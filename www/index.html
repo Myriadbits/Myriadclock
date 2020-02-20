@@ -6,14 +6,16 @@ R"(
     <title>Myriadclock</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.4.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/js/bootstrap.min.js"></script>    
-    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.3.6/css/bootstrap-colorpicker.css" rel="stylesheet">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.3.6/js/bootstrap-colorpicker.js"></script>
+
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.1.3/css/bootstrap.min.css" integrity="sha384-MCw98/SFnGE8fJT3GXwEOngsV7Zt27NXFoaoApmYm81iuXoPkFOJwJ8ERdknLPMO" crossorigin="anonymous">   
+    
     <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.3.6/css/bootstrap-colorpicker.css" rel="stylesheet">
     <script src="https://code.jquery.com/jquery-2.2.2.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-colorpicker/2.3.6/js/bootstrap-colorpicker.js"></script>
 </head>
 
 <body>
@@ -29,9 +31,9 @@ R"(
             </div>
             <ul class="nav navbar-nav">
                 <li class="active"><a href="#">Home</a></li>
-                <li><a href="#">Page 1</a></li>
+                <!-- <li><a href="#">Page 1</a></li>
                 <li><a href="#">Page 2</a></li>
-                <li><a href="#">Page 3</a></li>
+                <li><a href="#">Page 3</a></li> -->
             </ul>
         </div>
     </nav>
@@ -39,27 +41,55 @@ R"(
     <div class="container">
         <div class="row">
             <div class="col-sm-4">
-                <h3>Column 1</h3>
-                <div id="cp2" class="input-group colorpicker-component"> 
-                    <input type="text" value="#00AABB" class="form-control" /> 
-                    <span class="input-group-addon"><i></i></span>
-                </div>               
+                <div class="card">
+                    <div class="card-header">
+                        Colors
+                    </div>
+                    <div class="card-body">
+                      <form action='/' method='POST'>
+                          <label for="email">Time color:</label>
+                          <div id="cp1" class="input-group colorpicker-component"> 
+                              <input type="text" value="#000001" name="colTime" class="form-control" /> 
+                              <span class="input-group-addon"><i></i></span>
+                          </div>               
+                          </p>
+                          <label for="email">Date color:</label>
+                          <div id="cp2" class="input-group colorpicker-component"> 
+                              <input type="text" value="#000002" name="colDate" class="form-control" /> 
+                              <span class="input-group-addon"><i></i></span>
+                          </div>               
+                          </p>
+                          <button type="submit" class="btn btn-success pull-right">Save</button>
+                      </form>
+                    </div>
+                </div>
             </div>
             <div class="col-sm-4">
-                <h3>Column 2</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
-                <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
+                <div class="card">
+                    <div class="card-header">
+                        Options
+                    </div>
+                    <div class="card-body">
+                     
+                    </div>
+                </div>
             </div>
             <div class="col-sm-4">
-                <h3>Column 3</h3>
-                <p>Lorem ipsum dolor sit amet, consectetur adipisicing elit...</p>
-                <p>Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris...</p>
+                <div class="card">
+                    <div class="card-header">
+                        Settings
+                    </div>
+                    <div class="card-body">
+                     
+                    </div>
+                </div>
             </div>
         </div>
     </div>
 
     <script type="text/javascript">
-        $('#cp2').colorpicker();
+        $('#cp1').colorpicker({format :'hex'});
+        $('#cp2').colorpicker({format :'hex'});
     </script>
 </body>
 

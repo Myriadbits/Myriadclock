@@ -9,9 +9,9 @@
 //
 // Initialize
 //
-void DisplayStateBooting::Initialize(CRGB* pLEDs, Timezone* pTZ)
+void DisplayStateBooting::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ);
+    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
     m_timeStamp = millis();
     m_nCounter = 0;
     m_nCycleCounter = 0;

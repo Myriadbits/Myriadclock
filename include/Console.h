@@ -1,7 +1,7 @@
 #ifndef   __MYRIADCONSOLE_H__
 #define   __MYRIADCONSOLE_H__
 
-#include "Arduino.h"
+#include "Esp.h"
 
 #define MAXCOMMANDS          15       // Maximum # commands
 #define MAXARGUMENTS          3       // Maximum # command line arguments

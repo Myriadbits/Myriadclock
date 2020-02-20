@@ -1,7 +1,7 @@
 #ifndef   __DISPLAYSTATEUPDATING_H__
 #define   __DISPLAYSTATEUPDATING_H__
 
-#include "Arduino.h"
+#include "Esp.h"
 #include "DisplayStateBase.h"
 #include "esp32fota.h"
 
@@ -16,7 +16,7 @@
 class DisplayStateUpdating : public DisplayStateBase
 {
 public:
-    void Initialize(CRGB* pLEDs, Timezone* pTZ);
+    void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
     bool HandleLoop(unsigned long epochTime);  
 
 private:

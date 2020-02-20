@@ -1,7 +1,7 @@
 #ifndef   __DISPLAYSTATECLOCK_H__
 #define   __DISPLAYSTATECLOCK_H__
 
-#include "Arduino.h"
+#include "Esp.h"
 #include "DisplayStateBase.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -12,7 +12,7 @@
 class DisplayStateClock : public DisplayStateBase
 {
 public:
-    void Initialize(CRGB* pLEDs, Timezone* pTZ);
+    void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
     bool HandleLoop(unsigned long epochTime);  
     
 protected:

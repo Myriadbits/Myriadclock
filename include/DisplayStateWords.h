@@ -1,7 +1,7 @@
 #ifndef   __DISPLAYSTATEWORDS_H__
 #define   __DISPLAYSTATEWORDS_H__
 
-#include "Arduino.h"
+#include "Esp.h"
 #include "DisplayStateBase.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -11,7 +11,7 @@
 class DisplayStateWords : public DisplayStateBase
 {
 public:
-    void Initialize(CRGB* pLEDs, Timezone* pTZ);
+    void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
     bool HandleLoop(unsigned long epochTime);  
 
     void CommandHandler(int argc, char *argv[]);

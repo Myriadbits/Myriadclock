@@ -8,9 +8,9 @@
 //
 // Initialize
 //
-void DisplayStateWords::Initialize(CRGB* pLEDs, Timezone* pTZ)
+void DisplayStateWords::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ);
+    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
     m_nWordIndexTop = 0;
     m_nWordIndexBottom = 0;
     strcpy(m_sCommand, "words");

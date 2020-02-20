@@ -9,9 +9,9 @@
 //
 // Initialize
 //
-void DisplayStateUpdating::Initialize(CRGB* pLEDs, Timezone* pTZ)
+void DisplayStateUpdating::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ);
+    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
     m_timeStamp = millis();
     strcpy(m_sCommand, "update");
     strcpy(m_sCommandDescription, "Update using FOTA");   

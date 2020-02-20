@@ -23,9 +23,9 @@
 //
 // Initialize
 //
-void DisplayStateClock::Initialize(CRGB* pLEDs, Timezone* pTZ)
+void DisplayStateClock::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ);
+    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
     m_nPreviousBrightness = 0;
     strcpy(m_sCommand, "clock");
     strcpy(m_sCommandDescription, "Show the normal clock");
@@ -82,9 +82,10 @@ void DisplayStateClock::CalcSunriseSunset(unsigned long timestamp, float lat, fl
 //
 bool DisplayStateClock::HandleLoop(unsigned long epochTime)
 {
-    CRGB colTime = CRGB(0, 0xFF, 0);
-    CRGB colDate = CRGB(0xFF, 0xA5, 0x00);
-    //CRGB colPulse = CRGB(0, 0x80, 0);
+    if (!m_pSettings) return false;
+
+    CRGB colTime = CRGB(m_pSettings->colTime);
+    CRGB colDate = CRGB(m_pSettings->colDate);
     
     if (Elapsed(m_timeStamp) > 100)
     {
@@ -246,7 +247,9 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
 
         // Second heartbeat fading led
         int heartBeatBrightness = 127 * (cos(2.0 * PI * m_timeStamp / 6000.0) + 1.0);
-        AddWordToLeds((ledpos_t*) pulse2, CRGB(0, heartBeatBrightness / 2, 0));        
+        CRGB colFade = colDate;
+        colFade.fadeToBlackBy(heartBeatBrightness);
+        AddWordToLeds((ledpos_t*) pulse2, colFade); // CRGB(0, heartBeatBrightness / 2, 0));        
         
         FastLED.show();   
     }

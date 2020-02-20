@@ -16,15 +16,20 @@
     TODO:
     HOMEKIT: https://github.com/maximkulkin/esp-homekit
 
+    Bootstrap test page:
+    https://juzraai.github.io/bootstrap4-test-page/
+
     s00500/ESPUI??
     Bootstrap: https://diyprojects.io/bootstrap-create-beautiful-web-interface-projects-esp8266/#.XkhzFWhKiUk
+
+    Color picker:
+    https://itsjavi.com/bootstrap-colorpicker/module-options.html
     
 */
 
 #include <NTPClient.h>
 #include <WiFi.h>
 #include <WebServer.h>
-#include <Preferences.h>
 #include <AutoConnect.h>
 #include <time.h>
 #include <Timezone.h>
@@ -39,6 +44,7 @@
 #include "DisplayStateClock.h"
 #include "DisplayStateUpdating.h"
 #include "MyriadclockConfig.h"
+#include "MyriadclockSettings.h"
 
 using namespace std;
 
@@ -55,7 +61,7 @@ static DisplayStateBase* g_arStates[MAXSTATES] = {0};
 static int      g_nStateCounter = 0;
 static int      g_nCurrentState = 0;
 static bool     g_fNTPStarted = false;
-static Preferences g_Preferences;
+static MyriadclockSettings g_Settings;
 static int      g_nPreviousHour = 0;
 
 WiFiUDP ntpUDP;
@@ -73,12 +79,6 @@ AutoConnectUpdate   g_acUpdate("www.myriadbits.com", 80);  // Step #3
 TimeChangeRule      CEST = {"CEST", Last, Sun, Mar, 2, 120};     // Central European Summer Time
 TimeChangeRule      CET = {"CET ", Last, Sun, Oct, 3, 60};       // Central European Standard Time
 Timezone            g_CE(CEST, CET);
-
-// Get CHIP ID:
-//chipid=ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
-//	Serial.printf("ESP32 Chip ID = %04X",(uint16_t)(chipid>>32));//print High 2 bytes
-//	Serial.printf("%08X\n",(uint32_t)chipid);//print Low 4bytes.
-
 
 //
 // Time elapsed??
@@ -101,7 +101,7 @@ static void cmdStateChange(const char* command, int argc, char *argv[])
         if (strcmp(command, g_arStates[n]->GetCommand()) == 0)
         {
             g_nCurrentState = n;
-            g_arStates[n]->Initialize(g_Leds, &g_CE); // Reinitialize 
+            g_arStates[n]->Initialize(g_Leds, &g_CE, &g_Settings); // Reinitialize 
             g_arStates[n]->CommandHandler(argc, argv);
             break;
         }
@@ -113,24 +113,60 @@ static void cmdStateChange(const char* command, int argc, char *argv[])
 //
 void addState(DisplayStateBase* pNewState)
 {
-    pNewState->Initialize(g_Leds, &g_CE);
+    pNewState->Initialize(g_Leds, &g_CE, &g_Settings);
     g_arStates[g_nStateCounter++] = pNewState;
     g_pConsole->Add(pNewState->GetCommand(), cmdStateChange, pNewState->GetCommandDescription());    
 }
 
-String getPage(){
+String getPage()
+{
     const char *s =    
-    #include "..\www\index.html"
+        #include "..\www\index.html"
     ;    
     return String(s);
 }
 
+uint32_t parseHexNumber(String key, String hexNum)
+{
+    String hex = hexNum;
+    if (hexNum.startsWith("#"))
+        hex = hexNum.substring(1);
+    uint32_t value = std::strtoul(hex.c_str(), 0, 16);
+    Serial.printf("Parsing %s: '%s' = %06X\n", key.c_str(), hexNum.c_str(), value);
+    return value;
+}
+
+String getHexString(uint32_t value)
+{
+    char buff[32];
+    snprintf(buff, sizeof(buff), "#%06X", value);
+    return String(buff);
+}
+
+//
+// Handle the webpage
+//
 void rootPage()
 {
-    //char content[128];
-    //sprintf(content, "<h1>Myriadclock</h1><br/><h2>Version %d</h2>", FIRMWARE_VERSION);    
-    //g_server.send(200, "text/text", content);
-    g_server.send(200, "text/html", getPage());
+    if (g_server.hasArg("colTime"))
+    {
+        g_Settings.colTime = parseHexNumber("colTime", g_server.arg("colTime"));        
+
+        //Serial.printf("Time Color changed: %08X\n", (uint32_t)g_server.arg("colTime") );
+        if (g_server.hasArg("colDate"))
+        {
+            g_Settings.colDate = parseHexNumber("colDate", g_server.arg("colDate"));
+        }
+
+        g_Settings.Store();
+    }
+
+    // Nothing in the post message, just return the entire page
+    String pageText = getPage();
+    pageText.replace("#000001", getHexString(g_Settings.colTime));
+    pageText.replace("#000002", getHexString(g_Settings.colDate));
+
+    g_server.send(200, "text/html", pageText);
 }
 
 //
@@ -141,7 +177,8 @@ void setup()
 	FastLED.addLeds<NEOPIXEL, DATA_PIN>(g_Leds, NUM_LEDS); // Init of the Fastled library
 	FastLED.setBrightness(100);
 
-    g_Preferences.begin("Myriadclock", false);
+    // Load/initialize all settings
+    g_Settings.Initialize();
 
     // Create + start the console
     g_pConsole = new Console(115200);   
