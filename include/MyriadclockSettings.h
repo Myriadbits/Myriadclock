@@ -4,6 +4,9 @@
 #include "FastLED.h"
 #include <Preferences.h>
 
+#define MAX_BIRTHDAYS       10
+#define MAX_HOLIDAYS        10
+
 ///////////////////////////////////////////////////////////////////////////////
 // Settings class
 ///////////////////////////////////////////////////////////////////////////////
@@ -13,10 +16,34 @@ private:
     Preferences m_preferences;
 
 public:
-    uint32_t colTime;
-    uint32_t colDate;    
+    enum displayOptions
+    {
+        DO_NORMAL,              // Single color
+        DO_COLOR_CYCLE_NORMAL,  // Normal color cycle
+        DO_COLOR_CYCLEHOUR,     // Color cycle per hour
+        DO_COLOR_CYCLEDAY,      // Every day another color
+        DO_COLOR_PARTY_SLOW,    // Random per character per minute
+        DO_COLOR_PARTY_QUICK,   // Random per character constant
+        DO_COLOR_PARTY_MINUTE,  // Random colors every minute for a few seconds
+    };
+
+    uint32_t    colTime;   // Color of time part
+    uint32_t    colDate;   // Color of date part
+    uint32_t    colPulse;  // Color of the heartbeat pulse led
+
+    int16_t     nBrightnessDay;     // Day brightness
+    int16_t     nBrightnessNight;   // Day night
+
+    displayOptions  eDisplayOptionsTime;    
+    displayOptions  eDisplayOptionsDate;    
+    displayOptions  eDisplayOptionsBirthday;
+    displayOptions  eDisplayOptionsHoliday;
+
+    time_t      dateBirthdays[MAX_BIRTHDAYS];   // Special days
+    time_t      dateHolidays[MAX_HOLIDAYS];     // Holidays
 
     void Initialize();
     void Store();
     void Load();
+
 };

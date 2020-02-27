@@ -45,6 +45,7 @@
 #include "DisplayStateUpdating.h"
 #include "MyriadclockConfig.h"
 #include "MyriadclockSettings.h"
+#include "WebHandler.h"
 
 using namespace std;
 
@@ -79,6 +80,11 @@ AutoConnectUpdate   g_acUpdate("www.myriadbits.com", 80);  // Step #3
 TimeChangeRule      CEST = {"CEST", Last, Sun, Mar, 2, 120};     // Central European Summer Time
 TimeChangeRule      CET = {"CET ", Last, Sun, Oct, 3, 60};       // Central European Standard Time
 Timezone            g_CE(CEST, CET);
+
+
+// Create the webhandler
+WebHandler*        g_pWebHandler { NULL};
+
 
 //
 // Time elapsed??
@@ -118,57 +124,6 @@ void addState(DisplayStateBase* pNewState)
     g_pConsole->Add(pNewState->GetCommand(), cmdStateChange, pNewState->GetCommandDescription());    
 }
 
-String getPage()
-{
-    const char *s =    
-        #include "..\www\index.html"
-    ;    
-    return String(s);
-}
-
-uint32_t parseHexNumber(String key, String hexNum)
-{
-    String hex = hexNum;
-    if (hexNum.startsWith("#"))
-        hex = hexNum.substring(1);
-    uint32_t value = std::strtoul(hex.c_str(), 0, 16);
-    Serial.printf("Parsing %s: '%s' = %06X\n", key.c_str(), hexNum.c_str(), value);
-    return value;
-}
-
-String getHexString(uint32_t value)
-{
-    char buff[32];
-    snprintf(buff, sizeof(buff), "#%06X", value);
-    return String(buff);
-}
-
-//
-// Handle the webpage
-//
-void rootPage()
-{
-    if (g_server.hasArg("colTime"))
-    {
-        g_Settings.colTime = parseHexNumber("colTime", g_server.arg("colTime"));        
-
-        //Serial.printf("Time Color changed: %08X\n", (uint32_t)g_server.arg("colTime") );
-        if (g_server.hasArg("colDate"))
-        {
-            g_Settings.colDate = parseHexNumber("colDate", g_server.arg("colDate"));
-        }
-
-        g_Settings.Store();
-    }
-
-    // Nothing in the post message, just return the entire page
-    String pageText = getPage();
-    pageText.replace("#000001", getHexString(g_Settings.colTime));
-    pageText.replace("#000002", getHexString(g_Settings.colDate));
-
-    g_server.send(200, "text/html", pageText);
-}
-
 //
 // Setup all hardware
 //
@@ -180,6 +135,9 @@ void setup()
     // Load/initialize all settings
     g_Settings.Initialize();
 
+    // Initialize/start the webhandler
+    g_pWebHandler = new WebHandler(g_server, g_Settings);
+
     // Create + start the console
     g_pConsole = new Console(115200);   
 
@@ -189,8 +147,6 @@ void setup()
     addState(new DisplayStateWords());
     addState(new DisplayStateUpdating());
     g_nCurrentState = 0;   
-
-    g_server.on("/", rootPage);
 
     // Get CHIP ID:
     uint64_t chipid = ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
