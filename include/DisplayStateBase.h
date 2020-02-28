@@ -34,7 +34,9 @@ public:
     virtual void CommandHandler(int, char **) {};
 
 protected:
-    void AddWordToLeds(ledpos_t* pCurrentWord, CRGB rgbColor);
+    virtual CRGB ColorHandler(uint32_t customParam);
+
+    void AddWordToLeds(ledpos_t* pCurrentWord, uint32_t customParam);
     int16_t CalcLedPos(int8_t x, int8_t y);
     uint32_t Elapsed(uint32_t ts);
 

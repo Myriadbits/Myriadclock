@@ -24,6 +24,10 @@
 
     Color picker:
     https://itsjavi.com/bootstrap-colorpicker/module-options.html
+
+
+    Colors:
+    https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
     
 */
 
@@ -125,6 +129,26 @@ void addState(DisplayStateBase* pNewState)
 }
 
 //
+// Advertise presence using mDNS 
+//
+void AdvertiseServices(String myName)
+{
+    if (MDNS.begin(myName.c_str()))
+    {
+        Serial.println(F("mDNS responder started"));
+        Serial.print(F("I am: "));
+        Serial.println(myName.c_str());
+
+        // Add service to MDNS-SD
+        MDNS.addService("http", "tcp", 80);
+    }
+    else
+    {
+        Serial.println(F("Error setting up MDNS responder"));
+    }
+}
+
+//
 // Setup all hardware
 //
 void setup() 
@@ -150,11 +174,11 @@ void setup()
 
     // Get CHIP ID:
     uint64_t chipid = ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
-	Serial.printf("ESP32 Chip ID = %04X",(uint16_t)(chipid>>32));//print High 2 bytes
-	Serial.printf(" - %08X\n",(uint32_t)chipid);//print Low 4bytes.
+	Serial.printf("ESP32 Chip ID = %04X",(uint16_t)(chipid >> 16));//print High 2 bytes
+	Serial.printf("%08X\n",(uint32_t)chipid);//print Low 4bytes.
 
     char buff[128];
-    snprintf(buff, sizeof(buff), "Myriadclock-%04X", (uint16_t)(chipid & 0xFFFF));
+    snprintf(buff, sizeof(buff), "Myriadclock-%04X", (uint16_t)((chipid >> 16) & 0xFFFF));
     String clockName(buff);
 
     Serial.printf("Clockname: %s\n", clockName.c_str());
@@ -172,6 +196,8 @@ void setup()
     g_acUpdate.attach(g_acPortal);
 
     Serial.println("Webserver started: " + WiFi.localIP().toString());    
+
+    AdvertiseServices(clockName);
     
     timeClient.begin();
 }

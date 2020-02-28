@@ -28,24 +28,29 @@ int16_t DisplayStateBase::CalcLedPos(int8_t x, int8_t y)
 }
 
 //
-// Add a single word to the display/leds
+// Color handler for words
+CRGB DisplayStateBase::ColorHandler(uint32_t customParam)
+{
+    return CRGB(customParam);
+}
+
 //
-void DisplayStateBase::AddWordToLeds(ledpos_t* pCurrentWord, CRGB rgbColor) 
+// Add a single word to the display/leds
+// customParam can be any value, normal operation when ColorHandler is not overriden: customParam is the color
+void DisplayStateBase::AddWordToLeds(ledpos_t* pCurrentWord, uint32_t customParam) 
 {
     if (pCurrentWord == NULL) return;
+    if (m_pLEDs == NULL) return;
 
     uint8_t charIndex = 0;
-    do
+    ledpos_t ledPos = pCurrentWord[charIndex];
+    while (ledPos.x >= 0 && ledPos.y >= 0)
     {
-        ledpos_t ledPos = pCurrentWord[charIndex];
-        if (ledPos.x < 0 || ledPos.y < 0)
-            break;
-
         // Led numbers are inverted left to right every other row:        
-        int16_t ledIndex = CalcLedPos(ledPos.x, ledPos.y); 
-        if (m_pLEDs != NULL)
-            m_pLEDs[ledIndex] = rgbColor;
+        m_pLEDs[CalcLedPos(ledPos.x, ledPos.y)] = ColorHandler(customParam);
+        
+        // Next char
         charIndex++;
+        ledPos = pCurrentWord[charIndex];
     }
-    while (true);
 }

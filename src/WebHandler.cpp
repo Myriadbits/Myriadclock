@@ -4,6 +4,18 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "WebHandler.h"
+#include <string>
+#include <sstream>
+
+namespace patch
+{
+    template < typename T > std::string to_string( const T& n )
+    {
+        std::ostringstream stm ;
+        stm << n ;
+        return stm.str() ;
+    }
+}
 
 //
 // Handle the webpage
@@ -57,7 +69,7 @@ bool WebHandler::ParseHexNumber(uint32_t &setting, String key, String hexNum)
 //
 // Parse a number/option
 //
-bool WebHandler::ParseDisplayOptions(MyriadclockSettings::displayOptions &setting, String key, String valueText)
+bool WebHandler::ParseDisplayOptions(MyriadclockSettings::EDisplayOptions &setting, String key, String valueText)
 {
     if (mServer.hasArg(key))
     {
@@ -65,7 +77,25 @@ bool WebHandler::ParseDisplayOptions(MyriadclockSettings::displayOptions &settin
         if (setting != value)
         {
             Serial.printf("- Value '%s' is changed to %d\n", key.c_str(), value);
-            setting = (MyriadclockSettings::displayOptions) value;
+            setting = (MyriadclockSettings::EDisplayOptions) value;
+            return true;
+        }
+    }
+    return false;
+}
+
+//
+// Parse a normal number, return true if the value has changed
+//
+bool WebHandler::ParseNumber(int16_t &setting, String key, String val)
+{
+    if (mServer.hasArg(key))
+    {
+        int16_t value = std::strtol(val.c_str(), 0, 10);
+        if (setting != value)
+        {
+            Serial.printf("- Value '%s' is changed to %06X ('%s')\n", key.c_str(), value, val.c_str());
+            setting = value;
             return true;
         }
     }
@@ -85,7 +115,7 @@ String WebHandler::GetHexString(uint32_t value)
 //
 // Return the display options string of a specific value
 //
-String WebHandler::GetDisplayOptionsString(MyriadclockSettings::displayOptions &value)
+String WebHandler::GetDisplayOptionsString(MyriadclockSettings::EDisplayOptions &value)
 {
     char buff[32];
     snprintf(buff, sizeof(buff), "%d", (int) value);
@@ -101,9 +131,13 @@ bool WebHandler::ProcessWebCall()
     // Parse any changed settings
     bool changed = false;
     changed |= ParseHexNumber(mSettings.colTime, "colTime", mServer.arg("colTime"));        
+    changed |= ParseHexNumber(mSettings.colWeekday, "colWeekday", mServer.arg("colWeekday"));
     changed |= ParseHexNumber(mSettings.colDate, "colDate", mServer.arg("colDate"));
     changed |= ParseDisplayOptions(mSettings.eDisplayOptionsTime, "displayOptionTime", mServer.arg("displayOptionTime"));
+    changed |= ParseDisplayOptions(mSettings.eDisplayOptionsWeekday, "displayOptionWeekday", mServer.arg("displayOptionWeekday"));
     changed |= ParseDisplayOptions(mSettings.eDisplayOptionsDate, "displayOptionDate", mServer.arg("displayOptionDate"));
+    changed |= ParseNumber(mSettings.nBrightnessDay, "brightnessDay", mServer.arg("brightnessDay"));
+    changed |= ParseNumber(mSettings.nBrightnessNight, "brightnessNight", mServer.arg("brightnessNight"));
 
     // Whenever a setting has changed, store all settings
     if (changed)
@@ -114,10 +148,15 @@ bool WebHandler::ProcessWebCall()
 
     // Nothing in the post message, just return the entire page
     String pageText = GetHTMLPage();
-    pageText.replace("t#000002", GetHexString(mSettings.colTime));
-    pageText.replace("d#000002", GetHexString(mSettings.colDate));
-    pageText.replace("t#000001", GetDisplayOptionsString(mSettings.eDisplayOptionsTime));
-    pageText.replace("d#000001", GetDisplayOptionsString(mSettings.eDisplayOptionsDate));
+    // TODO: parse 
+    pageText.replace("<!--colTime-->", GetHexString(mSettings.colTime));
+    pageText.replace("<!--colWeekday-->", GetHexString(mSettings.colWeekday));
+    pageText.replace("<!--colDate-->", GetHexString(mSettings.colDate));
+    pageText.replace("<!--displayOptionsTime-->", GetDisplayOptionsString(mSettings.eDisplayOptionsTime));
+    pageText.replace("<!--displayOptionsWeekday-->", GetDisplayOptionsString(mSettings.eDisplayOptionsWeekday));
+    pageText.replace("<!--displayOptionsDate-->", GetDisplayOptionsString(mSettings.eDisplayOptionsDate));
+    pageText.replace("<!--brightnessDay-->", patch::to_string(mSettings.nBrightnessDay).c_str());
+    pageText.replace("<!--brightnessNight-->", patch::to_string(mSettings.nBrightnessNight).c_str());
 
     mServer.send(200, "text/html", pageText);
 

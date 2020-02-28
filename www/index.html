@@ -27,10 +27,10 @@ R"(
                     class="text-success">myriadbits.com</a></h1>
         </div>
     </header>
-    <nav class="navbar sticky-top navbar-expand-md navbar-dark bg-dark">
+    <nav class="navbar sticky-top navbar-expand-md bg-light">
         <div class="container">
-            <ul class="nav navbar-nav mr-auto">
-                <li class="active text-light ">Home</li>
+            <ul class="nav mr-auto">
+                <li class="active text-dark ">Home</li>
                 <!-- <li><a href="#">Page 1</a></li>
                 <li><a href="#">Page 2</a></li>
                 <li><a href="#">Page 3</a></li> -->
@@ -48,7 +48,7 @@ R"(
                     <div class="card-body">
                         <form action='/' method='POST'>
                             <label for="displayOptionTime">Color options:</label>
-                            <select id="sp1" name="displayOptionTime" class="form-control">
+                            <select id="spDisplayOptionTime" name="displayOptionTime" class="form-control">
                                 <option value=0>Normal, opaque color</option>
                                 <option value=1>Cycle colors</option>
                                 <option value=2>Color cycle hourly</option>
@@ -56,11 +56,45 @@ R"(
                                 <option value=4>Party colors slow</option>
                                 <option value=5>Party colors quick</option>
                                 <option value=6>Party colors minute</option>
+                                <option value=7>Each day of the week another color (Ayurveda)</option>
+                                <option value=8>Each day of the week another color (Thai)</option>
                             </select>
                             </p>
                             <label for="colTime">Opaque color:</label>
-                            <div id="cp1" class="input-group colorpicker-component">
-                                <input type="text" value="t#000002" name="colTime" class="form-control" />
+                            <div id="cpColTime" class="input-group colorpicker-component">
+                                <input type="text" value="<!--colTime-->" name="colTime" class="form-control" />
+                                <span class="input-group-addon"><i></i></span>
+                            </div>
+                            </p>
+                            <button type="submit" class="btn btn-success pull-right">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-sm-6 mb-3">
+                <div class="card">
+                    <div class="card-header">
+                        Day of week settings
+                    </div>
+                    <div class="card-body">
+                        <form action='/' method='POST'>
+                            <label for="displayOptionWeekday">Color options:</label>
+                            <select id="spDisplayOptionWeekday" name="displayOptionWeekday" class="form-control">
+                                <option value=0>Normal, opaque color</option>
+                                <option value=1>Cycle colors</option>
+                                <option value=2>Color cycle hourly</option>
+                                <option value=3>Color cycle daily</option>
+                                <option value=4>Party colors slow</option>
+                                <option value=5>Party colors quick</option>
+                                <option value=6>Party colors minute</option>
+                                <option value=7>Each day of the week another color (Ayurveda)</option>
+                                <option value=8>Each day of the week another color (Thai)</option>
+                            </select>
+                            </p>
+                            <label for="colWeekday">Opaque color:</label>
+                            <div id="cpColWeekday" class="input-group colorpicker-component">
+                                <input type="text" value="<!--colWeekday-->" name="colWeekday" class="form-control" />
                                 <span class="input-group-addon"><i></i></span>
                             </div>
                             </p>
@@ -78,7 +112,7 @@ R"(
                     <div class="card-body">
                         <form action='/' method='POST'>
                             <label for="displayOptionDate">Color options:</label>
-                            <select id="sp2" name="displayOptionDate" class="form-control">
+                            <select id="spDisplayOptionDate" name="displayOptionDate" class="form-control">
                                 <option value=0>Normal, opaque color</option>
                                 <option value=1>Cycle colors</option>
                                 <option value=2>Color cycle hourly</option>
@@ -86,11 +120,13 @@ R"(
                                 <option value=4>Party colors slow</option>
                                 <option value=5>Party colors quick</option>
                                 <option value=6>Party colors minute</option>
+                                <option value=7>Each day of the week another color (Ayurveda)</option>
+                                <option value=8>Each day of the week another color (Thai)</option>
                             </select>
                             </p>
                             <label for="colDate">Opaque color:</label>
-                            <div id="cp2" class="input-group colorpicker-component">
-                                <input type="text" value="d#000002" name="colDate" class="form-control" />
+                            <div id="cpColDate" class="input-group colorpicker-component">
+                                <input type="text" value="<!--colDate-->" name="colDate" class="form-control" />
                                 <span class="input-group-addon"><i></i></span>
                             </div>
                             </p>
@@ -108,11 +144,11 @@ R"(
                     <div class="card-body">
                         <form action='/' method='POST'>
                             <label>Brightness during daytime (0-100%):</label>
-                            </p>
-                            <input id="" type="number" min="1" max="100" value="b#000001" />
+                            <input name="brightnessDay" type="number" min="1" max="100" value="<!--brightnessDay-->" class="form-control" />
                             </p>
                             <label>Brightness during nighttime (0-100%):</label>
-                            <input type="number" min="1" max="100" value="b#000002" />
+                            <input name="brightnessNight" type="number" min="1" max="100" value="<!--brightnessNight-->" class="form-control"/>
+                            </p>
                             <button type="submit" class="btn btn-success pull-right">Save</button>
                         </form>
                     </div>
@@ -144,14 +180,18 @@ R"(
     </div>
 
     <script type="text/javascript">
-        $('#cp1').colorpicker({ format: 'hex' });
-        $('#cp2').colorpicker({ format: 'hex' });
+        $('#cpColTime').colorpicker({ format: 'hex' });
+        $('#cpColWeekday').colorpicker({ format: 'hex' });
+        $('#cpColDate').colorpicker({ format: 'hex' });
 
-        $('#sp1').selectpicker();
-        $('#sp1').selectpicker('val', 't#000001');
+        $('#spDisplayOptionTime').selectpicker();
+        $('#spDisplayOptionTime').selectpicker('val', '<!--displayOptionsTime-->');
 
-        $('#sp2').selectpicker();
-        $('#sp2').selectpicker('val', 'd#000001');
+        $('#spDisplayOptionWeekday').selectpicker();
+        $('#spDisplayOptionWeekday').selectpicker('val', '<!--displayOptionsWeekday-->');
+
+        $('#spDisplayOptionDate').selectpicker();
+        $('#spDisplayOptionDate').selectpicker('val', '<!--displayOptionsDate-->');
     </script>
 </body>
 

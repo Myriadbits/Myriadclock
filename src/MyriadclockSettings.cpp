@@ -20,10 +20,12 @@ void MyriadclockSettings::Initialize()
 void MyriadclockSettings::Store()
 {
     m_preferences.putUInt("colorTime", colTime);
+    m_preferences.putUInt("colorWeekday", colWeekday);
     m_preferences.putUInt("colorDate", colDate);
     m_preferences.putShort("brightnessDay", nBrightnessDay);
     m_preferences.putShort("brightnessNight", nBrightnessNight);
     m_preferences.putInt("doTime", eDisplayOptionsTime);
+    m_preferences.putInt("doWeekday", eDisplayOptionsWeekday);
     m_preferences.putInt("doDate", eDisplayOptionsDate);
     m_preferences.putInt("doBirthdays", eDisplayOptionsBirthday);
     m_preferences.putInt("doHolidays", eDisplayOptionsHoliday);
@@ -47,14 +49,16 @@ void MyriadclockSettings::Store()
 void MyriadclockSettings::Load()
 {
     colTime = m_preferences.getUInt("colorTime", 0x00FF00);
-    colDate = m_preferences.getUInt("colorDate", 0xFFA500);
+    colWeekday = m_preferences.getUInt("colorWeekday", 0xFFA500);
+    colDate = m_preferences.getUInt("colorDate", 0xE59400);
 
     nBrightnessDay = m_preferences.getShort("brightnessDay", 100);
     nBrightnessNight = m_preferences.getShort("brightnessNight", 30);
-    eDisplayOptionsTime = (displayOptions) m_preferences.getInt("doTime", DO_NORMAL);
-    eDisplayOptionsDate = (displayOptions) m_preferences.getInt("doDate", DO_NORMAL);
-    eDisplayOptionsBirthday = (displayOptions) m_preferences.getInt("doBirthdays", DO_COLOR_PARTY_MINUTE);
-    eDisplayOptionsHoliday = (displayOptions) m_preferences.getInt("doHolidays", DO_NORMAL);
+    eDisplayOptionsTime = (EDisplayOptions) m_preferences.getInt("doTime", DO_NORMAL);
+    eDisplayOptionsWeekday = (EDisplayOptions) m_preferences.getInt("doWeekday", DO_NORMAL);
+    eDisplayOptionsDate = (EDisplayOptions) m_preferences.getInt("doDate", DO_NORMAL);
+    eDisplayOptionsBirthday = (EDisplayOptions) m_preferences.getInt("doBirthdays", DO_COLOR_PARTY_MINUTE);
+    eDisplayOptionsHoliday = (EDisplayOptions) m_preferences.getInt("doHolidays", DO_NORMAL);
 
     char buff[32];
     for(int n = 0; n < MAX_BIRTHDAYS; n++)
