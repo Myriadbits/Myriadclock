@@ -20,8 +20,7 @@
 // IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.
 ///////////////////////////////////////////////////////////////////////////////
 
-#ifndef  __CLOCKLAYOUT_H__
-#define  __CLOCKLAYOUT_H__
+#pragma once
 
 #ifndef NULL
 #define NULL    (void *)0
@@ -197,4 +196,3 @@ static const ledpos_t* const s_wordMonths[] = {
     januari, februari, march, april, may, june, july, august, september, october, november, december,
     NULL };
 
-#endif // __CLOCK_LAYOUT_H__

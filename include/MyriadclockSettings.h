@@ -1,6 +1,5 @@
 #pragma once
 
-#include "Esp.h"
 #include "FastLED.h"
 #include <Preferences.h>
 

@@ -1,7 +1,5 @@
-#ifndef   __DISPLAYSTATEUPDATING_H__
-#define   __DISPLAYSTATEUPDATING_H__
+#pragma once
 
-#include "Esp.h"
 #include "DisplayStateBase.h"
 #include "esp32fota.h"
 
@@ -23,4 +21,3 @@ private:
     esp32FOTA*       m_pesp32FOTA; //("Myriadclock-fota", 1);
 };
 
-#endif //__DISPLAYSTATEUPDATING_H__

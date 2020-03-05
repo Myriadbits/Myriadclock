@@ -1,7 +1,5 @@
-#ifndef   __DISPLAYSTATEBOOTING_H__
-#define   __DISPLAYSTATEBOOTING_H__
+#pragma once
 
-#include "Esp.h"
 #include "DisplayStateBase.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -18,5 +16,3 @@ private:
     int             m_nDir;
     int             m_nCycleCounter;
 };
-
-#endif //__DISPLAYSTATEBOOTING_H__

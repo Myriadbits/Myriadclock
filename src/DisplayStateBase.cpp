@@ -4,7 +4,7 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "DisplayStateBase.h"
-
+#include "ClockLayout.h"
 
 //
 //  Return the elapsed time in milliseconds since a timestamp

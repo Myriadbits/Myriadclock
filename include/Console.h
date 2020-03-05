@@ -1,7 +1,4 @@
-#ifndef   __MYRIADCONSOLE_H__
-#define   __MYRIADCONSOLE_H__
-
-#include "Esp.h"
+#pragma once
 
 #define MAXCOMMANDS          15       // Maximum # commands
 #define MAXARGUMENTS          3       // Maximum # command line arguments
@@ -51,5 +48,3 @@ class Console
         void _process(void);
         void _list(void);
 };
-
-#endif // __MYRIADCONSOLE_H__

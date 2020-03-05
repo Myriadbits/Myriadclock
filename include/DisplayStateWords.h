@@ -1,7 +1,5 @@
-#ifndef   __DISPLAYSTATEWORDS_H__
-#define   __DISPLAYSTATEWORDS_H__
+#pragma once
 
-#include "Esp.h"
 #include "DisplayStateBase.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -20,5 +18,3 @@ private:
     uint8_t       m_nWordIndexTop;
     uint8_t       m_nWordIndexBottom;
 };
-
-#endif //__DISPLAYSTATEWORDS_H__

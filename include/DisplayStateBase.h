@@ -1,9 +1,7 @@
-#ifndef   __DISPLAYSTATEBASE_H__
-#define   __DISPLAYSTATEBASE_H__
+#pragma once
 
-#include "Esp.h"
 #include "FastLED.h"            // Fastled library to control the LEDs
-#include "ClockLayout.h"        // Clock layout, needed for ledpos_t
+#include "ClockLayout.h"
 #include <Timezone.h>
 #include "MyriadclockSettings.h"
 
@@ -48,5 +46,3 @@ protected:
     Timezone*    m_pTZ;
     MyriadclockSettings*    m_pSettings;
 };
-
-#endif //__DISPLAYSTATEBASE_H__

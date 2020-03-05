@@ -5,6 +5,7 @@
 
 #include "console.h"
 #include "MyriadclockConfig.h"
+#include "esp.h"
 
 #define PROMPT "$ "
 #define arraysize(x)          (int)(sizeof((x))/sizeof(*(x)))

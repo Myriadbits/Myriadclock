@@ -1,11 +1,6 @@
 #pragma once
 
-#include "Esp.h"
-#include "FastLED.h"            // Fastled library to control the LEDs
-#include "ClockLayout.h"        // Clock layout, needed for ledpos_t
-#include <Timezone.h>
 #include <WebServer.h>
-#include <string>
 #include "MyriadclockSettings.h"
 
 #define MAXCOMMANDLEN               16
@@ -22,7 +17,7 @@ public:
 
 private:
     void        RootPage(void);
-    String      GetHTMLPage();
+    String*     GetHTMLPage();
 
     bool        ParseHexNumber(uint32_t &setting, String key, String hexNum);
     bool        ParseDisplayOptions(MyriadclockSettings::EDisplayOptions &setting, String key, String value);
@@ -32,7 +27,7 @@ private:
     String      GetDisplayOptionsString(MyriadclockSettings::EDisplayOptions &value);
 
 private:
-    WebServer  &mServer;
+    WebServer   &mServer;
     MyriadclockSettings &mSettings;
 };
 

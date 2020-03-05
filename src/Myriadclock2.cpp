@@ -28,19 +28,24 @@
 
     Colors:
     https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
+
+    Captive portal:
+    https://www.instructables.com/id/ESP32-Captive-Portal-to-Configure-Static-and-DHCP-/
+    (Crashes due to captive softAP solved using: https://github.com/espressif/arduino-esp32/issues/2025)
     
 */
 
 #include <NTPClient.h>
 #include <WiFi.h>
 #include <WebServer.h>
-#include <AutoConnect.h>
 #include <time.h>
 #include <Timezone.h>
+#include <AutoConnect.h>
 #include <ESPmDNS.h>
 
 #include "Console.h"
 #include "ClockLayout.h"
+#define FASTLED_INTERNAL
 #include "FastLED.h"       // Fastled library to control the LEDs
 
 #include "DisplayStateBooting.h"
@@ -57,22 +62,22 @@ using namespace std;
 #define DATA_PIN                13      // Connected to the data pin of the first LED strip
 #define MAXSTATES               10      // Maximum number of states
 
-CRGB colGreen = CRGB(0, 255, 0);
 
-static CRGB     g_Leds[NUM_LEDS]; // Define the array of leds
-static Console* g_pConsole = NULL;
-static uint32_t g_timestamp  = 0;
+static CRGB         g_Leds[NUM_LEDS]; // Define the array of leds
+static Console*     g_pConsole = NULL;
+static uint32_t     g_timestamp  = 0;
 static DisplayStateBase* g_arStates[MAXSTATES] = {0};
-static int      g_nStateCounter = 0;
-static int      g_nCurrentState = 0;
-static bool     g_fNTPStarted = false;
-static MyriadclockSettings g_Settings;
-static int      g_nPreviousHour = 0;
+static int          g_nStateCounter = 0;
+static int          g_nCurrentState = 0;
+static bool         g_fNTPStarted = false;
+static int          g_nPreviousHour = 0;
 
-WiFiUDP ntpUDP;
+static MyriadclockSettings g_Settings;
+
+WiFiUDP             g_ntpUDP;
 
 // By default 'pool.ntp.org' is used with 60 seconds update interval and no offset
-NTPClient timeClient(ntpUDP);
+NTPClient           g_timeClient(g_ntpUDP);
 
 // Webservers
 WebServer           g_server;
@@ -81,13 +86,13 @@ AutoConnectUpdate   g_acUpdate("www.myriadbits.com", 80);  // Step #3
 
 
 // Central European Time (Frankfurt, Paris)
-TimeChangeRule      CEST = {"CEST", Last, Sun, Mar, 2, 120};     // Central European Summer Time
-TimeChangeRule      CET = {"CET ", Last, Sun, Oct, 3, 60};       // Central European Standard Time
+TimeChangeRule      CEST {"CEST", Last, Sun, Mar, 2, 120};     // Central European Summer Time
+TimeChangeRule      CET {"CET ", Last, Sun, Oct, 3, 60};       // Central European Standard Time
 Timezone            g_CE(CEST, CET);
 
 
 // Create the webhandler
-WebHandler*        g_pWebHandler { NULL};
+WebHandler*        g_pWebHandler { NULL };
 
 
 //
@@ -95,7 +100,7 @@ WebHandler*        g_pWebHandler { NULL};
 //
 uint32_t Elapsed(uint32_t ts)
 {
-    uint32_t now = millis();
+    uint32_t now = xTaskGetTickCount();
     if (ts < now) return (now - ts);
     return(now + (0xffffffff - ts));
 }
@@ -141,6 +146,7 @@ void AdvertiseServices(String myName)
 
         // Add service to MDNS-SD
         MDNS.addService("http", "tcp", 80);
+        MDNS.addServiceTxt("_http", "_tcp", "Myriadclock", "3");
     }
     else
     {
@@ -199,7 +205,7 @@ void setup()
 
     AdvertiseServices(clockName);
     
-    timeClient.begin();
+    g_timeClient.begin();
 }
 
 
@@ -211,7 +217,7 @@ void loop()
     // TODO Make currentstate an ENUM
     if (g_nCurrentState < g_nStateCounter)
     {
-        if (!g_arStates[g_nCurrentState]->HandleLoop(timeClient.getEpochTime()))
+        if (!g_arStates[g_nCurrentState]->HandleLoop(g_timeClient.getEpochTime()))
         {
             // When handleloop returns false, select the next handler
             g_nCurrentState = 1; // TODO always fallback to clock?
@@ -220,22 +226,23 @@ void loop()
 
     // Allow the portal to handle stuff
     g_acPortal.handleClient();
+
+    //g_server.handleClient();
         
     // And the console
     g_pConsole->Tick();    
 
-
-    // Once every second, check the NTP stuff
-    if (Elapsed(g_timestamp) > 1000)
+    // Once every x seconds, check the NTP stuff
+    if (Elapsed(g_timestamp) > 10000)
     {                
-        g_timestamp = millis();
+        g_timestamp = xTaskGetTickCount();
 
         //Serial.println(WiFi.status());
         if (WiFi.status() == WL_CONNECTED)
         {
             if (!g_fNTPStarted)
             {
-                timeClient.begin();
+                g_timeClient.begin();
                 g_fNTPStarted = true;
                 Serial.println("NTP starting");
 
@@ -259,14 +266,14 @@ void loop()
 
         if (g_fNTPStarted)
         {
-            timeClient.update();
+            g_timeClient.update();
             //Serial.println(timeClient.getFormattedTime());
 
             // Check for 3->4 hour switch
             // Let Handle-Loop return another state
             // Convert to local time
             TimeChangeRule *tcr;    
-            time_t t = g_CE.toLocal(timeClient.getEpochTime(), &tcr); // (Note: tcr cannot be NULL)
+            time_t t = g_CE.toLocal(g_timeClient.getEpochTime(), &tcr); // (Note: tcr cannot be NULL)
             int hours = hour(t);
             if (hours == 4 && g_nPreviousHour != 4)
             {

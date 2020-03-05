@@ -5,17 +5,17 @@
 
 #include "WebHandler.h"
 #include <string>
-#include <sstream>
+//#include <sstream>
 
-namespace patch
-{
-    template < typename T > std::string to_string( const T& n )
-    {
-        std::ostringstream stm ;
-        stm << n ;
-        return stm.str() ;
-    }
-}
+// namespace patch
+// {
+//     template < typename T > std::string to_string( const T& n )
+//     {
+//         std::ostringstream stm ;
+//         stm << n ;
+//         return stm.str() ;
+//     }
+// }
 
 //
 // Handle the webpage
@@ -35,13 +35,13 @@ WebHandler::WebHandler(WebServer &server, MyriadclockSettings &settings)
 //
 // Return the entire webpage
 //
-String WebHandler::GetHTMLPage()
+String* WebHandler::GetHTMLPage()
 {
     // Include the entire html file at once by using the preprocessor
-    const char *s =    
+    static const char sIndexPage[] =    
         #include "..\www\index.html"
     ;    
-    return String(s);
+    return new String(sIndexPage);
 }
 
 //
@@ -142,23 +142,26 @@ bool WebHandler::ProcessWebCall()
     // Whenever a setting has changed, store all settings
     if (changed)
     {
-        Serial.printf("- Storing changes");
+        Serial.printf("- Storing changes\n");
         mSettings.Store();
     }
 
     // Nothing in the post message, just return the entire page
-    String pageText = GetHTMLPage();
+    String* pageText = GetHTMLPage();
+    
     // TODO: parse 
-    pageText.replace("<!--colTime-->", GetHexString(mSettings.colTime));
-    pageText.replace("<!--colWeekday-->", GetHexString(mSettings.colWeekday));
-    pageText.replace("<!--colDate-->", GetHexString(mSettings.colDate));
-    pageText.replace("<!--displayOptionsTime-->", GetDisplayOptionsString(mSettings.eDisplayOptionsTime));
-    pageText.replace("<!--displayOptionsWeekday-->", GetDisplayOptionsString(mSettings.eDisplayOptionsWeekday));
-    pageText.replace("<!--displayOptionsDate-->", GetDisplayOptionsString(mSettings.eDisplayOptionsDate));
-    pageText.replace("<!--brightnessDay-->", patch::to_string(mSettings.nBrightnessDay).c_str());
-    pageText.replace("<!--brightnessNight-->", patch::to_string(mSettings.nBrightnessNight).c_str());
+    pageText->replace("<!--colTime-->", GetHexString(mSettings.colTime));
+    pageText->replace("<!--colWeekday-->", GetHexString(mSettings.colWeekday));
+    pageText->replace("<!--colDate-->", GetHexString(mSettings.colDate));
+    pageText->replace("<!--displayOptionsTime-->", GetDisplayOptionsString(mSettings.eDisplayOptionsTime));
+    pageText->replace("<!--displayOptionsWeekday-->", GetDisplayOptionsString(mSettings.eDisplayOptionsWeekday));
+    pageText->replace("<!--displayOptionsDate-->", GetDisplayOptionsString(mSettings.eDisplayOptionsDate));
+    //pageText->replace("<!--brightnessDay-->", patch::to_string(mSettings.nBrightnessDay).c_str());
+    //pageText->replace("<!--brightnessNight-->", patch::to_string(mSettings.nBrightnessNight).c_str());
 
-    mServer.send(200, "text/html", pageText);
+    mServer.send_P(200, "text/html", pageText->c_str());
+
+    delete pageText;
 
     return true;
 }

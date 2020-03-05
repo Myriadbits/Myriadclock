@@ -1,7 +1,5 @@
-#ifndef   __DISPLAYSTATECLOCK_H__
-#define   __DISPLAYSTATECLOCK_H__
+#pragma once
 
-#include "Esp.h"
 #include "DisplayStateBase.h"
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -37,5 +35,3 @@ private:
     int             m_nHours;
     int             m_nWeekDay;
 };
-
-#endif //__DISPLAYSTATECLOCK_H__
