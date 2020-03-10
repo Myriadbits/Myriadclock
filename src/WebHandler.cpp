@@ -151,6 +151,8 @@ bool WebHandler::ProcessWebCall()
     String* pageText = GetHTMLPage();
     
     // TODO: parse 
+    pageText->replace("<!--sClockName-->", mSettings.sClockName.c_str());
+    pageText->replace("<!--nSerialNumber-->", GetNumberString(mSettings.nSerialNumber));
     pageText->replace("<!--colTime-->", GetHexString(mSettings.colTime));
     pageText->replace("<!--colWeekday-->", GetHexString(mSettings.colWeekday));
     pageText->replace("<!--colDate-->", GetHexString(mSettings.colDate));

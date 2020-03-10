@@ -42,6 +42,8 @@ R"(
     <div class="jumbotron">
         <div class="container">
             <h1>Myriadclock</h1>
+            <h4 class="text-muted">Serialnumber: <!--nSerialNumber--></h4>
+            <h4 class="text-muted">ClockID: <!--sClockName--></h4>
             <!-- <h3 class="display-4 text-secondary">by <a href="https://www.myriadbits.com/" class="text-success">myriadbits.com</a></h3> -->
         </div>
     </div>
@@ -60,7 +62,6 @@ R"(
                                 <option value=0>Normal, opaque color</option>
                                 <option value=1>Cycle colors</option>
                                 <option value=2>Color cycle hourly</option>
-                                <option value=3>Color cycle daily</option>
                                 <option value=4>Party colors slow</option>
                                 <option value=5>Party colors quick</option>
                                 <option value=6>Party colors minute</option>
@@ -70,7 +71,7 @@ R"(
                             </p>
                             <label for="colTime">Opaque color:</label>
                             <div id="cpColTime" class="input-group colorpicker-component">
-                                <input type="text" value="<!--colTime-->" name="colTime" class="form-control" />
+                                <input id="inpColTime" type="text" value="<!--colTime-->" name="colTime" class="form-control" />
                                 <span class="input-group-addon"><i></i></span>
                             </div>
                             </p>
@@ -92,7 +93,6 @@ R"(
                                 <option value=0>Normal, opaque color</option>
                                 <option value=1>Cycle colors</option>
                                 <option value=2>Color cycle hourly</option>
-                                <option value=3>Color cycle daily</option>
                                 <option value=4>Party colors slow</option>
                                 <option value=5>Party colors quick</option>
                                 <option value=6>Party colors minute</option>
@@ -102,7 +102,7 @@ R"(
                             </p>
                             <label for="colWeekday">Opaque color:</label>
                             <div id="cpColWeekday" class="input-group colorpicker-component">
-                                <input type="text" value="<!--colWeekday-->" name="colWeekday" class="form-control" />
+                                <input id="inpColWeekday" type="text" value="<!--colWeekday-->" name="colWeekday" class="form-control" />
                                 <span class="input-group-addon"><i></i></span>
                             </div>
                             </p>
@@ -124,7 +124,6 @@ R"(
                                 <option value=0>Normal, opaque color</option>
                                 <option value=1>Cycle colors</option>
                                 <option value=2>Color cycle hourly</option>
-                                <option value=3>Color cycle daily</option>
                                 <option value=4>Party colors slow</option>
                                 <option value=5>Party colors quick</option>
                                 <option value=6>Party colors minute</option>
@@ -134,7 +133,7 @@ R"(
                             </p>
                             <label for="colDate">Opaque color:</label>
                             <div id="cpColDate" class="input-group colorpicker-component">
-                                <input type="text" value="<!--colDate-->" name="colDate" class="form-control" />
+                                <input id="inpColDate" type="text" value="<!--colDate-->" name="colDate" class="form-control" />
                                 <span class="input-group-addon"><i></i></span>
                             </div>
                             </p>
@@ -175,14 +174,24 @@ R"(
         $('#cpColDate').colorpicker({ format: 'hex' });
 
         $('#spDisplayOptionTime').selectpicker();
+        $("#spDisplayOptionTime").on('change', function() {
+    		$('#inpColTime').prop('disabled', this.value!=='0');
+		});
         $('#spDisplayOptionTime').selectpicker('val', '<!--displayOptionsTime-->');
 
         $('#spDisplayOptionWeekday').selectpicker();
+        $("#spDisplayOptionWeekday").on('change', function() {
+    		$('#inpColWeekday').prop('disabled', this.value!=='0');
+		});
         $('#spDisplayOptionWeekday').selectpicker('val', '<!--displayOptionsWeekday-->');
 
         $('#spDisplayOptionDate').selectpicker();
+        $("#spDisplayOptionDate").on('change', function() {
+    		$('#inpColDate').prop('disabled', this.value!=='0');
+		});
         $('#spDisplayOptionDate').selectpicker('val', '<!--displayOptionsDate-->');
-    </script>
+
+</script>
 </body>
 
 </html>

@@ -1,0 +1,7 @@
+{
+    "type": "Myriadclock-fota",
+    "version": 4,
+    "host": "myriadclock.myriadbits.com",
+    "port": 80,
+    "bin": "/myriadclock-v4.bin"
+}

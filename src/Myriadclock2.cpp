@@ -163,6 +163,25 @@ void setup()
     // Load/initialize all settings
     g_Settings.Initialize();
 
+     // Get CHIP ID:
+    uint64_t chipid = ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
+	Serial.printf("ESP32 Chip ID = %04X",(uint16_t)(chipid >> 16));//print High 2 bytes
+	Serial.printf("%08X\n",(uint32_t)chipid);//print Low 4bytes.
+
+    // Get the word codes
+    uint16_t chipNumber = (uint16_t)((chipid >> 16) & 0xFFFF);
+    Serial.printf("SerialNumber: %d\n", chipNumber);
+    
+    // Fabricate the clock name
+    char buff[128];
+    snprintf(buff, sizeof(buff), "Myriadclock%s", s_wordCodes[chipNumber % 32].text);
+
+    // Put name + serial number in settings (volatile, not store to DB)
+    g_Settings.sClockName = String(buff);
+    g_Settings.nSerialNumber = chipNumber;
+
+    Serial.printf("Clockurl: http://%s.local\n", g_Settings.sClockName.c_str());
+
     // Initialize/start the webhandler
     g_pWebHandler = new WebHandler(g_server, g_Settings);
 
@@ -176,24 +195,14 @@ void setup()
     addState(new DisplayStateUpdating());
     g_nCurrentState = 0;   
 
-    // Get CHIP ID:
-    uint64_t chipid = ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
-	Serial.printf("ESP32 Chip ID = %04X",(uint16_t)(chipid >> 16));//print High 2 bytes
-	Serial.printf("%08X\n",(uint32_t)chipid);//print Low 4bytes.
-
-    char buff[128];
-    snprintf(buff, sizeof(buff), "Myriadclock-%04X", (uint16_t)((chipid >> 16) & 0xFFFF));
-    String clockName(buff);
-
-    Serial.printf("Clockname: %s\n", clockName.c_str());
-
+   
     AutoConnectConfig config; 
-    config.apid = clockName;
+    config.apid = g_Settings.sClockName;
     config.autoReconnect = true;
     config.retainPortal = true;
     config.autoSave = AC_SAVECREDENTIAL_AUTO;
-    config.title = clockName;
-    config.hostName = clockName;
+    config.title = g_Settings.sClockName;
+    config.hostName = g_Settings.sClockName;
 
     g_acPortal.config(config); 
     g_acPortal.begin();
@@ -201,7 +210,7 @@ void setup()
 
     Serial.println("Webserver started: " + WiFi.localIP().toString());    
 
-    AdvertiseServices(clockName);
+    AdvertiseServices(g_Settings.sClockName);
     
     g_timeClient.begin();
 }

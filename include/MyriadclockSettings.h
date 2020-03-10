@@ -20,13 +20,16 @@ public:
         DO_NORMAL,              // Single color
         DO_COLOR_CYCLENORMAL,   // Normal color cycle
         DO_COLOR_CYCLEHOUR,     // Color cycle per hour
-        DO_COLOR_CYCLEDAY,      // Every day another color
+        DO_COLOR_CYCLERESERVED, // <reserved>
         DO_COLOR_PARTY_SLOW,    // Random per character per minute
         DO_COLOR_PARTY_QUICK,   // Random per character constant
         DO_COLOR_PARTY_MINUTE,  // Random colors every minute for a few seconds
         DO_COLOR_WEEK_AYURVEDA, // Different color for each weekday according to the Ayurveda
         DO_COLOR_WEEK_THAI,     // Different color for each weekday according to the Thai
     };
+
+    String      sClockName;     // Name of the clock, filled in by the main setup (not stored to DB)
+    uint16_t    nSerialNumber;  // Serial number (not stored to db)
 
     uint32_t    colTime;   // Color of time part
     uint32_t    colWeekday;// Color of week day

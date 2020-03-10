@@ -140,6 +140,51 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         int monthday = day(t);
         int monthnum = month(t) - 1; // Januari = 1, we need it to be 0
 
+        switch (m_pSettings->eDisplayOptionsTime)
+        {
+        case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
+            m_randomTime.seed(m_nHours + m_nMinutes + m_nSeconds);
+            break;
+        case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
+            m_randomTime.seed(m_nHours + m_nMinutes);
+            break;
+        case MyriadclockSettings::DO_COLOR_PARTY_SLOW:
+            m_randomTime.seed(m_nHours + m_nMinutes + (m_nSeconds / 10));
+            break;
+        default:
+            break;
+        }
+
+        switch (m_pSettings->eDisplayOptionsWeekday)
+        {
+        case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
+            m_randomWeekday.seed(m_nHours + m_nMinutes + m_nSeconds);
+            break;
+        case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
+            m_randomWeekday.seed(m_nHours + m_nMinutes);
+            break;
+        case MyriadclockSettings::DO_COLOR_PARTY_SLOW:
+            m_randomWeekday.seed(m_nHours + m_nMinutes + (m_nSeconds / 10));
+            break;
+        default:
+            break;
+        }
+
+         switch (m_pSettings->eDisplayOptionsDate)
+        {
+        case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
+            m_randomDate.seed(m_nHours + m_nMinutes + m_nSeconds);
+            break;
+        case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
+            m_randomDate.seed(m_nHours + m_nMinutes);
+            break;
+        case MyriadclockSettings::DO_COLOR_PARTY_SLOW:
+            m_randomDate.seed(m_nHours + m_nMinutes + (m_nSeconds / 10));
+            break;
+        default:
+            break;
+        }
+
         // Quarter past 1 => 14 minutes to half two (in Dutch this is correct, English I don't know)
         int quarterNum = m_nMinutes / 15;
         int min1 = m_nMinutes % 15;        
@@ -234,16 +279,16 @@ CRGB DisplayStateClock::ColorHandler(uint32_t customParam)
     switch ((EColorElement) customParam)
     {
         case EColorElement::CE_ITIS:        
-            return GetDisplayOptionsColor(m_pSettings->colTime, m_pSettings->eDisplayOptionsTime);
+            return GetDisplayOptionsColor(m_pSettings->colTime, m_pSettings->eDisplayOptionsTime, m_randomTime);
 
         case EColorElement::CE_TIME:
-            return GetDisplayOptionsColor(m_pSettings->colTime, m_pSettings->eDisplayOptionsTime);
+            return GetDisplayOptionsColor(m_pSettings->colTime, m_pSettings->eDisplayOptionsTime, m_randomTime);
 
         case EColorElement::CE_WEEKDAY:
-            return GetDisplayOptionsColor(m_pSettings->colWeekday, m_pSettings->eDisplayOptionsWeekday);
+            return GetDisplayOptionsColor(m_pSettings->colWeekday, m_pSettings->eDisplayOptionsWeekday, m_randomWeekday);
 
         case EColorElement::CE_DATE: 
-            return GetDisplayOptionsColor(m_pSettings->colDate, m_pSettings->eDisplayOptionsDate);
+            return GetDisplayOptionsColor(m_pSettings->colDate, m_pSettings->eDisplayOptionsDate, m_randomDate);
 
         case EColorElement::CE_PULSE:
             return CRGB(m_pSettings->colDate).fadeToBlackBy(127 * (cos(2.0 * PI * m_timeStamp / 6000.0) + 1.0));
@@ -256,7 +301,7 @@ CRGB DisplayStateClock::ColorHandler(uint32_t customParam)
 //
 // Helper to return a specific color for a display part
 //
-CRGB DisplayStateClock::GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSettings::EDisplayOptions eOption)
+CRGB DisplayStateClock::GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSettings::EDisplayOptions eOption, std::minstd_rand0& generator)
 {
     static CRGB colorLoop[] {CRGB::Navy, CRGB::Blue, CRGB::Aqua, CRGB::Teal, CRGB::Olive, CRGB::Green, CRGB::Lime, CRGB::Yellow, 
                              CRGB::Orange, CRGB::Red, CRGB::Maroon, CRGB::Fuchsia, CRGB::Purple, CRGB::Magenta, CRGB::Silver, CRGB::White};
@@ -281,17 +326,10 @@ CRGB DisplayStateClock::GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSet
         case MyriadclockSettings::DO_COLOR_CYCLEHOUR:
             return colorLoop[m_nHours % 16];
         
-        case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
-            {
-                srand(m_nMinutes);
-                return colorLoop[rand() % 16];
-            }
-
         case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
-            {
-                std::random_device dev;
-                return colorLoop[m_random() % 16];
-            }
+        case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
+        case MyriadclockSettings::DO_COLOR_PARTY_SLOW:
+            return colorLoop[generator() % 16];
 
         default:
         case MyriadclockSettings::DO_NORMAL:

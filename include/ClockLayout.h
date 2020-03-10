@@ -38,9 +38,9 @@ typedef struct {
 
 
 typedef struct {
+    const ledpos_t  *leds; // Indices of leds to light up
     const char      *text; // Description
-    const int16_t   *leds; // Indices of leds to light up
-} intro_t;
+} ledtexts_t;
 
 #define WEND  {-1,-1}
 
@@ -166,6 +166,40 @@ static const ledpos_t pulse2  [] = { {0,15}, WEND};
 static const ledpos_t heart [] = { {9,13}, WEND};
 static const ledpos_t flag [] = { {1,7}, WEND};
 
+
+static const ledpos_t code1     [] = { {1,11}, {2,11}, {3, 11}, WEND};
+static const ledpos_t code2     [] = { {2,11}, {3,11}, {4, 11}, WEND};
+static const ledpos_t code3     [] = { {3,11}, {4,11}, {5, 11}, WEND};
+static const ledpos_t code4     [] = { {4,11}, {5,11}, {6, 11}, WEND};
+static const ledpos_t code5     [] = { {5,11}, {6,11}, {7, 11}, WEND};
+static const ledpos_t code6     [] = { {6,11}, {7,11}, {8, 11}, WEND};
+static const ledpos_t code7     [] = { {7,11}, {8,11}, {9, 11}, WEND};
+static const ledpos_t code8     [] = { {8,11}, {9,11}, {10, 11}, WEND};
+static const ledpos_t code9     [] = { {9,11}, {10,11}, {11, 11}, WEND};
+static const ledpos_t code10    [] = { {10,11}, {11,11}, {12, 11}, WEND};
+static const ledpos_t code11    [] = { {11,11}, {12,11}, {13, 11}, WEND};
+static const ledpos_t code12    [] = { {12,11}, {13,11}, {14, 11}, WEND};
+static const ledpos_t code13    [] = { {13,11}, {14,11}, {15, 11}, WEND};
+static const ledpos_t code14    [] = { {1,12}, {2,12}, {3, 12}, WEND};
+static const ledpos_t code15    [] = { {2,12}, {3,12}, {4, 12}, WEND};
+static const ledpos_t code16    [] = { {3,12}, {4,12}, {5, 12}, WEND};
+static const ledpos_t code17    [] = { {4,12}, {5,12}, {6, 12}, WEND};
+static const ledpos_t code18    [] = { {5,12}, {6,12}, {7, 12}, WEND};
+static const ledpos_t code19    [] = { {6,12}, {7,12}, {8, 12}, WEND};
+static const ledpos_t code20    [] = { {7,12}, {8,12}, {9, 12}, WEND};
+static const ledpos_t code21    [] = { {8,12}, {9,12}, {10, 12}, WEND};
+static const ledpos_t code22    [] = { {9,12}, {10,12}, {11, 12}, WEND};
+static const ledpos_t code23    [] = { {10,12}, {11,12}, {12, 12}, WEND};
+static const ledpos_t code24    [] = { {11,12}, {12,12}, {13, 12}, WEND};
+static const ledpos_t code25    [] = { {12,12}, {13,12}, {14, 12}, WEND};
+static const ledpos_t code26    [] = { {13,12}, {14,12}, {15, 12}, WEND};
+static const ledpos_t code27    [] = { {1,13}, {2,13}, {3, 13}, WEND};
+static const ledpos_t code28    [] = { {2,13}, {3,13}, {4, 13}, WEND};
+static const ledpos_t code29    [] = { {3,13}, {4,13}, {5, 13}, WEND};
+static const ledpos_t code30    [] = { {4,13}, {5,13}, {6, 13}, WEND};
+static const ledpos_t code31    [] = { {5,13}, {6,13}, {7, 13}, WEND};
+static const ledpos_t code32    [] = { {6,13}, {7,13}, {8, 13}, WEND};
+
 // List all words 
 static const ledpos_t* const s_wordsTop[] = {
     itis, 
@@ -194,5 +228,11 @@ static const ledpos_t* const s_wordsMonthDays[] = {
 
 static const ledpos_t* const s_wordMonths[] = {
     januari, februari, march, april, may, june, july, august, september, october, november, december,
+    NULL };
+
+static const ledtexts_t s_wordCodes[] = {
+    {code1, "101"}, {code2, "011"}, {code3, "112"}, {code4, "121"}, {code5, "213"}, {code6, "131"}, {code7, "314"}, {code8, "141"}, {code9, "415"}, {code10, "151"}, {code11, "516"}, {code12, "161"}, {code13, "617"},
+    {code14, "181"}, {code15, "819"}, {code16, "192"}, {code17, "922"}, {code18, "220"}, {code19, "202"}, {code20, "023"}, {code21, "232"}, {code22, "324"}, {code23, "242"}, {code24, "425"}, {code25, "252"}, {code26, "526"},
+    {code27, "272"}, {code28, "728"}, {code29, "282"}, {code30, "829"}, {code31, "293"}, {code32, "930"},
     NULL };
 

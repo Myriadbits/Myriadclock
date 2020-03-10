@@ -1,6 +1,7 @@
 #pragma once
 
 #include "DisplayStateBase.h"
+#include <random>
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -26,7 +27,7 @@ protected:
     void    CalcSunriseSunset(unsigned long timestamp, float lat, float lon, float alt, unsigned long *sunrise, unsigned long *sunset);
     void    UpdateBrightness(unsigned long epochTime);
     CRGB    ColorHandler(uint32_t customParam);
-    CRGB    GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSettings::EDisplayOptions eOption);
+    CRGB    GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSettings::EDisplayOptions eOption, std::minstd_rand0& generator);
 
 private:
     unsigned long   m_nPreviousEpochTime;
@@ -35,5 +36,7 @@ private:
     int             m_nMinutes;
     int             m_nHours;
     int             m_nWeekDay;
-    std::random_device  m_random;
+    std::minstd_rand0 m_randomTime;
+    std::minstd_rand0 m_randomWeekday;
+    std::minstd_rand0 m_randomDate;
 };

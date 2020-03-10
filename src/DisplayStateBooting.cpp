@@ -19,8 +19,18 @@ void DisplayStateBooting::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
     strcpy(m_sCommand, "booting");
     strcpy(m_sCommandDescription, "Show the booting sequence");
 
+    CRGB colOrange = CRGB(0xFF, 0x7E, 0x00);
+    CRGB colGreen = CRGB(0x00, 0x3E, 0x00);
+
     FastLED.clear();
-    AddWordToLeds((ledpos_t*) nowifi, CRGB(0xFF, 0x7E, 0x00));                           
+    AddWordToLeds((ledpos_t*) nowifi, colOrange);         
+
+    // Show the version
+    const ledpos_t* pNumber = s_wordsMonthDays[(FIRMWARE_VERSION - 1) % 31]; 
+    AddWordToLeds((ledpos_t*) pNumber, colGreen);    
+    // Show the codes
+    //AddWordToLeds((ledpos_t*) s_wordCodes[pSettings->nSerialNumber % 32].leds, colGreen);
+    
     FastLED.show();   
 }
 
@@ -52,8 +62,12 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime)
 
         AddWordToLeds((ledpos_t*) myriadclock, colTop);   
 
-        const ledpos_t* pNumber = s_wordsMonthDays[(FIRMWARE_VERSION - 1) % 31]; 
-        AddWordToLeds((ledpos_t*) pNumber, colVersion);    
+
+        // Show the codes
+        AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colVersion);
+        // Show the version
+        //const ledpos_t* pNumber = s_wordsMonthDays[(FIRMWARE_VERSION - 1) % 31]; 
+        //AddWordToLeds((ledpos_t*) pNumber, colVersion);    
 
         FastLED.show();   
     }
