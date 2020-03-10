@@ -31,7 +31,9 @@ protected:
 private:
     unsigned long   m_nPreviousEpochTime;
     int             m_nPreviousBrightness;
+    int             m_nSeconds;
     int             m_nMinutes;
     int             m_nHours;
     int             m_nWeekDay;
+    std::random_device  m_random;
 };

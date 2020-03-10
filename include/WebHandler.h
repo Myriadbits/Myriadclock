@@ -21,9 +21,10 @@ private:
 
     bool        ParseHexNumber(uint32_t &setting, String key, String hexNum);
     bool        ParseDisplayOptions(MyriadclockSettings::EDisplayOptions &setting, String key, String value);
-    bool        ParseNumber(int16_t &setting, String key, String value);
+    bool        ParseNumber(int16_t &setting, String key, String val, long minValue, long maxValue);
 
     String      GetHexString(uint32_t value);
+    String      GetNumberString(uint32_t value);
     String      GetDisplayOptionsString(MyriadclockSettings::EDisplayOptions &value);
 
 private:

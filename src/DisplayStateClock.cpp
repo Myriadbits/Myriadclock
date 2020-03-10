@@ -16,10 +16,6 @@
 #define SECONDS_PER_HOUR        3600ULL
 #define SECONDS_PER_DAY         86400ULL
 
-#define BRIGHTNESS_MAX          100
-#define BRIGHTNESS_MIN          30
-#define BRIGHTNESS_DIFF         (BRIGHTNESS_MAX - BRIGHTNESS_MIN)
-
 //
 // Initialize
 //
@@ -90,22 +86,23 @@ void DisplayStateClock::UpdateBrightness(unsigned long epochTime)
     //  |    __--|       100%       |--__    |
     //  |__--                            --__|   30%
 
-    int brightness = BRIGHTNESS_MIN;
+    int brightness = m_pSettings->nBrightnessNight;
     unsigned long deltaTime = 30 * 60;
+    int brightnessDiff = (m_pSettings->nBrightnessDay -  m_pSettings->nBrightnessNight);
     if (epochTime > sunrise - deltaTime && epochTime <= sunrise)
     {
         // Morning Twilight
-        brightness = BRIGHTNESS_MIN + ((sunrise - epochTime) * BRIGHTNESS_DIFF) / deltaTime;
+        brightness =  m_pSettings->nBrightnessNight + ((sunrise - epochTime) * brightnessDiff) / deltaTime;
     }
     else if (epochTime >= sunrise && epochTime <= sunset)
     {
         // Daytime
-        brightness = BRIGHTNESS_MAX;
+        brightness = m_pSettings->nBrightnessDay;
     }
     else if (epochTime >= sunset && epochTime < sunset + deltaTime)
     {
         // Evening Twilight
-        brightness = BRIGHTNESS_MAX - ((epochTime - sunset) * BRIGHTNESS_DIFF) / deltaTime;
+        brightness = m_pSettings->nBrightnessDay - ((epochTime - sunset) * brightnessDiff) / deltaTime;
     }
     FastLED.setBrightness(brightness);
     if (brightness != m_nPreviousBrightness)
@@ -137,7 +134,7 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         time_t t = (m_pTZ != NULL) ? m_pTZ->toLocal(epochTime, &tcr) : 0; // (Note: tcr cannot be NULL)
 
         m_nWeekDay = weekday(t) - 1; // Weekday returns (1 - 7), Sunday = 1
-        //int seconds = second(t);
+        m_nSeconds = second(t);
         m_nHours = hour(t);
         m_nMinutes = minute(t);        
         int monthday = day(t);
@@ -256,6 +253,9 @@ CRGB DisplayStateClock::ColorHandler(uint32_t customParam)
     }
 }
 
+//
+// Helper to return a specific color for a display part
+//
 CRGB DisplayStateClock::GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSettings::EDisplayOptions eOption)
 {
     static CRGB colorLoop[] {CRGB::Navy, CRGB::Blue, CRGB::Aqua, CRGB::Teal, CRGB::Olive, CRGB::Green, CRGB::Lime, CRGB::Yellow, 
@@ -282,7 +282,16 @@ CRGB DisplayStateClock::GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSet
             return colorLoop[m_nHours % 16];
         
         case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
-            return colorLoop[m_nMinutes % 16]; // TODO
+            {
+                srand(m_nMinutes);
+                return colorLoop[rand() % 16];
+            }
+
+        case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
+            {
+                std::random_device dev;
+                return colorLoop[m_random() % 16];
+            }
 
         default:
         case MyriadclockSettings::DO_NORMAL:

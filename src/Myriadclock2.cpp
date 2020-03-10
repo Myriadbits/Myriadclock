@@ -29,9 +29,7 @@
     Colors:
     https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
 
-    Captive portal:
-    https://www.instructables.com/id/ESP32-Captive-Portal-to-Configure-Static-and-DHCP-/
-    (Crashes due to captive softAP solved using: https://github.com/espressif/arduino-esp32/issues/2025)
+    
     
 */
 
@@ -233,7 +231,7 @@ void loop()
     g_pConsole->Tick();    
 
     // Once every x seconds, check the NTP stuff
-    if (Elapsed(g_timestamp) > 10000)
+    if (Elapsed(g_timestamp) > 1000)
     {                
         g_timestamp = xTaskGetTickCount();
 
