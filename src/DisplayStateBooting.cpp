@@ -60,8 +60,11 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime)
         
         FastLED.clear();
 
-        AddWordToLeds((ledpos_t*) myriadclock, colTop);   
+        // Set the background color (if required)
+        FillBackground();
 
+        // Show the myriadclock text
+        AddWordToLeds((ledpos_t*) myriadclock, colTop);   
 
         // Show the codes
         AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colVersion);

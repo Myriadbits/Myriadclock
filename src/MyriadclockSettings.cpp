@@ -22,8 +22,10 @@ void MyriadclockSettings::Store()
     m_preferences.putUInt("colorTime", colTime);
     m_preferences.putUInt("colorWeekday", colWeekday);
     m_preferences.putUInt("colorDate", colDate);
+    m_preferences.putUInt("colorBack", colBackground);
     m_preferences.putShort("brightnessDay", nBrightnessDay);
     m_preferences.putShort("brightnessNight", nBrightnessNight);
+    m_preferences.putShort("brightnessBack", nBrightnessBackground);
     m_preferences.putInt("doTime", eDisplayOptionsTime);
     m_preferences.putInt("doWeekday", eDisplayOptionsWeekday);
     m_preferences.putInt("doDate", eDisplayOptionsDate);
@@ -51,9 +53,11 @@ void MyriadclockSettings::Load()
     colTime = m_preferences.getUInt("colorTime", 0x00FF00);
     colWeekday = m_preferences.getUInt("colorWeekday", 0xFFA500);
     colDate = m_preferences.getUInt("colorDate", 0xE59400);
+    colBackground = m_preferences.getUInt("colorBack", 0x808080);
 
     nBrightnessDay = m_preferences.getShort("brightnessDay", 100);
     nBrightnessNight = m_preferences.getShort("brightnessNight", 30);
+    nBrightnessBackground = m_preferences.getShort("brightnessBack", 4);
     eDisplayOptionsTime = (EDisplayOptions) m_preferences.getInt("doTime", DO_NORMAL);
     eDisplayOptionsWeekday = (EDisplayOptions) m_preferences.getInt("doWeekday", DO_NORMAL);
     eDisplayOptionsDate = (EDisplayOptions) m_preferences.getInt("doDate", DO_NORMAL);

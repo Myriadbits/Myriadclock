@@ -35,9 +35,11 @@ public:
     uint32_t    colWeekday;// Color of week day
     uint32_t    colDate;   // Color of date part
     uint32_t    colPulse;  // Color of the heartbeat pulse led
+    uint32_t    colBackground;  // Color of the heartbeat pulse led
 
     int16_t     nBrightnessDay;     // Day brightness
     int16_t     nBrightnessNight;   // Day night
+    int16_t     nBrightnessBackground;  // Background brightness
 
     EDisplayOptions  eDisplayOptionsTime;    
     EDisplayOptions  eDisplayOptionsWeekday;    

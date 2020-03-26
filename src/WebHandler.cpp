@@ -134,11 +134,13 @@ bool WebHandler::ProcessWebCall()
     changed |= ParseHexNumber(mSettings.colTime, "colTime", mServer.arg("colTime"));        
     changed |= ParseHexNumber(mSettings.colWeekday, "colWeekday", mServer.arg("colWeekday"));
     changed |= ParseHexNumber(mSettings.colDate, "colDate", mServer.arg("colDate"));
+    changed |= ParseHexNumber(mSettings.colBackground, "colBackground", mServer.arg("colBackground"));
     changed |= ParseDisplayOptions(mSettings.eDisplayOptionsTime, "displayOptionTime", mServer.arg("displayOptionTime"));
     changed |= ParseDisplayOptions(mSettings.eDisplayOptionsWeekday, "displayOptionWeekday", mServer.arg("displayOptionWeekday"));
     changed |= ParseDisplayOptions(mSettings.eDisplayOptionsDate, "displayOptionDate", mServer.arg("displayOptionDate"));
     changed |= ParseNumber(mSettings.nBrightnessDay, "brightnessDay", mServer.arg("brightnessDay"), 1, 100);
     changed |= ParseNumber(mSettings.nBrightnessNight, "brightnessNight", mServer.arg("brightnessNight"), 1, 100);
+    changed |= ParseNumber(mSettings.nBrightnessBackground, "brightnessBackground", mServer.arg("brightnessBackground"), 0, 100);
 
     // Whenever a setting has changed, store all settings
     if (changed)
@@ -156,11 +158,13 @@ bool WebHandler::ProcessWebCall()
     pageText->replace("<!--colTime-->", GetHexString(mSettings.colTime));
     pageText->replace("<!--colWeekday-->", GetHexString(mSettings.colWeekday));
     pageText->replace("<!--colDate-->", GetHexString(mSettings.colDate));
+    pageText->replace("<!--colBackground-->", GetHexString(mSettings.colBackground));
     pageText->replace("<!--displayOptionsTime-->", GetDisplayOptionsString(mSettings.eDisplayOptionsTime));
     pageText->replace("<!--displayOptionsWeekday-->", GetDisplayOptionsString(mSettings.eDisplayOptionsWeekday));
     pageText->replace("<!--displayOptionsDate-->", GetDisplayOptionsString(mSettings.eDisplayOptionsDate));
     pageText->replace("<!--brightnessDay-->", GetNumberString(mSettings.nBrightnessDay));
     pageText->replace("<!--brightnessNight-->", GetNumberString(mSettings.nBrightnessNight));
+    pageText->replace("<!--brightnessBackground-->", GetNumberString(mSettings.nBrightnessBackground));
 
     mServer.send_P(200, "text/html", pageText->c_str());
 

@@ -126,10 +126,6 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
 
         m_timeStamp = millis();
 
-        //
-        // Update the brightness
-        UpdateBrightness(epochTime);        
-
         // Convert to local time
         time_t t = (m_pTZ != NULL) ? m_pTZ->toLocal(epochTime, &tcr) : 0; // (Note: tcr cannot be NULL)
 
@@ -246,6 +242,15 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
 
         // And now for the LEDS
         FastLED.clear();
+
+        // Back to full brightness
+        FastLED.setBrightness(255);
+
+        // Set the background color (if required)
+        FillBackground();
+
+        // Update the brightness
+        UpdateBrightness(epochTime);        
 
         // Always show it-is
         AddWordToLeds((ledpos_t*) itis, EColorElement::CE_ITIS);

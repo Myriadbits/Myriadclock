@@ -54,3 +54,19 @@ void DisplayStateBase::AddWordToLeds(ledpos_t* pCurrentWord, uint32_t customPara
         ledPos = pCurrentWord[charIndex];
     }
 }
+
+//
+// Fill the entire background with a color
+void DisplayStateBase::FillBackground(void)
+{
+    // Set the background color
+    if (m_pSettings->nBrightnessBackground != 0)
+    {
+        CRGB rgbBackground = m_pSettings->colBackground;
+        rgbBackground.fadeToBlackBy( 255 - (255 * m_pSettings->nBrightnessBackground) / 100 );
+        for(int n = 0; n < NUM_LEDS; n++)
+            m_pLEDs[n] = rgbBackground;
+    }
+}
+
+

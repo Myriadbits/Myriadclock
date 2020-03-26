@@ -165,11 +165,11 @@ void setup()
 
      // Get CHIP ID:
     uint64_t chipid = ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
-	Serial.printf("ESP32 Chip ID = %04X",(uint16_t)(chipid >> 16));//print High 2 bytes
+	Serial.printf("ESP32 Chip ID = %04X",(uint16_t)(chipid >> 32));//print High 2 bytes
 	Serial.printf("%08X\n",(uint32_t)chipid);//print Low 4bytes.
 
     // Get the word codes
-    uint16_t chipNumber = (uint16_t)((chipid >> 16) & 0xFFFF);
+    uint16_t chipNumber = (uint16_t)((chipid >> 32) & 0xFFFF) ^ (uint16_t)((chipid >> 16) & 0xFFFF) ^ (uint16_t)(chipid & 0xFFFF);
     Serial.printf("SerialNumber: %d\n", chipNumber);
     
     // Fabricate the clock name

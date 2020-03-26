@@ -146,6 +146,30 @@ R"(
             <div class="col-sm-6 mb-3">
                 <div class="panel panel-default">
                     <div class="panel-heading">
+                        Background letters settings
+                    </div>
+                    <div class="panel-body">
+                        <form action='/' method='POST'>
+                            <label>Brightness (0 = Off):</label>
+                            <input name="brightnessBackground" type="number" min="1" max="100" value="<!--brightnessBackground-->"
+                                class="form-control" />
+                            </p>
+                            <label for="colBackground">Background color:</label>
+                            <div id="cpColBackground" class="input-group colorpicker-component">
+                                <input id="inpColBackground" type="text" value="<!--colBackground-->" name="colBackground" class="form-control" />
+                                <span class="input-group-addon"><i></i></span>
+                            </div>
+                            </p>
+                            <button type="submit" class="btn btn-success pull-right">Save</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+
+
+            <div class="col-sm-6 mb-3">
+                <div class="panel panel-default">
+                    <div class="panel-heading">
                         Brightnes settings
                     </div>
                     <div class="panel-body">
@@ -172,6 +196,7 @@ R"(
         $('#cpColTime').colorpicker({ format: 'hex' });
         $('#cpColWeekday').colorpicker({ format: 'hex' });
         $('#cpColDate').colorpicker({ format: 'hex' });
+        $('#cpColBackground').colorpicker({ format: 'hex' });
 
         $('#spDisplayOptionTime').selectpicker();
         $("#spDisplayOptionTime").on('change', function() {
