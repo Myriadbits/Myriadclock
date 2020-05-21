@@ -25,11 +25,11 @@
     Color picker:
     https://itsjavi.com/bootstrap-colorpicker/module-options.html
 
-
     Colors:
     https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
 
-    
+    PILigt (ESPPiLight):
+    https://github.com/puuu/ESPiLight
     
 */
 
@@ -52,13 +52,19 @@
 #include "DisplayStateUpdating.h"
 #include "MyriadclockConfig.h"
 #include "MyriadclockSettings.h"
+#include "DisplayStateToilet.h"
 #include "WebHandler.h"
+#include <ESPiLight.h>
+#include <ArduinoJson.h>
+
+// Pin defines
+#define DATA_PIN                13      // Connected to the data pin of the first LED strip
+#define RECEIVER_PIN            22      // RXB6 input pin
+#define TYPE_PIN                17      // Pin for determining the type of the board
 
 using namespace std;
 
-// Defines
-#define DATA_PIN                13      // Connected to the data pin of the first LED strip
-#define MAXSTATES               10      // Maximum number of states
+#define MAXSTATES               10      // Maximum number of LED states
 
 
 static CRGB         g_Leds[NUM_LEDS]; // Define the array of leds
@@ -88,10 +94,11 @@ TimeChangeRule      CEST {"CEST", Last, Sun, Mar, 2, 120};     // Central Europe
 TimeChangeRule      CET {"CET ", Last, Sun, Oct, 3, 60};       // Central European Standard Time
 Timezone            g_CE(CEST, CET);
 
-
 // Create the webhandler
 WebHandler*        g_pWebHandler { NULL };
 
+// RF433 Mhz receiver
+ESPiLight          g_rf(-1);  // use -1 to disable transmitter
 
 //
 // Time elapsed??
@@ -152,13 +159,67 @@ void AdvertiseServices(String myName)
     }
 }
 
+
+
+// callback function. It is called on successfully received and parsed rc signal
+void rfCallback(const String &protocol, const String &message, int status, size_t repeats, const String &deviceID) 
+{
+    Serial.print("RF signal arrived [");
+    Serial.print(protocol);  // protocoll used to parse
+    Serial.print("][");
+    Serial.print(deviceID);  // value of id key in json message
+    Serial.print("] (");
+    Serial.print(status);  // status of message, depending on repeat, either:
+                        // FIRST   - first message of this protocoll within the
+                        //           last 0.5 s
+                        // INVALID - message repeat is not equal to the
+                        //           previous message
+                        // VALID   - message is equal to the previous message
+                        // KNOWN   - repeat of a already valid message
+    Serial.print(") ");
+    Serial.print(message);  // message in json format
+    Serial.println();
+
+    // check if message is valid and process it
+    if (status == VALID) {
+        Serial.print("Valid message: [");
+        Serial.print(protocol);
+        Serial.print("] ");
+        Serial.print(message);
+        Serial.println();
+
+        StaticJsonDocument<200> doc;
+        DeserializationError error = deserializeJson(doc, message);
+        if (!error)
+        {
+            const char* s = doc["state"];
+            if (strcasecmp(s, "opened") == 0)
+            {
+                Serial.println("--OPENED");
+                g_Settings.colTime = 0x00FF00;
+            }
+            if (strcasecmp(s, "closed") == 0)
+            {
+                Serial.println("--CLOSED");
+                g_Settings.colTime = 0xFF0000;
+            }
+        }
+        
+    }
+}
+
+
 //
 // Setup all hardware
 //
 void setup() 
 {
+    // Determine the board type/capabilities
+    pinMode(TYPE_PIN, INPUT_PULLDOWN);  // set pin as input
+    Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
+
 	FastLED.addLeds<NEOPIXEL, DATA_PIN>(g_Leds, NUM_LEDS); // Init of the Fastled library
-	FastLED.setBrightness(100);
+	FastLED.setBrightness(100);    
 
     // Load/initialize all settings
     g_Settings.Initialize();
@@ -182,8 +243,19 @@ void setup()
 
     Serial.printf("Clockurl: http://%s.local\n", g_Settings.sClockName.c_str());
 
+     Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
+
+   //Sset callback function
+    g_rf.setCallback(rfCallback);
+
+    // Initialize receiver
+    g_rf.initReceiver(RECEIVER_PIN);
+
+    Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
+
     // Initialize/start the webhandler
     g_pWebHandler = new WebHandler(g_server, g_Settings);
+    Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
     // Create + start the console
     g_pConsole = new Console(115200);   
@@ -193,9 +265,11 @@ void setup()
     addState(new DisplayStateClock());
     addState(new DisplayStateWords());
     addState(new DisplayStateUpdating());
+    addState(new DisplayStateToilet());
     g_nCurrentState = 0;   
 
-   
+      Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
+ 
     AutoConnectConfig config; 
     config.apid = g_Settings.sClockName;
     config.autoReconnect = true;
@@ -209,6 +283,7 @@ void setup()
     g_acUpdate.attach(g_acPortal);
 
     Serial.println("Webserver started: " + WiFi.localIP().toString());    
+    Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
     AdvertiseServices(g_Settings.sClockName);
     
@@ -221,13 +296,16 @@ void setup()
 //
 void loop() 
 {
+    // Handle RF 433 Mhz
+    g_rf.loop();   
+
     // TODO Make currentstate an ENUM
     if (g_nCurrentState < g_nStateCounter)
     {
         if (!g_arStates[g_nCurrentState]->HandleLoop(g_timeClient.getEpochTime()))
         {
             // When handleloop returns false, select the next handler
-            g_nCurrentState = 1; // TODO always fallback to clock?
+            g_nCurrentState = 4; // TODO always fallback to clock?
         }
     }
 
@@ -289,5 +367,5 @@ void loop()
             }
             g_nPreviousHour = hours;
         }
-    }
+    }    
 }
