@@ -9,9 +9,10 @@
     Thx!
 
     NTPClient: https://github.com/arduino-libraries/NTPClient
-    Autoconnect stuff: https://github.com/Hieromon/AutoConnect
+        //Disabled:    Autoconnect stuff: https://github.com/Hieromon/AutoConnect
     TimeZone: https://github.com/JChristensen/Timezone
     Esp32FOTA: https://github.com/chrisjoyce911/esp32FOTA
+    PILigt (ESPPiLight): https://github.com/puuu/ESPiLight
 
     TODO:
     HOMEKIT: https://github.com/maximkulkin/esp-homekit
@@ -28,8 +29,6 @@
     Colors:
     https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
 
-    PILigt (ESPPiLight):
-    https://github.com/puuu/ESPiLight
     
 */
 
@@ -38,8 +37,8 @@
 #include <WebServer.h>
 #include <time.h>
 #include <Timezone.h>
-#include <AutoConnect.h>
-#include <ESPmDNS.h>
+//#include <AutoConnect.h>
+//#include <ESPmDNS.h>
 
 #include "Console.h"
 #include "ClockLayout.h"
@@ -56,6 +55,9 @@
 #include "WebHandler.h"
 #include <ESPiLight.h>
 #include <ArduinoJson.h>
+
+#include "MIOTConfigurator.h"
+
 
 // Pin defines
 #define DATA_PIN                13      // Connected to the data pin of the first LED strip
@@ -85,8 +87,10 @@ NTPClient           g_timeClient(g_ntpUDP);
 
 // Webservers
 WebServer           g_server;
-AutoConnect         g_acPortal(g_server);
-AutoConnectUpdate   g_acUpdate("www.myriadbits.com", 80);  // Step #3
+MIOTConfigurator    g_miot("Myriadclock", FIRMWARE_VERSION);
+
+//AutoConnect         g_acPortal(g_server);
+//AutoConnectUpdate   g_acUpdate("www.myriadbits.com", 80);  // Step #3
 
 
 // Central European Time (Frankfurt, Paris)
@@ -141,7 +145,7 @@ void addState(DisplayStateBase* pNewState)
 //
 // Advertise presence using mDNS 
 //
-void AdvertiseServices(String myName)
+/*void AdvertiseServices(String myName)
 {
     if (MDNS.begin(myName.c_str()))
     {
@@ -158,6 +162,7 @@ void AdvertiseServices(String myName)
         Serial.println(F("Error setting up MDNS responder"));
     }
 }
+*/
 
 
 
@@ -214,9 +219,12 @@ void rfCallback(const String &protocol, const String &message, int status, size_
 //
 void setup() 
 {
+    // Create + start the console
+    g_pConsole = new Console(115200);   
+
     // Determine the board type/capabilities
     pinMode(TYPE_PIN, INPUT_PULLDOWN);  // set pin as input
-    Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
+    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
 	FastLED.addLeds<NEOPIXEL, DATA_PIN>(g_Leds, NUM_LEDS); // Init of the Fastled library
 	FastLED.setBrightness(100);    
@@ -224,14 +232,14 @@ void setup()
     // Load/initialize all settings
     g_Settings.Initialize();
 
-     // Get CHIP ID:
+    // Get CHIP ID:
     uint64_t chipid = ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
-	Serial.printf("ESP32 Chip ID = %04X",(uint16_t)(chipid >> 32));//print High 2 bytes
-	Serial.printf("%08X\n",(uint32_t)chipid);//print Low 4bytes.
+	//Serial.printf("ESP32 Chip ID = %04X",(uint16_t)(chipid >> 32));//print High 2 bytes
+	//Serial.printf("%08X\n",(uint32_t)chipid);//print Low 4bytes.
 
     // Get the word codes
     uint16_t chipNumber = (uint16_t)((chipid >> 32) & 0xFFFF) ^ (uint16_t)((chipid >> 16) & 0xFFFF) ^ (uint16_t)(chipid & 0xFFFF);
-    Serial.printf("SerialNumber: %d\n", chipNumber);
+    //Serial.printf("SerialNumber: %d\n", chipNumber);
     
     // Fabricate the clock name
     char buff[128];
@@ -241,9 +249,7 @@ void setup()
     g_Settings.sClockName = String(buff);
     g_Settings.nSerialNumber = chipNumber;
 
-    Serial.printf("Clockurl: http://%s.local\n", g_Settings.sClockName.c_str());
-
-     Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
+    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
    //Sset callback function
     g_rf.setCallback(rfCallback);
@@ -251,14 +257,11 @@ void setup()
     // Initialize receiver
     g_rf.initReceiver(RECEIVER_PIN);
 
-    Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
+    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
     // Initialize/start the webhandler
-    g_pWebHandler = new WebHandler(g_server, g_Settings);
-    Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
-
-    // Create + start the console
-    g_pConsole = new Console(115200);   
+   // g_pWebHandler = new WebHandler(g_server, g_Settings);
+    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
     // Add all states to our statemachine
     addState(new DisplayStateBooting());
@@ -268,26 +271,26 @@ void setup()
     addState(new DisplayStateToilet());
     g_nCurrentState = 0;   
 
-      Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
- 
-    AutoConnectConfig config; 
-    config.apid = g_Settings.sClockName;
-    config.autoReconnect = true;
-    config.retainPortal = true;
-    config.autoSave = AC_SAVECREDENTIAL_AUTO;
-    config.title = g_Settings.sClockName;
-    config.hostName = g_Settings.sClockName;
+    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
-    g_acPortal.config(config); 
-    g_acPortal.begin();
-    g_acUpdate.attach(g_acPortal);
+    //AutoConnectConfig config; 
+    //config.apid = g_Settings.sClockName;
+    //config.autoReconnect = true;
+    //config.retainPortal = true;
+    //config.autoSave = AC_SAVECREDENTIAL_AUTO;
+    //config.title = g_Settings.sClockName;
+    //config.hostName = g_Settings.sClockName;
 
-    Serial.println("Webserver started: " + WiFi.localIP().toString());    
-    Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
+    //g_acPortal.config(config); 
+    //g_acPortal.begin();
+    //g_acUpdate.attach(g_acPortal);
 
-    AdvertiseServices(g_Settings.sClockName);
-    
-    g_timeClient.begin();
+    g_miot.setup();
+
+    //Serial.println("Webserver started: " + WiFi.localIP().toString());    
+    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
+
+    //AdvertiseServices(g_Settings.sClockName);
 }
 
 
@@ -310,7 +313,8 @@ void loop()
     }
 
     // Allow the portal to handle stuff
-    g_acPortal.handleClient();
+    //g_acPortal.handleClient();
+    g_miot.handleClient();
 
     //g_server.handleClient();
         
@@ -331,17 +335,17 @@ void loop()
                 g_fNTPStarted = true;
                 Serial.println("NTP starting");
 
-                AutoConnectCredential credential;
-                station_config_t config;
-                Serial.println("New credentials:");
-                for(int i = 0; i < credential.entries(); i++) 
-                {
-                    credential.load(i, &config);
-                    Serial.print("- Credentials for ");
-                    Serial.print((char*) config.ssid);
-                    Serial.print(" = ");
-                    Serial.println((char*) config.password);    
-                }
+                //AutoConnectCredential credential;
+                //station_config_t config;
+                //Serial.println("New credentials:");
+                //for(int i = 0; i < credential.entries(); i++) 
+                //{
+                    //credential.load(i, &config);
+                    //Serial.print("- Credentials for ");
+                    //Serial.print((char*) config.ssid);
+                    //Serial.print(" = ");
+                    //Serial.println((char*) config.password);    
+                //}
             }
         }
         else
@@ -367,5 +371,5 @@ void loop()
             }
             g_nPreviousHour = hours;
         }
-    }    
+    }   
 }

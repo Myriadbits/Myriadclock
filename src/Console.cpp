@@ -7,7 +7,7 @@
 #include "MyriadclockConfig.h"
 #include "esp.h"
 
-#define PROMPT "$ "
+#define PROMPT ""
 #define arraysize(x)          (int)(sizeof((x))/sizeof(*(x)))
 
 //
@@ -35,14 +35,13 @@ void Console::Start()
     if (!_started)
     {
         Serial.begin(_baudrate);
-        Serial.println("");
-        Serial.println(F("-------------------------------------------------------------"));
-        Serial.println(F("---                      MyriadClock                      ---"));
-        Serial.println(F("-------------------------------------------------------------"));
-        Serial.println(F("            Copyright (c) 2020 - Jochem@myriadbits.com       "));
-        Serial.print("Myriadclock firmware version: ");
-        Serial.print(FIRMWARE_VERSION);
-        Serial.println();
+        Serial.printf("\n");
+        Serial.printf("-------------------------------------------------------------\n");
+        Serial.printf("---                      MyriadClock                      ---\n");
+        Serial.printf("-------------------------------------------------------------\n");
+        Serial.printf("--- Copyright (c) 2020 - Jochem@myriadbits.com            ---\n");
+        Serial.printf("--- Firmware version: %d                                   ---\n", FIRMWARE_VERSION);
+        Serial.printf("-------------------------------------------------------------\n");
         memset(_commands, 0, sizeof(_commands));
         _prompted = false;
         _started  = true;
