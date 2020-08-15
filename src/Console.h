@@ -36,15 +36,15 @@ class Console
         } line_t;
 
         // private variables
-        cmd_t           _commands[MAXCOMMANDS];
-        char*           _argv    [MAXARGUMENTS];
-        line_t          _command;
-        bool            _prompted;
-        bool            _started;
-        long            _baudrate;
-        bool            _espmon_on;
+        cmd_t           m_commands[MAXCOMMANDS];
+        char*           m_argv    [MAXARGUMENTS];
+        line_t          m_command;
+        bool            m_prompted;
+        bool            m_started;
+        long            m_baudrate;
+        bool            m_espmon_on;
 
         // private functions
-        void _process(void);
-        void _list(void);
+        void Process(void);
+        void List(void);
 };

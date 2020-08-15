@@ -214,13 +214,19 @@ void MIOTConfigurator::handleClient()
             int dataSize = m_pUDP->parsePacket();
             if (dataSize > 0) 
             {
-                MIOT_LOG("Received %d bytes from %s\n", dataSize, m_pUDP->remoteIP().toString().c_str());
+                MIOT_LOG("Received %d bytes from %s, port %d\n", dataSize, m_pUDP->remoteIP().toString().c_str(), m_pUDP->remotePort());
 
                 // read the packet into packetBufffer
                 char packetBuffer[2000]; //buffer to hold incoming packet,
                 m_pUDP->read(packetBuffer, 2000);
                 packetBuffer[dataSize] = 0;
-                MIOT_LOG("Contents: %s.\n", packetBuffer);
+                MIOT_LOG("-------> Received: %s.\n", packetBuffer);
+
+                sprintf(packetBuffer, "Acknowledged!");
+                m_pUDP->beginPacket(m_pUDP->remoteIP(), m_pUDP->remotePort());
+                size_t sendBytes = m_pUDP->write((const uint8_t*) packetBuffer, strlen(packetBuffer));
+                m_pUDP->endPacket();
+                MIOT_LOG("-------> Send: %s.\n", packetBuffer);
                 
                 //changeState(MIOTState_WaitingForWifi); // Smart config succeeded, now trying to connect to Wifi
                 //MIOT_LOG("SmartConfig credentials received. Waiting for WiFi.\n");
