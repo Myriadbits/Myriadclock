@@ -32,6 +32,7 @@
 
 #include <Preferences.h>
 #include <ESPmDNS.h>
+
 #if defined(ARDUINO_ARCH_ESP8266)
     #include <ESP8266WiFi.h>
 #elif defined(ARDUINO_ARCH_ESP32)
@@ -61,12 +62,17 @@
 #define MIOT_TIMEOUT_SMARTCONFIG        (10 * 60 * 1000)
 #define MIOT_DEFAULT_PRODUCTNAME        "MIOTDevice"
 #define MIOT_DEFAULT_VERSION            1
+#define MIOT_MDNS_SERVER                "_miot"
+#define MIOT_MDNS_PROTO                 "_tcp"
+#define MIOT_MDNS_PORT                  2323
+#define MIOT_AP_SETTINGS_PORT           19785 // 4d 49 = "MI"         
+
 
 typedef enum
 {
     MIOTState_Unconnected,
-    MIOTState_StartingSmartConfig,
-    MIOTState_WaitingForSmartConfig,
+    MIOTState_StartingAPSettings,
+    MIOTState_WaitingForAPSettings,
     MIOTState_WaitingForWifi,
     MIOTState_Connected,
     MIOTState_ConnectionLost
@@ -79,7 +85,7 @@ typedef enum
 class MIOTConfigurator
 {
 public:
-    MIOTConfigurator(String productName = MIOT_DEFAULT_PRODUCTNAME, int version = MIOT_DEFAULT_VERSION);
+    MIOTConfigurator(WiFiUDP& udp, String productName = MIOT_DEFAULT_PRODUCTNAME, int version = MIOT_DEFAULT_VERSION);
 
     void setup(unsigned long wifiConnectionTimeout = MIOT_TIMEOUT_WIFICONNECTION, unsigned long wifiConnectionLostTimeout = MIOT_TIMEOUT_WIFICONNECTIONLOST, unsigned long smartConfigTimeout = MIOT_TIMEOUT_SMARTCONFIG);    
     void handleClient();        
@@ -101,13 +107,19 @@ protected:
     EMIOTState              m_state;
     unsigned long           m_wifiConnectionTimeout;        // Timeout for new wifi networks
     unsigned long           m_wifiConnectionLostTimeout;    // Timeout in ms when a Wifi connection is lost before starting the smartconfig again
-    unsigned long           m_smartConfigTimeout;           // Timeout for the smart config, retry stored WiFi credentials
+    unsigned long           m_wifiAPSettingsTimeout;        // Timeout for the AP Settings, retry stored WiFi credentials
     unsigned long           m_millisLastStateChange;
+    unsigned long           m_millisLastUDP;
     Preferences             m_preferences;
 
     // Product info / mDns
     String                  m_productName;
     String                  m_deviceId;
+    String                  m_deviceName;
     int                     m_version;
+    WiFiUDP*                m_pUDP;
+    int                     m_clients;
+
+    WiFiServer              m_server;
 protected:
 };

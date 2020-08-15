@@ -48,8 +48,8 @@ void DisplayStateToilet::CommandHandler(int argc, char *argv[])
 //
 bool DisplayStateToilet::HandleLoop(unsigned long epochTime)
 {
-    CRGB colTop = CRGB(0, 255, 0);
-    CRGB colBottom = CRGB(255, 0, 0);
+    //CRGB colTop = CRGB(0, 255, 0);
+    //CRGB colBottom = CRGB(255, 0, 0);
     
     int r = CRGB(m_pSettings->colTime).r;
     int g = CRGB(m_pSettings->colTime).g;

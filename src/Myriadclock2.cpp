@@ -76,18 +76,18 @@ static DisplayStateBase* g_arStates[MAXSTATES] = {0};
 static int          g_nStateCounter = 0;
 static int          g_nCurrentState = 0;
 static bool         g_fNTPStarted = false;
-static int          g_nPreviousHour = 0;
+//static int          g_nPreviousHour = 0;
 
 static MyriadclockSettings g_Settings;
 
 WiFiUDP             g_ntpUDP;
 
 // By default 'pool.ntp.org' is used with 60 seconds update interval and no offset
-NTPClient           g_timeClient(g_ntpUDP);
+//NTPClient           g_timeClient(g_ntpUDP);
 
 // Webservers
-WebServer           g_server;
-MIOTConfigurator    g_miot("Myriadclock", FIRMWARE_VERSION);
+//WebServer           g_server;
+MIOTConfigurator    g_miot(g_ntpUDP, "Myriadclock", FIRMWARE_VERSION);
 
 //AutoConnect         g_acPortal(g_server);
 //AutoConnectUpdate   g_acUpdate("www.myriadbits.com", 80);  // Step #3
@@ -99,7 +99,7 @@ TimeChangeRule      CET {"CET ", Last, Sun, Oct, 3, 60};       // Central Europe
 Timezone            g_CE(CEST, CET);
 
 // Create the webhandler
-WebHandler*        g_pWebHandler { NULL };
+//WebHandler*        g_pWebHandler { NULL };
 
 // RF433 Mhz receiver
 ESPiLight          g_rf(-1);  // use -1 to disable transmitter
@@ -305,10 +305,10 @@ void loop()
     // TODO Make currentstate an ENUM
     if (g_nCurrentState < g_nStateCounter)
     {
-        if (!g_arStates[g_nCurrentState]->HandleLoop(g_timeClient.getEpochTime()))
+        if (!g_arStates[g_nCurrentState]->HandleLoop(0))// g_timeClient.getEpochTime()))
         {
             // When handleloop returns false, select the next handler
-            g_nCurrentState = 4; // TODO always fallback to clock?
+            g_nCurrentState = 0; // TODO always fallback to clock?
         }
     }
 
@@ -329,9 +329,11 @@ void loop()
         //Serial.println(WiFi.status());
         if (WiFi.status() == WL_CONNECTED)
         {
+            g_nCurrentState = 4; // Toilet
+
             if (!g_fNTPStarted)
             {
-                g_timeClient.begin();
+              //  g_timeClient.begin();
                 g_fNTPStarted = true;
                 Serial.println("NTP starting");
 
@@ -351,25 +353,26 @@ void loop()
         else
         {
             // Show no-wifi   
+            g_nCurrentState = 0; // Booting
         }
 
         if (g_fNTPStarted)
         {
-            g_timeClient.update();
+        //    g_timeClient.update();
             //Serial.println(timeClient.getFormattedTime());
 
             // Check for 3->4 hour switch
             // Let Handle-Loop return another state
             // Convert to local time
-            TimeChangeRule *tcr;    
-            time_t t = g_CE.toLocal(g_timeClient.getEpochTime(), &tcr); // (Note: tcr cannot be NULL)
-            int hours = hour(t);
-            if (hours == 4 && g_nPreviousHour != 4)
-            {
-                // Switch to updating
-                g_nCurrentState = 3;
-            }
-            g_nPreviousHour = hours;
+            // TimeChangeRule *tcr;    
+            // time_t t = g_CE.toLocal(g_timeClient.getEpochTime(), &tcr); // (Note: tcr cannot be NULL)
+            // int hours = hour(t);
+            // if (hours == 4 && g_nPreviousHour != 4)
+            // {
+            //     // Switch to updating
+            //     g_nCurrentState = 3;
+            // }
+            // g_nPreviousHour = hours;
         }
     }   
 }
