@@ -55,7 +55,7 @@ void MyriadclockSettings::Load()
     colDate = m_preferences.getUInt("colorDate", 0xE59400);
     colBackground = m_preferences.getUInt("colorBack", 0x808080);
 
-    nBrightnessDay = m_preferences.getShort("brightnessDay", 100);
+    nBrightnessDay = m_preferences.getShort("brightnessDay", 80);
     nBrightnessNight = m_preferences.getShort("brightnessNight", 30);
     nBrightnessBackground = m_preferences.getShort("brightnessBack", 4);
     eDisplayOptionsTime = (EDisplayOptions) m_preferences.getInt("doTime", DO_NORMAL);

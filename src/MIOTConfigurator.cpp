@@ -80,33 +80,33 @@ void MIOTConfigurator::setup(unsigned long wifiConnectionTimeout, unsigned long 
 //
 // Advertise presence using mDNS 
 //
-// void MIOTConfigurator::advertise()
-// {
-//     esp_err_t err = mdns_init();
-//     if (err) 
-//     {
-//         MIOT_LOG("Error setting up mDNS: %d\n", err);
-//         return;
-//     }
+void MIOTConfigurator::advertise()
+{
+    esp_err_t err = mdns_init();
+    if (err) 
+    {
+        MIOT_LOG("Error setting up mDNS: %d\n", err);
+        return;
+    }
 
-//     MIOT_LOG("mDNS started: `%s.%s.%s`\n", m_deviceName.c_str(), MIOT_MDNS_SERVER, MIOT_MDNS_PROTO);
+    MIOT_LOG("mDNS started: `%s.%s.%s`\n", m_deviceName.c_str(), MIOT_MDNS_SERVER, MIOT_MDNS_PROTO);
 
-//     //set hostname
-//     mdns_hostname_set(m_deviceName.c_str());
+    //set hostname
+    mdns_hostname_set(m_deviceName.c_str());
 
-//     //set default instance
-//     mdns_instance_name_set(m_deviceName.c_str());
+    //set default instance
+    mdns_instance_name_set(m_deviceName.c_str());
 
-//     //_services._dns-sd._udp
-//     mdns_service_add(NULL, MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, MIOT_MDNS_PORT, NULL, 0);
-//     //mdns_service_add("_services", "_dns-sd", "_udp", 80, NULL, 0);
-//     mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "product", m_productName.c_str());
-//     mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "deviceid", m_deviceId.c_str());
-//     mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "version", String(m_version).c_str());
-//     mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "lifetime", String(millis()).c_str());
+    //_services._dns-sd._udp
+    mdns_service_add(NULL, MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, MIOT_MDNS_PORT, NULL, 0);
+    //mdns_service_add("_services", "_dns-sd", "_udp", 80, NULL, 0);
+    mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "product", m_productName.c_str());
+    mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "deviceid", m_deviceId.c_str());
+    mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "version", String(m_version).c_str());
+    mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "lifetime", String(millis()).c_str());
 
-//     MIOT_LOG("DeviceURL: http://%s.local:%d\n", m_deviceName.c_str(), MIOT_MDNS_PORT);    
-// }
+    MIOT_LOG("DeviceURL: http://%s.local:%d\n", m_deviceName.c_str(), MIOT_MDNS_PORT);    
+}
 
 
 //
@@ -142,7 +142,6 @@ void MIOTConfigurator::handleClient()
         break;
 
     case MIOTState_StartingAPSettings:
-        //WiFi.softAPdisconnect();
            //WiFi.softAPsetHostname(m_deviceName.c_str());
         if (WiFi.softAP(m_deviceName.c_str(), "1234bier", 1))
         {                
@@ -217,19 +216,47 @@ void MIOTConfigurator::handleClient()
                 MIOT_LOG("Received %d bytes from %s, port %d\n", dataSize, m_pUDP->remoteIP().toString().c_str(), m_pUDP->remotePort());
 
                 // read the packet into packetBufffer
-                char packetBuffer[2000]; //buffer to hold incoming packet,
-                m_pUDP->read(packetBuffer, 2000);
+                char packetBuffer[2048]; //buffer to hold incoming packet,
+                m_pUDP->read(packetBuffer, 2048);
                 packetBuffer[dataSize] = 0;
                 MIOT_LOG("-------> Received: %s.\n", packetBuffer);
 
-                sprintf(packetBuffer, "Acknowledged!");
-                m_pUDP->beginPacket(m_pUDP->remoteIP(), m_pUDP->remotePort());
-                size_t sendBytes = m_pUDP->write((const uint8_t*) packetBuffer, strlen(packetBuffer));
-                m_pUDP->endPacket();
-                MIOT_LOG("-------> Send: %s.\n", packetBuffer);
-                
-                //changeState(MIOTState_WaitingForWifi); // Smart config succeeded, now trying to connect to Wifi
-                //MIOT_LOG("SmartConfig credentials received. Waiting for WiFi.\n");
+                // Expected json format
+                // {"ssid":"<ssid>", "passphrase":"*****"}
+                StaticJsonDocument<2048> doc;
+                if (deserializeJson(doc, packetBuffer) == DeserializationError::Ok)
+                { 
+                    String ssid = doc["ssid"];
+                    String passphrase = doc["passphrase"];
+
+                    // Send an ack
+                    sprintf(packetBuffer, "ACK");
+                    m_pUDP->beginPacket(m_pUDP->remoteIP(), m_pUDP->remotePort());
+                    m_pUDP->write((const uint8_t*) packetBuffer, strlen(packetBuffer));
+                    m_pUDP->endPacket();
+                    MIOT_LOG("-------> Send: %s.\n", packetBuffer);
+
+                    // Stop the UDP
+                    m_pUDP->stop();
+
+                    // Disconnect soft AP
+                    //WiFi.softAPdisconnect();
+
+                    // Yes, start connecting using these settings
+                    WiFi.begin(ssid.c_str(), passphrase.c_str());
+
+                    // Wait for the WiFi
+                    changeState(MIOTState_WaitingForWifi);
+                    MIOT_LOG("SmartConfig credentials received (%s, %s). Waiting for WiFi.\n", ssid.c_str(), passphrase.c_str());
+                }
+                else
+                {
+                    sprintf(packetBuffer, "NACK");
+                    m_pUDP->beginPacket(m_pUDP->remoteIP(), m_pUDP->remotePort());
+                    m_pUDP->write((const uint8_t*) packetBuffer, strlen(packetBuffer));
+                    m_pUDP->endPacket();
+                    MIOT_LOG("-------> Send: %s.\n", packetBuffer);
+                }
             }
         }
         break;
@@ -244,14 +271,7 @@ void MIOTConfigurator::handleClient()
             MIOT_LOG("- Gateway:     %s\n", WiFi.gatewayIP().toString().c_str());
             
             // Start advertising our name
-            //advertise();
-
-            //This initializes udp and transfer buffer
-            // if (m_pUDP != nullptr)
-            // {
-            //     int status = m_pUDP->begin(23122);
-            //     MIOT_LOG("- Started UDP: %d\n", status);
-            // }
+            advertise();
 
             // Store the WiFi credentials
             if (m_preferences.begin(MIOT_PREF_CONFIG, false)) // Open storage
@@ -269,6 +289,7 @@ void MIOTConfigurator::handleClient()
             if ((millis() - m_millisLastStateChange) > m_wifiConnectionTimeout)
             {
                 MIOT_LOG("WiFi connection timeout. Restarting SmartConfig\n");
+                WiFi.disconnect();
                 changeState(MIOTState_StartingAPSettings); // This takes too long, jump back to waiting for smartconfig
             }
         }
@@ -303,7 +324,7 @@ void MIOTConfigurator::handleClient()
         // }
 
         // Trick to keep updating the announcement:
-       // mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "product", m_productName.c_str());
+        mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "product", m_productName.c_str());
         //mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "deviceid", m_deviceId.c_str());
         //mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "version", String(m_version).c_str());
         //mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "lifetime", String(millis()).c_str());
@@ -331,7 +352,7 @@ void MIOTConfigurator::handleClient()
                 changeState(MIOTState_StartingAPSettings);
 
                 // Stop the MDNS
-    //            MDNS.end();
+//                MDNS.end();
             }
         }
         break;

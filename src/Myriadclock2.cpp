@@ -45,6 +45,7 @@
 #define FASTLED_INTERNAL
 #include "FastLED.h"       // Fastled library to control the LEDs
 
+#include "DisplayStateNoWiFi.h"
 #include "DisplayStateBooting.h"
 #include "DisplayStateWords.h"
 #include "DisplayStateClock.h"
@@ -76,14 +77,14 @@ static DisplayStateBase* g_arStates[MAXSTATES] = {0};
 static int          g_nStateCounter = 0;
 static int          g_nCurrentState = 0;
 static bool         g_fNTPStarted = false;
-//static int          g_nPreviousHour = 0;
+static int          g_nPreviousHour = 0;
 
 static MyriadclockSettings g_Settings;
 
 WiFiUDP             g_ntpUDP;
 
 // By default 'pool.ntp.org' is used with 60 seconds update interval and no offset
-//NTPClient           g_timeClient(g_ntpUDP);
+NTPClient           g_timeClient(g_ntpUDP, "pool.ntp.org");
 
 // Webservers
 //WebServer           g_server;
@@ -227,7 +228,7 @@ void setup()
     //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
 	FastLED.addLeds<NEOPIXEL, DATA_PIN>(g_Leds, NUM_LEDS); // Init of the Fastled library
-	FastLED.setBrightness(100);    
+	FastLED.setBrightness(50);    
 
     // Load/initialize all settings
     g_Settings.Initialize();
@@ -264,6 +265,7 @@ void setup()
     //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
     // Add all states to our statemachine
+    addState(new DisplayStateNoWiFi());
     addState(new DisplayStateBooting());
     addState(new DisplayStateClock());
     addState(new DisplayStateWords());
@@ -305,7 +307,7 @@ void loop()
     // TODO Make currentstate an ENUM
     if (g_nCurrentState < g_nStateCounter)
     {
-        if (!g_arStates[g_nCurrentState]->HandleLoop(0))// g_timeClient.getEpochTime()))
+        if (!g_arStates[g_nCurrentState]->HandleLoop(g_timeClient.getEpochTime()))
         {
             // When handleloop returns false, select the next handler
             g_nCurrentState = 0; // TODO always fallback to clock?
@@ -329,50 +331,44 @@ void loop()
         //Serial.println(WiFi.status());
         if (WiFi.status() == WL_CONNECTED)
         {
-            g_nCurrentState = 4; // Toilet
+            g_nCurrentState = 1; // Booting
 
             if (!g_fNTPStarted)
             {
-              //  g_timeClient.begin();
+                g_timeClient.begin();
                 g_fNTPStarted = true;
                 Serial.println("NTP starting");
-
-                //AutoConnectCredential credential;
-                //station_config_t config;
-                //Serial.println("New credentials:");
-                //for(int i = 0; i < credential.entries(); i++) 
-                //{
-                    //credential.load(i, &config);
-                    //Serial.print("- Credentials for ");
-                    //Serial.print((char*) config.ssid);
-                    //Serial.print(" = ");
-                    //Serial.println((char*) config.password);    
-                //}
             }
         }
         else
         {
             // Show no-wifi   
-            g_nCurrentState = 0; // Booting
+            g_nCurrentState = 0; // noWiFi
         }
 
         if (g_fNTPStarted)
         {
-        //    g_timeClient.update();
-            //Serial.println(timeClient.getFormattedTime());
-
+            g_timeClient.update();
+            
             // Check for 3->4 hour switch
             // Let Handle-Loop return another state
             // Convert to local time
-            // TimeChangeRule *tcr;    
-            // time_t t = g_CE.toLocal(g_timeClient.getEpochTime(), &tcr); // (Note: tcr cannot be NULL)
-            // int hours = hour(t);
-            // if (hours == 4 && g_nPreviousHour != 4)
-            // {
-            //     // Switch to updating
-            //     g_nCurrentState = 3;
-            // }
-            // g_nPreviousHour = hours;
+            TimeChangeRule *tcr;    
+            time_t t = g_CE.toLocal(g_timeClient.getEpochTime(), &tcr); // (Note: tcr cannot be NULL)
+            int hours = hour(t);
+            int currentYear = year(t);
+
+            if (currentYear > 1970)
+            {
+                g_nCurrentState = 2; // Show clock
+            }
+
+            if (hours == 4 && g_nPreviousHour != 4)
+            {
+                // Switch to updating
+                g_nCurrentState = 3;
+            }
+            g_nPreviousHour = hours;
         }
     }   
 }
