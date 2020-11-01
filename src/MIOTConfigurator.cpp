@@ -1,5 +1,18 @@
+#include <string.h>
+#include <sys/param.h>
 
 #include "MIOTConfigurator.h"
+
+#include "esp_system.h"
+#include "esp_wifi.h"
+#include "esp_event_loop.h"
+#include "esp_log.h"
+#include "nvs_flash.h"
+
+#include "lwip/err.h"
+#include "lwip/sockets.h"
+#include "lwip/sys.h"
+#include <lwip/netdb.h>
 
 //
 // Constructor, use this to change the timeouts
@@ -34,16 +47,17 @@ void MIOTConfigurator::changeState(EMIOTState newState)
 
 //
 // Legacy event handler, might be required for mDNS
-//esp_err_t legacy_event_handler(void *ctx, system_event_t *event) 
-//{
-    //mdns_handle_system_event(ctx, event);
-    //MIOT_LOG("Event handler\n");
-  //  return ESP_OK;
-//}
-//static void _on_sys_event(system_event_t *event)
-//{
-  //  mdns_handle_system_event(NULL, event);
-//}
+// esp_err_t legacy_event_handler(void *ctx, system_event_t *event) 
+// {
+//     mdns_handle_system_event(ctx, event);
+//     MIOT_LOG("Event handler\n");
+//     return ESP_OK;
+// }
+
+// static void _on_sys_event(system_event_t *event)
+// {
+//     mdns_handle_system_event(NULL, event);
+// }
 
 //
 // setup the MIOT Configurator, call this method in the setup function
@@ -80,34 +94,161 @@ void MIOTConfigurator::setup(unsigned long wifiConnectionTimeout, unsigned long 
 //
 // Advertise presence using mDNS 
 //
-void MIOTConfigurator::advertise()
+//void MIOTConfigurator::advertise()
+//{
+    // esp_err_t err = mdns_init();
+    // if (err) 
+    // {
+    //     MIOT_LOG("Error setting up mDNS: %d\n", err);
+    //     return;
+    // }
+
+    // MIOT_LOG("mDNS started: `%s.%s.%s`\n", m_deviceName.c_str(), MIOT_MDNS_SERVER, MIOT_MDNS_PROTO);
+
+    // //set hostname
+    // mdns_hostname_set(m_deviceName.c_str());
+
+    // //set default instance
+    // mdns_instance_name_set(m_deviceName.c_str());
+
+    // //_services._dns-sd._udp
+    // mdns_service_add("MIOTServer", MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, MIOT_MDNS_PORT, NULL, 0);
+    // //mdns_service_add("_services", "_dns-sd", "_udp", 80, NULL, 0);
+    // mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "product", m_productName.c_str());
+    // mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "deviceid", m_deviceId.c_str());
+    // mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "version", String(m_version).c_str());
+    // mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "lifetime", String(millis()).c_str());
+
+    // MIOT_LOG("DeviceURL: http://%s.local:%d\n", m_deviceName.c_str(), MIOT_MDNS_PORT);    
+//}
+
+
+/* Add a socket, either IPV4-only or IPV6 dual mode, to the IPV4
+   multicast group */
+int MIOTConfigurator::createMulticastGroup()
 {
-    esp_err_t err = mdns_init();
-    if (err) 
+    struct sockaddr_in saddr = {0};
+    int sock = -1;
+    int err = 0;
+
+    sock = socket(PF_INET, SOCK_DGRAM, IPPROTO_IP);
+    if (sock < 0)
     {
-        MIOT_LOG("Error setting up mDNS: %d\n", err);
-        return;
+        MIOT_LOG("Failed to create socket. Error %d", errno);
+        return -1;
     }
 
-    MIOT_LOG("mDNS started: `%s.%s.%s`\n", m_deviceName.c_str(), MIOT_MDNS_SERVER, MIOT_MDNS_PROTO);
+    // Bind the socket to any address
+    saddr.sin_family = PF_INET;
+    saddr.sin_port = htons(MIOT_MULTICAST_UDP_PORT);
+    saddr.sin_addr.s_addr = htonl(INADDR_ANY);
+    err = bind(sock, (struct sockaddr *)&saddr, sizeof(struct sockaddr_in));
+    if (err < 0)
+    {
+        MIOT_LOG("Failed to bind socket. Error %d", errno);
+        close(sock);
+        return -1;
+    }
 
-    //set hostname
-    mdns_hostname_set(m_deviceName.c_str());
+    // Assign multicast TTL (set separately from normal interface TTL)
+    uint8_t ttl = MIOT_MULTICAST_TTL;
+    setsockopt(sock, IPPROTO_IP, IP_MULTICAST_TTL, &ttl, sizeof(uint8_t));
+    if (err < 0)
+    {
+        MIOT_LOG("Failed to set IP_MULTICAST_TTL. Error %d", errno);
+        close(sock);
+        return -1;
+    }
 
-    //set default instance
-    mdns_instance_name_set(m_deviceName.c_str());
-
-    //_services._dns-sd._udp
-    mdns_service_add(NULL, MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, MIOT_MDNS_PORT, NULL, 0);
-    //mdns_service_add("_services", "_dns-sd", "_udp", 80, NULL, 0);
-    mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "product", m_productName.c_str());
-    mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "deviceid", m_deviceId.c_str());
-    mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "version", String(m_version).c_str());
-    mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "lifetime", String(millis()).c_str());
-
-    MIOT_LOG("DeviceURL: http://%s.local:%d\n", m_deviceName.c_str(), MIOT_MDNS_PORT);    
+    // All set, socket is configured for sending and receiving
+    return sock;
 }
 
+bool MIOTConfigurator::handleMulticast(int sock)
+{
+    struct timeval tv = 
+    {
+        .tv_sec = 2,
+        .tv_usec = 0,
+    };
+    fd_set rfds;
+    FD_ZERO(&rfds);
+    FD_SET(sock, &rfds);
+
+    int s = select(sock + 1, &rfds, NULL, NULL, &tv);
+    if (s < 0)
+    {
+        MIOT_LOG("Select failed: errno %d", errno);
+        return false;
+    }
+    else if (s > 0)
+    {
+        if (FD_ISSET(sock, &rfds))
+        {
+            // Incoming datagram received
+            char recvbuf[48];
+            char raddr_name[32] = {0};
+
+            struct sockaddr_in6 raddr; // Large enough for both IPv4 or IPv6
+            socklen_t socklen = sizeof(raddr);
+            int len = recvfrom(sock, recvbuf, sizeof(recvbuf) - 1, 0,
+                                (struct sockaddr *)&raddr, &socklen);
+            if (len < 0)
+            {
+                MIOT_LOG("multicast recvfrom failed: errno %d", errno);
+                return false;
+            }
+
+            // Get the sender's address as a string
+            if (raddr.sin6_family == PF_INET)
+            {
+                inet_ntoa_r(((struct sockaddr_in *)&raddr)->sin_addr.s_addr,
+                            raddr_name, sizeof(raddr_name) - 1);
+            }
+            MIOT_LOG("received %d bytes from %s:", len, raddr_name);
+
+            recvbuf[len] = 0; // Null-terminate whatever we received and treat like a string...
+            MIOT_LOG("%s", recvbuf);
+        }
+    }
+    else
+    { 
+        // s == 0
+        // Timeout passed with no incoming data, so send something!
+        char sendbuf[256];
+        char addrbuf[32] = {0};
+        int len = snprintf(sendbuf, sizeof(sendbuf), "{\"type\":\"%s\",\"id\":\"%s\",\"name\":\"%s\",\"alive\":\"%d\"}", m_productName.c_str(), m_deviceId.c_str(), m_deviceName.c_str(), millis() / 1000 );
+        if (len > sizeof(sendbuf))
+        {
+            MIOT_LOG("Overflowed multicast sendfmt buffer!!");
+            return false;
+        }
+
+        struct addrinfo hints = {0};
+        hints.ai_flags = AI_PASSIVE;
+        hints.ai_socktype = SOCK_DGRAM;
+        struct addrinfo *res;
+
+        hints.ai_family = AF_INET; // For an IPv4 socket
+        int err = getaddrinfo(MIOT_MULTICAST_IP4_ADDRESS, NULL, &hints, &res);
+        if (err < 0)
+        {
+            MIOT_LOG("getaddrinfo() failed for IPV4 destination address. error: %d", err);
+            return false;
+        }
+
+        ((struct sockaddr_in *)res->ai_addr)->sin_port = htons(MIOT_MULTICAST_UDP_PORT);
+        inet_ntoa_r(((struct sockaddr_in *)res->ai_addr)->sin_addr, addrbuf, sizeof(addrbuf) - 1);
+        MIOT_LOG("Sending to IPV4 multicast address %s [%s]...\n", addrbuf, sendbuf);
+        err = sendto(sock, sendbuf, len, 0, res->ai_addr, res->ai_addrlen);
+        if (err < 0)
+        {
+            MIOT_LOG("IPV4 sendto failed. errno: %d", errno);
+            return false;
+        }
+    }
+    return true;
+}
 
 //
 // handleClient should be called in the main loop repeately
@@ -124,7 +265,8 @@ void MIOTConfigurator::handleClient()
         if (m_preferences.begin(MIOT_PREF_CONFIG, false)) // Open storage
         {
             String ssid = m_preferences.getString("ssid", "");
-            if (false) // (!ssid.isEmpty())
+            if (!ssid.isEmpty())
+            //if (false) // (!ssid.isEmpty())
             {
                 String passphrase = m_preferences.getString("passphrase", "");
                 MIOT_LOG("Found credentials, trying to connect to WiFi '%s'\n", ssid.c_str());
@@ -242,6 +384,9 @@ void MIOTConfigurator::handleClient()
                     // Disconnect soft AP
                     //WiFi.softAPdisconnect();
 
+                    // Start advertising our name
+                    //advertise();
+
                     // Yes, start connecting using these settings
                     WiFi.begin(ssid.c_str(), passphrase.c_str());
 
@@ -271,7 +416,19 @@ void MIOTConfigurator::handleClient()
             MIOT_LOG("- Gateway:     %s\n", WiFi.gatewayIP().toString().c_str());
             
             // Start advertising our name
-            advertise();
+            //advertise();
+
+            m_multicastSocket = createMulticastGroup();
+            if (m_multicastSocket >= 0)
+            {
+                // set destination multicast addresses for sending from these sockets
+                struct sockaddr_in sdestv4 = {0};
+                sdestv4.sin_family = PF_INET;
+                sdestv4.sin_port = htons(MIOT_MULTICAST_UDP_PORT);
+
+                // We know this inet_aton will pass because we did it above already
+                inet_aton(MIOT_MULTICAST_IP4_ADDRESS, &sdestv4.sin_addr.s_addr);
+            }
 
             // Store the WiFi credentials
             if (m_preferences.begin(MIOT_PREF_CONFIG, false)) // Open storage
@@ -302,6 +459,8 @@ void MIOTConfigurator::handleClient()
             changeState(MIOTState_ConnectionLost);
         }
 
+        if (m_multicastSocket >= 0)
+            handleMulticast(m_multicastSocket);
         //if (m_pUDP != nullptr)
         //{
         //    int packetSize = m_pUDP->parsePacket();
@@ -324,10 +483,10 @@ void MIOTConfigurator::handleClient()
         // }
 
         // Trick to keep updating the announcement:
-        mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "product", m_productName.c_str());
+        //mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "product", m_productName.c_str()); // this one
         //mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "deviceid", m_deviceId.c_str());
         //mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "version", String(m_version).c_str());
-        //mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "lifetime", String(millis()).c_str());
+    //    mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "lifetime", String(millis()).c_str());
 
         //{
         //    String hostName = m_productName + "_" + m_deviceId;

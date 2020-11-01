@@ -2,6 +2,14 @@
 	"folders": [
 		{
 			"path": "."
+		},
+		{
+			"name": "Myriadbot",
+			"path": "..\\Myriadbot"
+		},
+		{
+			"name": "NucleoRobot",
+			"path": "C:\\Projects\\NucleoRobot"
 		}
 	],
 	"settings": {

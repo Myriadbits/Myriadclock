@@ -30,9 +30,8 @@
 
 #pragma once
 
-#include <Preferences.h>
-#include <ESPmDNS.h>
 #include <ArduinoJson.h>
+#include <Preferences.h>
 
 #if defined(ARDUINO_ARCH_ESP8266)
     #include <ESP8266WiFi.h>
@@ -63,10 +62,11 @@
 #define MIOT_TIMEOUT_SMARTCONFIG        (10 * 60 * 1000)
 #define MIOT_DEFAULT_PRODUCTNAME        "MIOTDevice"
 #define MIOT_DEFAULT_VERSION            1
-#define MIOT_MDNS_SERVER                "_miot"
-#define MIOT_MDNS_PROTO                 "_tcp"
-#define MIOT_MDNS_PORT                  2323
-#define MIOT_AP_SETTINGS_PORT           19785 // 4d 49 = "MI"         
+#define MIOT_AP_SETTINGS_PORT           19785 // 4d 49 = "MI"        
+
+#define MIOT_MULTICAST_IP4_ADDRESS      "232.10.11.12"
+#define MIOT_MULTICAST_UDP_PORT         2323
+#define MIOT_MULTICAST_TTL              50
 
 
 typedef enum
@@ -101,7 +101,11 @@ public:
 
 private:
     void changeState(EMIOTState newState);
-    void advertise();
+    //void advertise();
+
+    //bool listenMulticast(ip_addr_t *addr, uint16_t port, uint8_t ttl);
+    int createMulticastGroup();    
+    bool handleMulticast(int sock);
 
 protected:
     // Statemachine related
@@ -121,6 +125,7 @@ protected:
     WiFiUDP*                m_pUDP;
     int                     m_clients;
 
+    int                     m_multicastSocket;
     WiFiServer              m_server;
 protected:
 };
