@@ -31,7 +31,6 @@ MIOTConfigurator::MIOTConfigurator(WiFiUDP& udp, String productName, int version
     , m_productName(productName)
     , m_version(version)
     , m_clients(-1)
-    //, m_server(MIOT_AP_SETTINGS_PORT)
 {
     m_pUDP = &udp;
 }
@@ -46,26 +45,16 @@ void MIOTConfigurator::changeState(EMIOTState newState)
 }
 
 //
-// Legacy event handler, might be required for mDNS
-// esp_err_t legacy_event_handler(void *ctx, system_event_t *event) 
-// {
-//     mdns_handle_system_event(ctx, event);
-//     MIOT_LOG("Event handler\n");
-//     return ESP_OK;
-// }
-
-// static void _on_sys_event(system_event_t *event)
-// {
-//     mdns_handle_system_event(NULL, event);
-// }
-
-//
 // setup the MIOT Configurator, call this method in the setup function
 // This setup will:
 // - Start WiFi using the stored credentials (if any and if valid)
-// - If no credentials are found, SmartConfig is started
-void MIOTConfigurator::setup(unsigned long wifiConnectionTimeout, unsigned long wifiConnectionLostTimeout, unsigned long wifiAPSettingTimeout)
+// - If no credentials are found, a SoftAP is started with a unique deviceID as SSID
+//   and the password (as argument)
+// Note that the password should be entered by the user of the configuration tool
+// Might be good to add that as a QR code to the product itself
+void MIOTConfigurator::setup(String softAPPassword, unsigned long wifiConnectionTimeout, unsigned long wifiConnectionLostTimeout, unsigned long wifiAPSettingTimeout)
 {
+    m_softAPPassword = softAPPassword;
     m_wifiConnectionTimeout = wifiConnectionTimeout;
     m_wifiConnectionLostTimeout = wifiConnectionLostTimeout;   
     m_wifiAPSettingsTimeout = wifiAPSettingTimeout; 
@@ -92,39 +81,8 @@ void MIOTConfigurator::setup(unsigned long wifiConnectionTimeout, unsigned long 
 }
 
 //
-// Advertise presence using mDNS 
-//
-//void MIOTConfigurator::advertise()
-//{
-    // esp_err_t err = mdns_init();
-    // if (err) 
-    // {
-    //     MIOT_LOG("Error setting up mDNS: %d\n", err);
-    //     return;
-    // }
-
-    // MIOT_LOG("mDNS started: `%s.%s.%s`\n", m_deviceName.c_str(), MIOT_MDNS_SERVER, MIOT_MDNS_PROTO);
-
-    // //set hostname
-    // mdns_hostname_set(m_deviceName.c_str());
-
-    // //set default instance
-    // mdns_instance_name_set(m_deviceName.c_str());
-
-    // //_services._dns-sd._udp
-    // mdns_service_add("MIOTServer", MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, MIOT_MDNS_PORT, NULL, 0);
-    // //mdns_service_add("_services", "_dns-sd", "_udp", 80, NULL, 0);
-    // mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "product", m_productName.c_str());
-    // mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "deviceid", m_deviceId.c_str());
-    // mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "version", String(m_version).c_str());
-    // mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "lifetime", String(millis()).c_str());
-
-    // MIOT_LOG("DeviceURL: http://%s.local:%d\n", m_deviceName.c_str(), MIOT_MDNS_PORT);    
-//}
-
-
-/* Add a socket, either IPV4-only or IPV6 dual mode, to the IPV4
-   multicast group */
+// Create a multicast group (if it does not exist yet)
+// Add a socket, either IPV4-only or IPV6 dual mode, to the IPV4 multicast group
 int MIOTConfigurator::createMulticastGroup()
 {
     struct sockaddr_in saddr = {0};
@@ -164,6 +122,8 @@ int MIOTConfigurator::createMulticastGroup()
     return sock;
 }
 
+//
+// Handle the multicasts
 bool MIOTConfigurator::handleMulticast(int sock)
 {
     struct timeval tv = 
@@ -191,8 +151,7 @@ bool MIOTConfigurator::handleMulticast(int sock)
 
             struct sockaddr_in6 raddr; // Large enough for both IPv4 or IPv6
             socklen_t socklen = sizeof(raddr);
-            int len = recvfrom(sock, recvbuf, sizeof(recvbuf) - 1, 0,
-                                (struct sockaddr *)&raddr, &socklen);
+            int len = recvfrom(sock, recvbuf, sizeof(recvbuf) - 1, 0, (struct sockaddr *)&raddr, &socklen);
             if (len < 0)
             {
                 MIOT_LOG("multicast recvfrom failed: errno %d", errno);
@@ -202,8 +161,7 @@ bool MIOTConfigurator::handleMulticast(int sock)
             // Get the sender's address as a string
             if (raddr.sin6_family == PF_INET)
             {
-                inet_ntoa_r(((struct sockaddr_in *)&raddr)->sin_addr.s_addr,
-                            raddr_name, sizeof(raddr_name) - 1);
+                inet_ntoa_r(((struct sockaddr_in *)&raddr)->sin_addr.s_addr, raddr_name, sizeof(raddr_name) - 1);
             }
             MIOT_LOG("received %d bytes from %s:", len, raddr_name);
 
@@ -217,7 +175,8 @@ bool MIOTConfigurator::handleMulticast(int sock)
         // Timeout passed with no incoming data, so send something!
         char sendbuf[256];
         char addrbuf[32] = {0};
-        int len = snprintf(sendbuf, sizeof(sendbuf), "{\"type\":\"%s\",\"id\":\"%s\",\"name\":\"%s\",\"alive\":\"%d\"}", m_productName.c_str(), m_deviceId.c_str(), m_deviceName.c_str(), millis() / 1000 );
+        int len = snprintf(sendbuf, sizeof(sendbuf), "{\"type\":\"%s\",\"id\":\"%s\",\"name\":\"%s\",\"alive\":\"%ld\"}", 
+            m_productName.c_str(), m_deviceId.c_str(), m_deviceName.c_str(), millis() / 1000 );
         if (len > sizeof(sendbuf))
         {
             MIOT_LOG("Overflowed multicast sendfmt buffer!!");
@@ -266,7 +225,7 @@ void MIOTConfigurator::handleClient()
         {
             String ssid = m_preferences.getString("ssid", "");
             if (!ssid.isEmpty())
-            //if (false) // (!ssid.isEmpty())
+            //if (false) 
             {
                 String passphrase = m_preferences.getString("passphrase", "");
                 MIOT_LOG("Found credentials, trying to connect to WiFi '%s'\n", ssid.c_str());
@@ -284,13 +243,12 @@ void MIOTConfigurator::handleClient()
         break;
 
     case MIOTState_StartingAPSettings:
-           //WiFi.softAPsetHostname(m_deviceName.c_str());
-        if (WiFi.softAP(m_deviceName.c_str(), "1234bier", 1))
+        //WiFi.softAPsetHostname(m_deviceName.c_str());
+        if (WiFi.softAP(m_deviceName.c_str(), m_softAPPassword.c_str(), 1))
         {                
             delay(100);
             if (WiFi.softAPConfig(IPAddress(192, 168, 4, 1), IPAddress(192, 168, 4, 1), IPAddress(255, 255, 255, 0)))
             {
-                //m_server.begin();
                 MIOT_LOG("Start listening for SoftAP Setting\n");
                 MIOT_LOG("- SoftAP IP Address:  %s\n", WiFi.softAPIP().toString().c_str());
 
@@ -298,12 +256,15 @@ void MIOTConfigurator::handleClient()
                 {
                     if (!m_pUDP->begin(MIOT_AP_SETTINGS_PORT))
                     {
-                        MIOT_LOG("- Failed to open UDP port!\n");    
+                        MIOT_LOG("- Failed to open UDP port!\n");
+                        WiFi.softAPdisconnect();
                     }
-                    MIOT_LOG("- SoftAP IP Port:  %d\n", MIOT_AP_SETTINGS_PORT);
-                    MIOT_LOG("Waiting for SoftAP settings.\n");                  
-                    
-                    changeState(MIOTState_WaitingForAPSettings);
+                    else
+                    {
+                        MIOT_LOG("- SoftAP IP Port:  %d\n", MIOT_AP_SETTINGS_PORT);
+                        MIOT_LOG("Waiting for SoftAP settings.\n");                  
+                        changeState(MIOTState_WaitingForAPSettings);
+                    }                    
                 }
                 else
                 {
@@ -313,10 +274,10 @@ void MIOTConfigurator::handleClient()
                 }
             }
         }
-        //else
-        //{
-        //    MIOT_LOG("Failed to create the soft AP!\n");
-        //}
+        else
+        {
+            MIOT_LOG("Failed to create the soft AP!\n");
+        }
         break;
 
     case MIOTState_WaitingForAPSettings:
@@ -334,30 +295,12 @@ void MIOTConfigurator::handleClient()
                 MIOT_LOG("SoftAP number of clients: %d.\n", m_clients);
             }
 
-            // WiFiClient client = m_server.available();
-            // if (client.connected()) 
-            // { 
-            //     MIOT_LOG("Client connected: %s.\n", client.remoteIP().toString().c_str());
-            //     while (client.connected()) 
-            //     {
-            //         int data = client.read();
-            //         if (data > 0) 
-            //         {
-            //             Serial.println(data);
-            //         } 
-            //         delay(10); // Delay needed for receiving the data correctly
-            //     } 
-            //     Serial.println("The client disconnected");
-            //     delay(100);
-            // }
- 
-  
             int dataSize = m_pUDP->parsePacket();
             if (dataSize > 0) 
             {
                 MIOT_LOG("Received %d bytes from %s, port %d\n", dataSize, m_pUDP->remoteIP().toString().c_str(), m_pUDP->remotePort());
 
-                // read the packet into packetBufffer
+                // Read the packet into packetBufffer
                 char packetBuffer[2048]; //buffer to hold incoming packet,
                 m_pUDP->read(packetBuffer, 2048);
                 packetBuffer[dataSize] = 0;
@@ -384,9 +327,6 @@ void MIOTConfigurator::handleClient()
                     // Disconnect soft AP
                     //WiFi.softAPdisconnect();
 
-                    // Start advertising our name
-                    //advertise();
-
                     // Yes, start connecting using these settings
                     WiFi.begin(ssid.c_str(), passphrase.c_str());
 
@@ -410,14 +350,21 @@ void MIOTConfigurator::handleClient()
         // Our we connected to Wifi yet?
         if (WiFi.status() == WL_CONNECTED)
         {
+            // Yes, WiFi is connected!
             MIOT_LOG("WiFi connected to %s\n", WiFi.SSID().c_str());
             MIOT_LOG("- IP Address:  %s\n", WiFi.localIP().toString().c_str());
             MIOT_LOG("- Subnet mask: %s\n", WiFi.subnetMask().toString().c_str());
             MIOT_LOG("- Gateway:     %s\n", WiFi.gatewayIP().toString().c_str());
-            
-            // Start advertising our name
-            //advertise();
 
+            // Store the WiFi credentials
+            if (m_preferences.begin(MIOT_PREF_CONFIG, false)) // Open storage
+            {
+                m_preferences.putString("ssid", WiFi.SSID());
+                m_preferences.putString("passphrase", WiFi.psk());
+                m_preferences.end();
+            } 
+
+            // Now start registering ourself with the multicast group so we can be found
             m_multicastSocket = createMulticastGroup();
             if (m_multicastSocket >= 0)
             {
@@ -428,14 +375,6 @@ void MIOTConfigurator::handleClient()
 
                 // We know this inet_aton will pass because we did it above already
                 inet_aton(MIOT_MULTICAST_IP4_ADDRESS, &sdestv4.sin_addr.s_addr);
-            }
-
-            // Store the WiFi credentials
-            if (m_preferences.begin(MIOT_PREF_CONFIG, false)) // Open storage
-            {
-                m_preferences.putString("ssid", WiFi.SSID());
-                m_preferences.putString("passphrase", WiFi.psk());
-                m_preferences.end();
             }
 
             changeState(MIOTState_Connected);
@@ -453,46 +392,18 @@ void MIOTConfigurator::handleClient()
         break;
 
     case MIOTState_Connected:
+        // Connected state, everything is working
         if (WiFi.status() != WL_CONNECTED)
         {
             MIOT_LOG("WiFi connection lost\n");
             changeState(MIOTState_ConnectionLost);
         }
-
-        if (m_multicastSocket >= 0)
-            handleMulticast(m_multicastSocket);
-        //if (m_pUDP != nullptr)
-        //{
-        //    int packetSize = m_pUDP->parsePacket();
-        //    if (packetSize) 
-        //    {
-        //        MIOT_LOG("Received packet of size %d\n", packetSize);
-        //        MIOT_LOG("From %s port %d\n", m_pUDP->remoteIP().toString().c_str(), m_pUDP->remotePort() );
-        //
-        //    }
-        //    m_pUDP->flush();
-        //}
-        
-        // if ((millis() - m_millisLastUDP) > 1000)
-        // {
-        //     const char *ptext = "Hallo jochem";
-        //     m_udp.beginPacket(WiFi.broadcastIP(), 2323);
-        //     m_udp.write((const uint8_t*)ptext, strlen(ptext));
-        //     m_udp.endPacket();
-        //     m_millisLastUDP = millis();
-        // }
-
-        // Trick to keep updating the announcement:
-        //mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "product", m_productName.c_str()); // this one
-        //mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "deviceid", m_deviceId.c_str());
-        //mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "version", String(m_version).c_str());
-    //    mdns_service_txt_item_set(MIOT_MDNS_SERVER, MIOT_MDNS_PROTO, "lifetime", String(millis()).c_str());
-
-        //{
-        //    String hostName = m_productName + "_" + m_deviceId;
-        //    mdns_instance_name_set(hostName.c_str());
-        //}
-
+        else
+        {
+            // Handle the multicast input
+            if (m_multicastSocket >= 0)
+                handleMulticast(m_multicastSocket);
+        }
         break;
 
     case MIOTState_ConnectionLost:
@@ -509,9 +420,6 @@ void MIOTConfigurator::handleClient()
                 // This takes too long, jump back to waiting for smartconfig
                 MIOT_LOG("WiFi connection timeout due to lost connection. Restarting SmartConfig\n");
                 changeState(MIOTState_StartingAPSettings);
-
-                // Stop the MDNS
-//                MDNS.end();
             }
         }
         break;

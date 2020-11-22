@@ -20,12 +20,25 @@
     @file	    MIOTConfigurator.h
     @author	    jochem@myriadbits.com
     @version	0.0.1
- 	@date	    2020-05-21
+ 	@date	    2020-11-1
 
     Dependencies: 
         Wifi.h
         Preferences
 
+
+    The purpose of this class is to have a fast and stable deploy and discovery mechanism
+    for ESP32's (and ESP8266). 
+    - The initial deployment is done by creating a softAP with a fixed SSID and softAPPassword (configurable). 
+    - When a connection is made by a client to this softAP, the softAP listens for a json packet with the WiFi credentials for
+      the host WiFi network.
+    - After receiving the credentials, this class will try to connect to the WiFi with the supplied credentials
+    - Upon success, it will join a UDP multicast group and start broadcasting its information (productname, deviceid and version)
+    - The WiFi credentials will be stored. Upon a reboot, those credentials will be re-used
+    - When the WiFi connection is lost for some time a retry mechanism kicks in, after repeated failures, the initial
+      deployment sequence is restarted.
+
+    This class works in collaboration with the MiotConfigurator, an App (android/ios) to fully automate this process
 */
 
 #pragma once
@@ -61,12 +74,13 @@
 #define MIOT_TIMEOUT_WIFICONNECTIONLOST (2 * 60 * 1000)
 #define MIOT_TIMEOUT_SMARTCONFIG        (10 * 60 * 1000)
 #define MIOT_DEFAULT_PRODUCTNAME        "MIOTDevice"
+#define MIOT_DEFAULT_SOFTAPPASSWORD     "1234bier"
 #define MIOT_DEFAULT_VERSION            1
 #define MIOT_AP_SETTINGS_PORT           19785 // 4d 49 = "MI"        
 
 #define MIOT_MULTICAST_IP4_ADDRESS      "232.10.11.12"
 #define MIOT_MULTICAST_UDP_PORT         2323
-#define MIOT_MULTICAST_TTL              50
+#define MIOT_MULTICAST_TTL              32 // Restrict multicasts to same site
 
 
 typedef enum
@@ -88,7 +102,7 @@ class MIOTConfigurator
 public:
     MIOTConfigurator(WiFiUDP& udp, String productName = MIOT_DEFAULT_PRODUCTNAME, int version = MIOT_DEFAULT_VERSION);
 
-    void setup(unsigned long wifiConnectionTimeout = MIOT_TIMEOUT_WIFICONNECTION, unsigned long wifiConnectionLostTimeout = MIOT_TIMEOUT_WIFICONNECTIONLOST, unsigned long smartConfigTimeout = MIOT_TIMEOUT_SMARTCONFIG);    
+    void setup(String softAPPassword = MIOT_DEFAULT_SOFTAPPASSWORD, unsigned long wifiConnectionTimeout = MIOT_TIMEOUT_WIFICONNECTION, unsigned long wifiConnectionLostTimeout = MIOT_TIMEOUT_WIFICONNECTIONLOST, unsigned long smartConfigTimeout = MIOT_TIMEOUT_SMARTCONFIG);    
     void handleClient();        
 
     void setProductName(String productName) { m_productName = productName; }
@@ -101,9 +115,6 @@ public:
 
 private:
     void changeState(EMIOTState newState);
-    //void advertise();
-
-    //bool listenMulticast(ip_addr_t *addr, uint16_t port, uint8_t ttl);
     int createMulticastGroup();    
     bool handleMulticast(int sock);
 
@@ -117,8 +128,9 @@ protected:
     unsigned long           m_millisLastUDP;
     Preferences             m_preferences;
 
-    // Product info / mDns
+    // Product info
     String                  m_productName;
+    String                  m_softAPPassword;
     String                  m_deviceId;
     String                  m_deviceName;
     int                     m_version;
