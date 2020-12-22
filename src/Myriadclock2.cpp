@@ -41,7 +41,6 @@
 //#include <ESPmDNS.h>
 
 #include "Console.h"
-#include "ClockLayout.h"
 #define FASTLED_INTERNAL
 #include "FastLED.h"       // Fastled library to control the LEDs
 

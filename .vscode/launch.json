@@ -14,7 +14,7 @@
             "name": "PIO Debug",
             "executable": "D:/Projects/Myriadclock/.pio/build/MyClock/firmware.elf",
             "projectEnvName": "MyClock",
-            "toolchainBinDir": "C:/Users/Jochem/.platformio/packages/toolchain-xtensa32/bin",
+            "toolchainBinDir": "C:/Users/Jochem/.platformio/packages/toolchain-xtensa32@2.50200.80/bin",
             "preLaunchTask": {
                 "type": "PlatformIO",
                 "task": "Pre-Debug"
@@ -27,7 +27,7 @@
             "name": "PIO Debug (skip Pre-Debug)",
             "executable": "D:/Projects/Myriadclock/.pio/build/MyClock/firmware.elf",
             "projectEnvName": "MyClock",
-            "toolchainBinDir": "C:/Users/Jochem/.platformio/packages/toolchain-xtensa32/bin",
+            "toolchainBinDir": "C:/Users/Jochem/.platformio/packages/toolchain-xtensa32@2.50200.80/bin",
             "internalConsoleOptions": "openOnSessionStart"
         }
     ]

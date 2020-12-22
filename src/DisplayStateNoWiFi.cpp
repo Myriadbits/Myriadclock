@@ -22,7 +22,7 @@ void DisplayStateNoWiFi::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSetti
     CRGB colOrange = CRGB(0xFF, 0x7E, 0x00);
 
     FastLED.clear();
-    AddWordToLeds((ledpos_t*) nowifi, colOrange);         
+    AddWordToLeds((ledpos_t*) passcode, colOrange);         
    
     FastLED.show();   
 }
@@ -58,7 +58,7 @@ bool DisplayStateNoWiFi::HandleLoop(unsigned long epochTime)
         FillBackground();
 
         // Show the NoWiFi
-        AddWordToLeds((ledpos_t*) nowifi, colNoWiFi);         
+        AddWordToLeds((ledpos_t*) passcode, colNoWiFi);         
 
         // Show the myriadclock text
         AddWordToLeds((ledpos_t*) myriadclock, colMyriadclock);   

@@ -182,54 +182,36 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         }
 
         // Quarter past 1 => 14 minutes to half two (in Dutch this is correct, English I don't know)
-        int quarterNum = m_nMinutes / 15;
-        int min1 = m_nMinutes % 15;        
+        int min5 = m_nMinutes / 5;
+        int min1 = m_nMinutes % 5;        
         int hours = m_nHours;
-        if (quarterNum > 0 && !(quarterNum == 1 && min1 == 0)) hours++; // Increase the hour, but do NOT increase when we are at exactly a quarter past
+        if (min5 > 3) hours++; // Increase the hour, but do NOT increase when we are at exactly a quarter past
         hours %= 12; // Limit hours to 12
         
         // Determine to/past
-        const ledpos_t* pMinutesWord = NULL;
+        const ledpos_t* pMinutesMainWord = NULL;
+        const ledpos_t* pMinutesRestWord = NULL;
         const ledpos_t* pHalfWord = NULL;
         const ledpos_t* pToPastWord = NULL;
-        if (min1 == 0)
+                
+        switch(min5)
         {
-            // Specials quarters:
-            switch (quarterNum)             
-            {
-                case 0:                
-                    pMinutesWord = hour_full;
-                    pToPastWord = NULL; 
-                    break;
-                case 1:                
-                    pMinutesWord = quarter;
-                    pToPastWord = past; 
-                    break;
-                case 2:                
-                    pMinutesWord = half;
-                    pToPastWord = NULL; 
-                    break;
-                case 3:                
-                    pMinutesWord = quarter;
-                    pToPastWord = to; 
-                    break;
-            }
+            case  0: pMinutesMainWord = hour_full; break;
+            case  1: pMinutesMainWord = minute_5 ; pToPastWord = past; break;
+            case  2: pMinutesMainWord = minute_10; pToPastWord = past; break;
+            case  3: pMinutesMainWord = minute_15; pToPastWord = past; break;
+            case  4: pMinutesMainWord = minute_10; pToPastWord = to  ; pHalfWord = half; break;
+            case  5: pMinutesMainWord = minute_5 ; pToPastWord = to  ; pHalfWord = half; break;
+            case  6: pMinutesMainWord = half; break;
+            case  7: pMinutesMainWord = minute_5 ; pToPastWord = past; pHalfWord = half; break;
+            case  8: pMinutesMainWord = minute_10; pToPastWord = past; pHalfWord = half; break;
+            case  9: pMinutesMainWord = minute_15; pToPastWord = to  ; break;
+            case 10: pMinutesMainWord = minute_10; pToPastWord = to  ; break;
+            case 11: pMinutesMainWord = minute_5 ; pToPastWord = to  ; break;
         }
-        else
-        {
-            pToPastWord = past;
-            if (quarterNum == 1 || quarterNum == 3)
-            {
-                min1 = 15 - min1;
-                pToPastWord = to;
-            }
-            if (m_nMinutes > 15 && m_nMinutes < 45)
-            {
-                pHalfWord = half;
-            }
-            const ledpos_t* pMinuteWords[15] {NULL, minute_1, minute_2, minute_3, minute_4, minute_5, minute_6, minute_7, minute_8, minute_9, minute_10, minute_11, minute_12, minute_13, minute_14};
-            pMinutesWord = pMinuteWords[min1 % 15];
-        }
+        
+        const ledpos_t* pMinute5Words[5] {NULL, minute_1, minute_2, minute_3, minute_4};
+        pMinutesRestWord = pMinute5Words[min1];
 
         const ledpos_t* pHourWord = NULL;
         const ledpos_t* pHourWords[12] {hour_12, hour_1, hour_2, hour_3, hour_4, hour_5, hour_6, hour_7, hour_8, hour_9, hour_10, hour_11};
@@ -253,10 +235,9 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         UpdateBrightness(epochTime);        
 
         // Always show it-is
-        AddWordToLeds((ledpos_t*) itis, EColorElement::CE_ITIS);
-
         AddWordToLeds((ledpos_t*) pToPastWord, EColorElement::CE_TIME); // (AddWordToLeds can handle NULL pointers!)
-        AddWordToLeds((ledpos_t*) pMinutesWord, EColorElement::CE_TIME);
+        AddWordToLeds((ledpos_t*) pMinutesMainWord, EColorElement::CE_TIME);
+        AddWordToLeds((ledpos_t*) pMinutesRestWord, EColorElement::CE_TIME);
         AddWordToLeds((ledpos_t*) pHalfWord, EColorElement::CE_TIME);
         AddWordToLeds((ledpos_t*) pHourWord, EColorElement::CE_TIME);
 
@@ -268,7 +249,7 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         AddWordToLeds((ledpos_t*) pMonthWord, EColorElement::CE_DATE); 
         
         // Second heartbeat fading led
-        AddWordToLeds((ledpos_t*) pulse2, EColorElement::CE_PULSE);
+        AddWordToLeds((ledpos_t*) pulse1, EColorElement::CE_PULSE);
         
         FastLED.show();   
     }

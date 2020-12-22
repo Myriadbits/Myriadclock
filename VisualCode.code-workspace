@@ -10,6 +10,23 @@
 		{
 			"name": "NucleoRobot",
 			"path": "C:\\Projects\\NucleoRobot"
+		},
+		{
+			"name": "MyriadClockV2",
+			"path": "..\\MyriadClockV2"
+		},
+		{
+			"path": "..\\MyriadclockESPHome"
+		},
+		{
+			"path": "..\\MyriadClockV3"
+		},
+		{
+			"path": "..\\MyriadClockV4"
+		},
+		{
+			"name": "MyriadClockV5",
+			"path": "..\\MyriadClockV5"
 		}
 	],
 	"settings": {

@@ -54,5 +54,10 @@
         "mutex": "cpp",
         "thread": "cpp",
         "string": "cpp"
-    }
+    },
+    "cmake.configureOnOpen": true,
+    "idf.espIdfPathWin": "D:\\espressif\\esp-idf",
+    "idf.customExtraPaths": "D:\\espressif\\tools\\python_env\\idf4.1_py3.8_env\\Scripts;C:\\Python38;D:\\espressif\\tools\\tools\\xtensa-esp32-elf\\esp-2020r2-8.2.0\\xtensa-esp32-elf\\bin;D:\\espressif\\tools\\tools\\xtensa-esp32s2-elf\\esp-2020r2-8.2.0\\xtensa-esp32s2-elf\\bin;D:\\espressif\\tools\\tools\\esp32ulp-elf\\2.28.51-esp-20191205\\esp32ulp-elf-binutils\\bin;D:\\espressif\\tools\\tools\\esp32s2ulp-elf\\2.28.51-esp-20191205\\esp32s2ulp-elf-binutils\\bin;D:\\espressif\\tools\\tools\\cmake\\3.13.4\\bin;D:\\espressif\\tools\\tools\\openocd-esp32\\v0.10.0-esp32-20191114\\openocd-esp32\\bin;D:\\espressif\\tools\\tools\\ninja\\1.9.0;D:\\espressif\\tools\\tools\\idf-exe\\1.0.1;D:\\espressif\\tools\\tools\\ccache\\3.7",
+    "idf.toolsPathWin": "D:\\espressif\\tools",
+    "idf.customExtraVars": "{\"OPENOCD_SCRIPTS\":\"D:\\\\espressif\\\\tools\\\\tools\\\\openocd-esp32\\\\v0.10.0-esp32-20191114/openocd-esp32/share/openocd/scripts\",\"IDF_CCACHE_ENABLE\":\"1\"}"
 }

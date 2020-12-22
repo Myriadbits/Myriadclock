@@ -1,7 +1,7 @@
 #pragma once
 
 #include "FastLED.h"            // Fastled library to control the LEDs
-#include "ClockLayout.h"
+#include "ClockLayout V2.h"
 #include <Timezone.h>
 #include "MyriadclockSettings.h"
 
