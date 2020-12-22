@@ -22,10 +22,10 @@ void DisplayStateBooting::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
     CRGB colGreen = CRGB(0x00, 0x3E, 0x00);
 
     FastLED.clear();
-    AddWordToLeds((ledpos_t*) myriadclock, colGreen);         
+    AddWordToLeds((ledpos_t*) s_pLEDExtra->myriadclock, colGreen);         
 
     // Show the version
-    const ledpos_t* pNumber = s_wordsMonthDays[(FIRMWARE_VERSION - 1) % 31]; 
+    const ledpos_t* pNumber = s_pLEDDate->days[(FIRMWARE_VERSION - 1) % 31]; 
     AddWordToLeds((ledpos_t*) pNumber, colGreen);    
     
     FastLED.show();   
@@ -61,10 +61,10 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime)
         FillBackground();
 
         // Show the myriadclock text
-        AddWordToLeds((ledpos_t*) myriadclock, colTop);   
+        AddWordToLeds((ledpos_t*) s_pLEDExtra->myriadclock, colTop);   
 
         // Show the codes
-        AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colVersion);
+   //     AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colVersion); TODO
         // Show the version
         //const ledpos_t* pNumber = s_wordsMonthDays[(FIRMWARE_VERSION - 1) % 31]; 
         //AddWordToLeds((ledpos_t*) pNumber, colVersion);    

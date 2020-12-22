@@ -1,7 +1,8 @@
 #pragma once
 
 #include "FastLED.h"            // Fastled library to control the LEDs
-#include "ClockLayout V2.h"
+#include "ClockLayoutNL_V1.h"
+#include "ClockLayoutNL_V2.h"
 #include <Timezone.h>
 #include "MyriadclockSettings.h"
 
@@ -16,7 +17,11 @@ class DisplayStateBase
 {
 public:
     virtual void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings) 
-    {
+    {        
+        s_pLEDTime = &s_layoutNL_V2_time;
+        s_pLEDDate = &s_layoutNL_V2_date;
+        s_pLEDExtra = &s_layoutNL_V2_extra;
+
         m_pLEDs = pLEDs;
         m_pTZ = pTZ;
         m_pSettings = pSettings;
@@ -40,10 +45,14 @@ protected:
     uint32_t Elapsed(uint32_t ts);
 
 protected:
-    char         m_sCommand[MAXCOMMANDLEN];
-    char         m_sCommandDescription[MAXCOMMANDDESCRIPTIONLEN];
-    uint32_t     m_timeStamp;
-    CRGB*        m_pLEDs;
-    Timezone*    m_pTZ;
+    char            m_sCommand[MAXCOMMANDLEN];
+    char            m_sCommandDescription[MAXCOMMANDDESCRIPTIONLEN];
+    uint32_t        m_timeStamp;
+    CRGB*           m_pLEDs;
+    Timezone*       m_pTZ;
     MyriadclockSettings*    m_pSettings;
+
+    static const ledtime_t*   s_pLEDTime;
+    static const leddate_t*   s_pLEDDate;
+    static const ledextra_t*  s_pLEDExtra;
 };

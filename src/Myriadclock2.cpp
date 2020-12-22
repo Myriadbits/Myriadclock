@@ -243,7 +243,7 @@ void setup()
     
     // Fabricate the clock name
     char buff[128];
-    snprintf(buff, sizeof(buff), "Myriadclock%s", s_wordCodes[chipNumber % 32].text);
+   // snprintf(buff, sizeof(buff), "Myriadclock%s", s_wordCodes[chipNumber % 32].text); TODO
 
     // Put name + serial number in settings (volatile, not store to DB)
     g_Settings.sClockName = String(buff);
@@ -301,7 +301,7 @@ void setup()
 void loop() 
 {
     // Handle RF 433 Mhz
-    g_rf.loop();   
+    //g_rf.loop();   
 
     // TODO Make currentstate an ENUM
     if (g_nCurrentState < g_nStateCounter)
@@ -330,10 +330,9 @@ void loop()
         //Serial.println(WiFi.status());
         if (WiFi.status() == WL_CONNECTED)
         {
-            g_nCurrentState = 1; // Booting
-
             if (!g_fNTPStarted)
             {
+                g_nCurrentState = 1; // Booting
                 g_timeClient.begin();
                 g_fNTPStarted = true;
                 Serial.println("NTP starting");
@@ -357,7 +356,7 @@ void loop()
             int hours = hour(t);
             int currentYear = year(t);
 
-            if (currentYear > 1970)
+            if (currentYear > 1970 && g_nPreviousHour != hours)
             {
                 g_nCurrentState = 2; // Show clock
             }

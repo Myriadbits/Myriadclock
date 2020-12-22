@@ -166,7 +166,7 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
             break;
         }
 
-         switch (m_pSettings->eDisplayOptionsDate)
+        switch (m_pSettings->eDisplayOptionsDate)
         {
         case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
             m_randomDate.seed(m_nHours + m_nMinutes + m_nSeconds);
@@ -187,40 +187,106 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         int hours = m_nHours;
         if (min5 > 3) hours++; // Increase the hour, but do NOT increase when we are at exactly a quarter past
         hours %= 12; // Limit hours to 12
-        
-        // Determine to/past
+
         const ledpos_t* pMinutesMainWord = NULL;
         const ledpos_t* pMinutesRestWord = NULL;
         const ledpos_t* pHalfWord = NULL;
         const ledpos_t* pToPastWord = NULL;
-                
-        switch(min5)
+
+        switch (s_pLEDTime->timeFormat)
         {
-            case  0: pMinutesMainWord = hour_full; break;
-            case  1: pMinutesMainWord = minute_5 ; pToPastWord = past; break;
-            case  2: pMinutesMainWord = minute_10; pToPastWord = past; break;
-            case  3: pMinutesMainWord = minute_15; pToPastWord = past; break;
-            case  4: pMinutesMainWord = minute_10; pToPastWord = to  ; pHalfWord = half; break;
-            case  5: pMinutesMainWord = minute_5 ; pToPastWord = to  ; pHalfWord = half; break;
-            case  6: pMinutesMainWord = half; break;
-            case  7: pMinutesMainWord = minute_5 ; pToPastWord = past; pHalfWord = half; break;
-            case  8: pMinutesMainWord = minute_10; pToPastWord = past; pHalfWord = half; break;
-            case  9: pMinutesMainWord = minute_15; pToPastWord = to  ; break;
-            case 10: pMinutesMainWord = minute_10; pToPastWord = to  ; break;
-            case 11: pMinutesMainWord = minute_5 ; pToPastWord = to  ; break;
-        }
+        case ETimeFormat::TF_NL_EVERYMIN:
+            {
+                pMinutesMainWord = s_pLEDTime->leadtext;
+
+                // Quarter past 1 => 14 minutes to half two (in Dutch this is correct, English I don't know)
+                int quarterNum = m_nMinutes / 15;
+                int min1 = m_nMinutes % 15;        
+                int hours = m_nHours;
+                if (quarterNum > 0 && !(quarterNum == 1 && min1 == 0)) hours++; // Increase the hour, but do NOT increase when we are at exactly a quarter past
+                hours %= 12; // Limit hours to 12
+                
+                // Determine to/past
+                if (min1 == 0)
+                {
+                    // Specials quarters:
+                    switch (quarterNum)             
+                    {
+                        case 0:                
+                            pMinutesRestWord = s_pLEDTime->hour_full;
+                            pToPastWord = NULL; 
+                            break;
+                        case 1:                
+                            pMinutesRestWord = s_pLEDTime->quarter;
+                            pToPastWord = s_pLEDTime->past; 
+                            break;
+                        case 2:                
+                            pMinutesRestWord = s_pLEDTime->half;
+                            pToPastWord = NULL; 
+                            break;
+                        case 3:                
+                            pMinutesRestWord = s_pLEDTime->quarter;
+                            pToPastWord = s_pLEDTime->to; 
+                            break;
+                    }
+                }
+                else
+                {
+                    pToPastWord = s_pLEDTime->past;
+                    if (quarterNum == 1 || quarterNum == 3)
+                    {
+                        min1 = 15 - min1;
+                        pToPastWord = s_pLEDTime->to;
+                    }
+                    if (m_nMinutes > 15 && m_nMinutes < 45)
+                    {
+                        pHalfWord =s_pLEDTime-> half;
+                    }
+                    const ledpos_t* pMinuteWords[15] {NULL,s_pLEDTime->minute_1, s_pLEDTime->minute_2, s_pLEDTime->minute_3, s_pLEDTime->minute_4, 
+                        s_pLEDTime->minute_5, s_pLEDTime->minute_6, s_pLEDTime->minute_7, s_pLEDTime->minute_8, s_pLEDTime->minute_10, 
+                        s_pLEDTime->minute_11, s_pLEDTime->minute_12, s_pLEDTime->minute_13, s_pLEDTime->minute_14};
+                    pMinutesRestWord = pMinuteWords[min1 % 15];
+                }               
+            }
+            break;
         
-        const ledpos_t* pMinute5Words[5] {NULL, minute_1, minute_2, minute_3, minute_4};
-        pMinutesRestWord = pMinute5Words[min1];
+        case ETimeFormat::TF_NL_5MIN:
+            {
+                switch(min5)
+                {
+                    case  0: pMinutesMainWord = s_pLEDTime->hour_full; break;
+                    case  1: pMinutesMainWord = s_pLEDTime->minute_5 ; pToPastWord = s_pLEDTime->past; break;
+                    case  2: pMinutesMainWord = s_pLEDTime->minute_10; pToPastWord = s_pLEDTime->past; break;
+                    case  3: pMinutesMainWord = s_pLEDTime->quarter;   pToPastWord = s_pLEDTime->past; break;
+                    case  4: pMinutesMainWord = s_pLEDTime->minute_10; pToPastWord = s_pLEDTime->to  ; pHalfWord = s_pLEDTime->half; break;
+                    case  5: pMinutesMainWord = s_pLEDTime->minute_5 ; pToPastWord = s_pLEDTime->to  ; pHalfWord = s_pLEDTime->half; break;
+                    case  6: pMinutesMainWord = s_pLEDTime->half; break;
+                    case  7: pMinutesMainWord = s_pLEDTime->minute_5 ; pToPastWord = s_pLEDTime->past; pHalfWord = s_pLEDTime->half; break;
+                    case  8: pMinutesMainWord = s_pLEDTime->minute_10; pToPastWord = s_pLEDTime->past; pHalfWord = s_pLEDTime->half; break;
+                    case  9: pMinutesMainWord = s_pLEDTime->quarter;   pToPastWord = s_pLEDTime->to  ; break;
+                    case 10: pMinutesMainWord = s_pLEDTime->minute_10; pToPastWord = s_pLEDTime->to  ; break;
+                    case 11: pMinutesMainWord = s_pLEDTime->minute_5 ; pToPastWord = s_pLEDTime->to  ; break;
+                }
+                
+                const ledpos_t* pMinute5Words[5] {NULL, s_pLEDTime->minute_1, s_pLEDTime->minute_2, s_pLEDTime->minute_3,s_pLEDTime->minute_4};
+                pMinutesRestWord = pMinute5Words[min1];
+            }
+            break;
+
+        case ETimeFormat::TF_EN_5MIN:
+        default:
+            {
+
+            }
+            break;
+        }
 
         const ledpos_t* pHourWord = NULL;
-        const ledpos_t* pHourWords[12] {hour_12, hour_1, hour_2, hour_3, hour_4, hour_5, hour_6, hour_7, hour_8, hour_9, hour_10, hour_11};
-        pHourWord = pHourWords[hours % 12];
+        pHourWord = s_pLEDTime->hours[hours % 12];
 
-        const ledpos_t* pDayWord = s_wordsWeekDays[m_nWeekDay % 7];
-        const ledpos_t* pDayOfMonthWord = s_wordsMonthDays[(monthday - 1) % 31]; // Days start at 1
-        const ledpos_t* pMonthWord = s_wordMonths[monthnum % 12];
-
+        const ledpos_t* pDayWord = s_pLEDDate->weekdays[m_nWeekDay % 7];
+        const ledpos_t* pDayOfMonthWord = s_pLEDDate->days[(monthday - 1) % 31]; // Days start at 1
+        const ledpos_t* pMonthWord = s_pLEDDate->months[monthnum % 12];
 
         // And now for the LEDS
         FastLED.clear();
@@ -249,7 +315,7 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         AddWordToLeds((ledpos_t*) pMonthWord, EColorElement::CE_DATE); 
         
         // Second heartbeat fading led
-        AddWordToLeds((ledpos_t*) pulse1, EColorElement::CE_PULSE);
+        AddWordToLeds((ledpos_t*) s_pLEDTime->second, EColorElement::CE_PULSE);
         
         FastLED.show();   
     }

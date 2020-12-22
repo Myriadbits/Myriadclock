@@ -22,7 +22,8 @@ void DisplayStateNoWiFi::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSetti
     CRGB colOrange = CRGB(0xFF, 0x7E, 0x00);
 
     FastLED.clear();
-    AddWordToLeds((ledpos_t*) passcode, colOrange);         
+    AddWordToLeds((ledpos_t*) s_pLEDExtra->no, colOrange);
+    AddWordToLeds((ledpos_t*) s_pLEDExtra->wifi, colOrange);
    
     FastLED.show();   
 }
@@ -58,13 +59,15 @@ bool DisplayStateNoWiFi::HandleLoop(unsigned long epochTime)
         FillBackground();
 
         // Show the NoWiFi
-        AddWordToLeds((ledpos_t*) passcode, colNoWiFi);         
+        AddWordToLeds((ledpos_t*) s_pLEDExtra->no, colNoWiFi);         
+        AddWordToLeds((ledpos_t*) s_pLEDExtra->wifi, colNoWiFi);         
 
         // Show the myriadclock text
-        AddWordToLeds((ledpos_t*) myriadclock, colMyriadclock);   
+        AddWordToLeds((ledpos_t*) s_pLEDExtra->myriadclock, colMyriadclock);   
 
         // Show the codes
-        AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colMyriadclock);
+        //AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colMyriadclock);
+        
         // Show the version
         //const ledpos_t* pNumber = s_wordsMonthDays[(FIRMWARE_VERSION - 1) % 31]; 
         //AddWordToLeds((ledpos_t*) pNumber, colVersion);    

@@ -401,8 +401,8 @@ void MIOTConfigurator::handleClient()
         else
         {
             // Handle the multicast input
-            if (m_multicastSocket >= 0)
-                handleMulticast(m_multicastSocket);
+            //if (m_multicastSocket >= 0)
+            //    handleMulticast(m_multicastSocket);
         }
         break;
 

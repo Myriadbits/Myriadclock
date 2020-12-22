@@ -5,6 +5,10 @@
 
 #include "DisplayStateBase.h"
 
+const ledtime_t*   DisplayStateBase::s_pLEDTime;
+const leddate_t*   DisplayStateBase::s_pLEDDate;
+const ledextra_t*  DisplayStateBase::s_pLEDExtra;
+
 //
 //  Return the elapsed time in milliseconds since a timestamp
 //
