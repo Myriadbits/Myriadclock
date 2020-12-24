@@ -14,6 +14,10 @@
 class DisplayStateUpdating : public DisplayStateBase
 {
 public:
+    DisplayStateUpdating() : DisplayStateBase("updating") 
+    {
+    }
+
     void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
     bool HandleLoop(unsigned long epochTime);  
 

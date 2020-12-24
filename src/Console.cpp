@@ -10,30 +10,16 @@
 #define PROMPT ""
 #define arraysize(x)          (int)(sizeof((x))/sizeof(*(x)))
 
-//
-// Constructor
-//
-Console::Console(long baudrate)
-{
-    m_baudrate  = baudrate;
-    m_started   = false;
-    Start();
-}
-
-//
-// Destructor
-//
-Console::~Console(void)
-{
-}
+using namespace std;
 
 //
 // @brief  Start the console
 //
-void Console::Start()
+void Console::start(long baudrate)
 {
     if (!m_started)
     {
+        m_baudrate = baudrate;
         Serial.begin(m_baudrate);
         Serial.printf("\n");
         Serial.printf("-------------------------------------------------------------\n");
@@ -42,7 +28,6 @@ void Console::Start()
         Serial.printf("--- Copyright (c) 2020 - Jochem@myriadbits.com            ---\n");
         Serial.printf("--- Firmware version: %d                                   ---\n", FIRMWARE_VERSION);
         Serial.printf("-------------------------------------------------------------\n");
-        memset(m_commands, 0, sizeof(m_commands));
         m_prompted = false;
         m_started  = true;
     }
@@ -51,39 +36,22 @@ void Console::Start()
 //
 // Add a command to the command list
 //
-int Console::Add(const char *name, void (*cmd)(const char*, int, char **), const char *synopsis)
+void Console::add(string name, ConsoleHandler *phandler, string synopsis)
 {
-    int i;
-
-    for (i = 0; i < MAXCOMMANDS; i++)
-    {
-        if (m_commands[i].handler == NULL)
-        {
-            m_commands[i].name     = name;
-            m_commands[i].handler  = cmd;
-            m_commands[i].synopsis = synopsis;
-            break;
-        }
-    }
-    if (i == MAXCOMMANDS)
-    {
-        Serial.print("Cannot add command ");
-        Serial.println(name);
-        return -1;
-    }
-    return 0;
+    cmd_t cmd = { name, synopsis, phandler };
+    m_commands.push_back(cmd);
 }
 
 //
 // Check and handle any new characters
 //
-void Console::Tick(void)
+void Console::tick(void)
 {
     char c;
 
     if (!m_prompted)
     {
-        memset(&m_command, 0, sizeof(m_command));
+        m_line.clear();
         while (Serial.available() > 0) Serial.read();       // Flush input
         Serial.print(PROMPT);
         m_prompted = true;
@@ -95,36 +63,24 @@ void Console::Tick(void)
 
         switch (c)
         {
-            case 0x7f:
-            case '\b':  
-                if (m_command.index > 0)
-                {
-                    m_command.line[--m_command.index] = '\0';
-                }
-                break;
+        case 0x7f:
+        case '\b':  
+            if (m_line.size() > 0)
+                m_line.pop_back();
+            break;
 
-            case '\r':  
-                Serial.print('\n');
-                Process();
-                break;
+        case '\r':  
+            Serial.print('\n');
+            process();
+            break;
 
-            case '\n':  
-                Serial.print('\n');
-                Process();
-                break;
-                
-            default:    
-                if (m_command.index >= COMMAND_BUFFER_SIZE - 1)
-                {
-                    Serial.println(F("\nline too long"));
-                    Serial.print(PROMPT);
-                    m_prompted = false;
-                }
-                else
-                {
-                    m_command.line[m_command.index++] = c;
-                    m_command.line[m_command.index  ] = '\0';
-                }
+        case '\n':  
+            Serial.print('\n');
+            process();
+            break;
+            
+        default:    
+            m_line += c;
         }
     }
 }
@@ -132,52 +88,57 @@ void Console::Tick(void)
 //
 // Parse the command line into an argc/argv[] pair and try to execute the command in argv[0]
 //
-void Console::Process(void)
+void Console::process()
 {
-    char *p1, *p2;
-    int  i, argc;
-
     //
     //  Check on builtin "?"
     //
-    if (!strcmp(m_command.line, "?"))
+    if (m_line == "?")
     {
-        List();
+        list();
     }
-    else if (!strcmp(m_command.line, "\n"))
+    else if (m_line == "\n")
     {
         // Do nothing
     }
     else
     {
         // Parse the command line
-        memset(m_argv, 0, sizeof(m_argv));
-        for (argc = 0, p1 = m_command.line; argc < MAXARGUMENTS;)
+        m_args.clear();
+
+        string arg;
+        for (auto c : m_line) 
         {
-            while (*p1 == ' ') p1++;                    // remove leading spaces
-            if (*p1 == '\0') break;                     // check on EOL
-            m_argv[argc++] = p1;
-            if ((p2 = strchr(p1, ' ')) == NULL) break;  // check on last argument
-            *p2 = '\0';
-            p1  = p2 + 1;
-        }
-       
-        // Search for and execute the command handler
-        for (i = 0; i < arraysize(m_commands); i++)
-        {
-            if (m_argv[0])
+            if (c == ' ')
             {
-                if (strcmp(m_argv[0], m_commands[i].name) == 0)
+                m_args.push_back(arg);                
+                arg.clear();
+            }
+            else 
+            {
+                arg = arg + c;
+            }           
+        }
+        m_args.push_back(arg);
+      
+        // Search for and execute the command handler
+        if (m_args.size() > 0)
+        {
+            bool commandFound = false;
+            for (auto &cmd : m_commands) // access by reference to avoid copying
+            {  
+                if (cmd.name == m_args[0])
                 {
-                    m_commands[i].handler(m_commands[i].name, argc, m_argv);
+                    commandFound = true;
+                    cmd.handler->commandHandler(cmd.name, m_args);
                     break;
                 }
             }
-        }
-        if (i == sizeof(m_commands) / sizeof(cmd_t))
-        {
-            Serial.print(F("Unknown command "));
-            Serial.println(m_command.line);
+            if (!commandFound)
+            {
+                Serial.print(F("Unknown command "));
+                Serial.println(m_line.c_str());
+            }
         }
     }
     m_prompted = false;
@@ -186,22 +147,17 @@ void Console::Process(void)
 //
 // Show all avaiable commands
 //
-void Console::List(void)
+void Console::list()
 {
-    int i, j;
-
     Serial.println(F("Command list:"));
-    for (i = 0;  i < MAXCOMMANDS; i++)
-    {
-        if (m_commands[i].handler != NULL)
+    for (auto &cmd : m_commands) // access by reference to avoid copying
+    {       
+        Serial.print("    ");
+        Serial.print(cmd.name.c_str());
+        for (int j = strlen(cmd.name.c_str()); j < 20; j++)
         {
-            Serial.print("    ");
-            Serial.print(m_commands[i].name);
-            for (j = strlen(m_commands[i].name); j < 12; j++)
-            {
-                Serial.print(" ");
-            }
-            Serial.println(m_commands[i].synopsis);
+            Serial.print(" ");
         }
+        Serial.println(cmd.synopsis.c_str());
     }
 }

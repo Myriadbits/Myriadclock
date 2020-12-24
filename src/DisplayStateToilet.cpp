@@ -33,14 +33,6 @@ void DisplayStateToilet::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSetti
     DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
     m_nWordIndexTop = 0;
     m_nWordIndexBottom = 0;
-    strcpy(m_sCommand, "toilet");
-    strcpy(m_sCommandDescription, "Show the toilet signs");
-
-}
-
-
-void DisplayStateToilet::CommandHandler(int argc, char *argv[])
-{
 }
 
 //

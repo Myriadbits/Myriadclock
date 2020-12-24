@@ -8,6 +8,10 @@
 class DisplayStateNoWiFi : public DisplayStateBase
 {
 public:
+    DisplayStateNoWiFi() : DisplayStateBase("nowifi") 
+    {
+    }
+
     void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
     bool HandleLoop(unsigned long epochTime);  
 

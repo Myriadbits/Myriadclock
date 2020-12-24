@@ -9,10 +9,12 @@
 class DisplayStateWords : public DisplayStateBase
 {
 public:
+    DisplayStateWords() : DisplayStateBase("words") 
+    {
+    }
+
     void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
     bool HandleLoop(unsigned long epochTime);  
-
-    void CommandHandler(int argc, char *argv[]);
 
 private:
     uint8_t       m_nWordIndexTop;

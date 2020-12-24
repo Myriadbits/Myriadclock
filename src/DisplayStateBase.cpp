@@ -5,9 +5,7 @@
 
 #include "DisplayStateBase.h"
 
-const ledtime_t*   DisplayStateBase::s_pLEDTime;
-const leddate_t*   DisplayStateBase::s_pLEDDate;
-const ledextra_t*  DisplayStateBase::s_pLEDExtra;
+ledclocklayout_t DisplayStateBase::s_layout = s_layoutNL_V1;
 
 //
 //  Return the elapsed time in milliseconds since a timestamp
@@ -31,16 +29,23 @@ int16_t DisplayStateBase::CalcLedPos(int8_t x, int8_t y)
 }
 
 //
+// Set the clock layout
+void DisplayStateBase::setLayout(const ledclocklayout_t *playout) 
+{ 
+    memcpy(&s_layout, playout, sizeof(s_layout));
+};
+
+//
 // Color handler for words
-CRGB DisplayStateBase::ColorHandler(uint32_t customParam)
+CRGB DisplayStateBase::ColorHandler(CRGB defaultColor, int customParam)
 {
-    return CRGB(customParam);
+    return defaultColor;
 }
 
 //
 // Add a single word to the display/leds
 // customParam can be any value, normal operation when ColorHandler is not overriden: customParam is the color
-void DisplayStateBase::AddWordToLeds(ledpos_t* pCurrentWord, uint32_t customParam) 
+void DisplayStateBase::AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int customParam) 
 {
     if (pCurrentWord == NULL) return;
     if (m_pLEDs == NULL) return;
@@ -50,7 +55,7 @@ void DisplayStateBase::AddWordToLeds(ledpos_t* pCurrentWord, uint32_t customPara
     while (ledPos.x >= 0 && ledPos.y >= 0)
     {
         // Led numbers are inverted left to right every other row:        
-        m_pLEDs[CalcLedPos(ledPos.x, ledPos.y)] = ColorHandler(customParam);
+        m_pLEDs[CalcLedPos(ledPos.x, ledPos.y)] = ColorHandler(defaultColor, customParam);
         
         // Next char
         charIndex++;

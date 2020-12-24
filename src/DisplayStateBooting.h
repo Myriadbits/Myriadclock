@@ -8,6 +8,10 @@
 class DisplayStateBooting : public DisplayStateBase
 {
 public:
+    DisplayStateBooting() : DisplayStateBase("booting") 
+    {
+    }
+
     void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
     bool HandleLoop(unsigned long epochTime);  
 

@@ -20,13 +20,18 @@ class DisplayStateClock : public DisplayStateBase
     };
 
 public:
+    DisplayStateClock() : DisplayStateBase("clock") 
+    {
+    }
+
     void    Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
     bool    HandleLoop(unsigned long epochTime);  
     
 protected:
+    CRGB    ColorHandler(CRGB defaultColor, int customParam = 0);
+
     void    CalcSunriseSunset(unsigned long timestamp, float lat, float lon, float alt, unsigned long *sunrise, unsigned long *sunset);
     void    UpdateBrightness(unsigned long epochTime);
-    CRGB    ColorHandler(uint32_t customParam);
     CRGB    GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSettings::EDisplayOptions eOption, std::minstd_rand0& generator);
 
 private:

@@ -9,6 +9,7 @@
 #include "esp_log.h"
 #include "nvs_flash.h"
 
+
 #include "lwip/err.h"
 #include "lwip/sockets.h"
 #include "lwip/sys.h"
@@ -62,6 +63,8 @@ void MIOTConfigurator::setup(String softAPPassword, unsigned long wifiConnection
     // See statemachine in handlelient
     m_state = MIOTState_Unconnected;
 
+
+
     // Default device ID is the serial number of the Chip
     if (m_deviceId.isEmpty())
     {
@@ -78,6 +81,31 @@ void MIOTConfigurator::setup(String softAPPassword, unsigned long wifiConnection
     MIOT_LOG("- DeviceId: %s\n", m_deviceId.c_str());
     MIOT_LOG("- DeviceName: %s\n", m_deviceName.c_str());
     MIOT_LOG("- Version:  %d\n", m_version);
+
+
+    BLEDevice::init(m_deviceName.c_str());
+    m_pBLEServer = BLEDevice::createServer();
+    BLEService *pService = m_pBLEServer->createService(MIOT_SERVICE_UUID);
+    BLECharacteristic *pCharacteristic = pService->createCharacteristic(MIOT_CHARACTERISTIC_UUID, 
+                                                BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+    pCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
+    pCharacteristic->setValue("01234567890123456789012345678901234567890");
+
+    pService->start();
+
+    // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
+    BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
+    pAdvertising->addServiceUUID(MIOT_SERVICE_UUID);
+    pAdvertising->setScanResponse(true);
+    pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
+    pAdvertising->setMinPreferred(0x12);
+    BLEDevice::startAdvertising();
+    Serial.println("Characteristic defined! Now you can read it in your phone!");
+
+    BLESecurity *pSecurity = new BLESecurity();
+    pSecurity->setCapability(ESP_IO_CAP_OUT);
+    pSecurity->setAuthenticationMode(ESP_LE_AUTH_REQ_SC_BOND);
+    BLEDevice::setSecurityCallbacks(this);
 }
 
 //
@@ -207,6 +235,40 @@ bool MIOTConfigurator::handleMulticast(int sock)
         }
     }
     return true;
+}
+
+
+uint32_t MIOTConfigurator::onPassKeyRequest()
+{
+    return 123456;
+}
+
+void MIOTConfigurator::onPassKeyNotify(uint32_t pass_key)
+{       
+     MIOT_LOG("The passkey Notify number:%d\n", pass_key);
+}
+
+bool MIOTConfigurator::onConfirmPIN(uint32_t pass_key)
+{
+    MIOT_LOG("The passkey YES/NO number:%d\n", pass_key);
+    vTaskDelay(1000);
+    return true;
+}
+
+bool MIOTConfigurator::onSecurityRequest()
+{
+    MIOT_LOG("Security Request\n");
+    return true;
+}
+void MIOTConfigurator::onAuthenticationComplete(esp_ble_auth_cmpl_t auth_cmpl)
+{
+    if(auth_cmpl.success)
+    {
+        MIOT_LOG("remote BD_ADDR:");
+        //esp_log_buffer_hex(LOG_TAG, auth_cmpl.bd_addr, sizeof(auth_cmpl.bd_addr));
+        MIOT_LOG("address type = %d\n", auth_cmpl.addr_type);
+    }
+    MIOT_LOG("Pair status = %s\n", auth_cmpl.success ? "success" : "fail");
 }
 
 //

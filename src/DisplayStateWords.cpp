@@ -14,42 +14,38 @@ void DisplayStateWords::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettin
     m_nWordIndexTop = 0;
     m_nWordIndexBottom = 0;
     m_nWordIndexDay = 0;
-    strcpy(m_sCommand, "words");
-    strcpy(m_sCommandDescription, "Show all words after eachother to validate the words");
 }
 
-
-void DisplayStateWords::CommandHandler(int argc, char *argv[])
-{
-}
 
 //
 // Loop
 //
 bool DisplayStateWords::HandleLoop(unsigned long epochTime)
-{
+{    
     // List all words 
-    static const ledpos_t* s_wordsTop[] = {
-        s_pLEDTime->leadtext, 
-        s_pLEDTime->minute_1, s_pLEDTime->minute_2, s_pLEDTime->minute_3, s_pLEDTime->minute_4, s_pLEDTime->minute_5, 
-        s_pLEDTime->minute_6, s_pLEDTime->minute_7, s_pLEDTime->minute_8, s_pLEDTime->minute_9, s_pLEDTime->minute_10, 
-        s_pLEDTime->minute_11, s_pLEDTime->minute_12, s_pLEDTime->minute_13, s_pLEDTime->minute_14, s_pLEDTime->quarter,
-        s_pLEDTime->to, s_pLEDTime->past, s_pLEDTime->half,
-        s_pLEDTime->hours[0], s_pLEDTime->hours[1], s_pLEDTime->hours[2], s_pLEDTime->hours[3], s_pLEDTime->hours[4], 
-        s_pLEDTime->hours[5], s_pLEDTime->hours[6], s_pLEDTime->hours[7], s_pLEDTime->hours[8], s_pLEDTime->hours[9],
-        s_pLEDTime->hours[10], s_pLEDTime->hours[11], 
-        s_pLEDTime->hour_full,        
+    const ledpos_t* s_wordsTop[] = {
+        s_layout.time.leadtext, 
+        s_layout.time.minute_1,  s_layout.time.minute_2,  s_layout.time.minute_3,  s_layout.time.minute_4,  s_layout.time.minute_5, 
+        s_layout.time.minute_6,  s_layout.time.minute_7,  s_layout.time.minute_8,  s_layout.time.minute_9,  s_layout.time.minute_10, 
+        s_layout.time.minute_11,  s_layout.time.minute_12,  s_layout.time.minute_13,  s_layout.time.minute_14,  s_layout.time.quarter,
+        s_layout.time.to_5,  s_layout.time.past_5,  s_layout.time.to_10,  s_layout.time.past_10,  s_layout.time.to_15,  s_layout.time.past_15, 
+        s_layout.time.to_20,  s_layout.time.past_20,  s_layout.time.to_25,  s_layout.time.past_25,
+        s_layout.time.half_past,  s_layout.time.half_to,
+        s_layout.hours[0],  s_layout.hours[1],  s_layout.hours[2],  s_layout.hours[3],  s_layout.hours[4], 
+        s_layout.hours[5],  s_layout.hours[6],  s_layout.hours[7],  s_layout.hours[8],  s_layout.hours[9],
+        s_layout.hours[10],  s_layout.hours[11], 
+        s_layout.time.hour_full,        
         NULL };
 
-    static const ledpos_t* s_wordsBottom[] = {   
-        s_pLEDDate->weekdays[0], s_pLEDDate->weekdays[1], s_pLEDDate->weekdays[2], s_pLEDDate->weekdays[3], s_pLEDDate->weekdays[4], 
-        s_pLEDDate->weekdays[5], s_pLEDDate->weekdays[6],
-        s_pLEDDate->months[0], s_pLEDDate->months[1], s_pLEDDate->months[2], s_pLEDDate->months[3],
-        s_pLEDDate->months[4], s_pLEDDate->months[5], s_pLEDDate->months[6], s_pLEDDate->months[7],
-        s_pLEDDate->months[8], s_pLEDDate->months[9], s_pLEDDate->months[10], s_pLEDDate->months[11],
-        s_pLEDExtra->birthday, s_pLEDExtra->bluetooth, s_pLEDExtra->holiday, s_pLEDExtra->myriadbits, 
-        s_pLEDExtra->myriadclock, s_pLEDExtra->no, s_pLEDExtra->party, s_pLEDExtra->passcode, 
-        s_pLEDExtra->weddingday, s_pLEDExtra->wifi,
+    const ledpos_t* s_wordsBottom[] = {   
+        s_layout.weekdays[0], s_layout.weekdays[1], s_layout.weekdays[2], s_layout.weekdays[3], s_layout.weekdays[4], 
+        s_layout.weekdays[5], s_layout.weekdays[6],
+        s_layout.months[0], s_layout.months[1], s_layout.months[2], s_layout.months[3],
+        s_layout.months[4], s_layout.months[5], s_layout.months[6], s_layout.months[7],
+        s_layout.months[8], s_layout.months[9], s_layout.months[10], s_layout.months[11],
+        s_layout.extra.birthday, s_layout.extra.bluetooth, s_layout.extra.holiday, s_layout.extra.myriadbits, 
+        s_layout.extra.myriadclock, s_layout.extra.no, s_layout.extra.yes, s_layout.extra.party, s_layout.extra.passcode, 
+        s_layout.extra.goodmorning, s_layout.extra.wakeup, s_layout.extra.wifi,
         NULL };
 
 
@@ -91,10 +87,10 @@ bool DisplayStateWords::HandleLoop(unsigned long epochTime)
         } while (pCurrentWord == EMPTY);
 
         if (pCurrentWord != NULL)
-            AddWordToLeds(pCurrentWord, colBottom);                       
+            AddWordToLeds(pCurrentWord, colBottom);        
 
         
-        AddWordToLeds((ledpos_t*) s_pLEDDate->days[m_nWordIndexDay % 31], colCenter);                       
+        AddWordToLeds((ledpos_t*) s_layout.days[m_nWordIndexDay % 31], colCenter);                       
         m_nWordIndexDay++;
 
         FastLED.show();   

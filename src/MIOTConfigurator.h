@@ -46,6 +46,10 @@
 #include <ArduinoJson.h>
 #include <Preferences.h>
 
+#include <BLEDevice.h>
+#include <BLEUtils.h>
+#include <BLEServer.h>
+
 #if defined(ARDUINO_ARCH_ESP8266)
     #include <ESP8266WiFi.h>
 #elif defined(ARDUINO_ARCH_ESP32)
@@ -82,6 +86,8 @@
 #define MIOT_MULTICAST_UDP_PORT         2323
 #define MIOT_MULTICAST_TTL              32 // Restrict multicasts to same site
 
+#define MIOT_SERVICE_UUID               "a8264447-fdbd-4668-a422-9c38494f5400"
+#define MIOT_CHARACTERISTIC_UUID        "a8264447-fdbd-4668-a422-9c3d494f5401"
 
 typedef enum
 {
@@ -97,7 +103,7 @@ typedef enum
 // MIOTConfigurator
 // Automatic SmartConfig/Wifi connection
 ///////////////////////////////////////////////////////////////////////////////
-class MIOTConfigurator
+class MIOTConfigurator : public BLESecurityCallbacks
 {
 public:
     MIOTConfigurator(WiFiUDP& udp, String productName = MIOT_DEFAULT_PRODUCTNAME, int version = MIOT_DEFAULT_VERSION);
@@ -113,12 +119,21 @@ public:
     String getDeviceId() { return m_deviceId; }
     int getVersion() { return m_version; }
 
+	virtual uint32_t onPassKeyRequest();
+	virtual void onPassKeyNotify(uint32_t pass_key);
+	virtual bool onSecurityRequest();
+	virtual void onAuthenticationComplete(esp_ble_auth_cmpl_t);
+	virtual bool onConfirmPIN(uint32_t pin);
+
 private:
     void changeState(EMIOTState newState);
     int createMulticastGroup();    
     bool handleMulticast(int sock);
 
 protected:
+    //
+    BLEServer*              m_pBLEServer;
+
     // Statemachine related
     EMIOTState              m_state;
     unsigned long           m_wifiConnectionTimeout;        // Timeout for new wifi networks

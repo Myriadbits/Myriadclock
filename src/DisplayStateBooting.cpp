@@ -16,16 +16,14 @@ void DisplayStateBooting::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
     m_nCounter = 0;
     m_nCycleCounter = 0;
     m_nDir = 1;
-    strcpy(m_sCommand, "booting");
-    strcpy(m_sCommandDescription, "Show the booting sequence");
 
     CRGB colGreen = CRGB(0x00, 0x3E, 0x00);
 
     FastLED.clear();
-    AddWordToLeds((ledpos_t*) s_pLEDExtra->myriadclock, colGreen);         
+    AddWordToLeds((ledpos_t*) s_layout.extra.myriadclock, colGreen);         
 
     // Show the version
-    const ledpos_t* pNumber = s_pLEDDate->days[(FIRMWARE_VERSION - 1) % 31]; 
+    const ledpos_t* pNumber = s_layout.numbers[(FIRMWARE_VERSION - 1) % 31]; 
     AddWordToLeds((ledpos_t*) pNumber, colGreen);    
     
     FastLED.show();   
@@ -37,7 +35,7 @@ void DisplayStateBooting::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
 bool DisplayStateBooting::HandleLoop(unsigned long epochTime)
 {
     CRGB colTop = CRGB(0, m_nCounter, 0);
-    CRGB colVersion = CRGB(0, m_nCounter/4, 0);
+   // CRGB colVersion = CRGB(0, m_nCounter/4, 0);
 
     if (Elapsed(m_timeStamp) > 25)
     {
@@ -61,7 +59,7 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime)
         FillBackground();
 
         // Show the myriadclock text
-        AddWordToLeds((ledpos_t*) s_pLEDExtra->myriadclock, colTop);   
+        AddWordToLeds(s_layout.extra.myriadclock, colTop);   
 
         // Show the codes
    //     AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colVersion); TODO

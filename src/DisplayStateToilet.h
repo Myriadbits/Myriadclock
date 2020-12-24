@@ -9,10 +9,12 @@
 class DisplayStateToilet : public DisplayStateBase
 {
 public:
+    DisplayStateToilet() : DisplayStateBase("toilet") 
+    {
+    }
+
     void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
     bool HandleLoop(unsigned long epochTime);  
-
-    void CommandHandler(int argc, char *argv[]);
 
 private:
     static uint8_t     s_toiletSign[16 * 16];

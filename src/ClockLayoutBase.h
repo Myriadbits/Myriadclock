@@ -47,8 +47,7 @@ enum ETimeFormat
 };
 
 // Definitions for times text
-typedef struct {
-    const ETimeFormat timeFormat;
+typedef struct {    
     const ledpos_t *second;
     const ledpos_t *leadtext; 
     const ledpos_t *minute_1;  
@@ -68,34 +67,51 @@ typedef struct {
     const ledpos_t *quarter;
     const ledpos_t *minute_20;
     const ledpos_t *minute_25;
-    const ledpos_t *past;
-    const ledpos_t *to;
-    const ledpos_t *half;
-    const ledpos_t *hour_full;    
-    const ledpos_t *hours[12];
-} ledtime_t;
+    const ledpos_t *past_5;     // Past for `five past` = default for past
+    const ledpos_t *to_5;       // To for `five to` = default for to
+    const ledpos_t *past_10;    // Past for `ten past`
+    const ledpos_t *to_10;      // To for `ten to`
+    const ledpos_t *past_15;    // Past for `quarter past`
+    const ledpos_t *to_15;      // To for `quarter to`
+    const ledpos_t *past_20;    // Past for `twenty past`
+    const ledpos_t *to_20;      // To for `twenty to`
+    const ledpos_t *past_25;    // Past for `twenty-five past`
+    const ledpos_t *to_25;      // To for `twenty-five to`
 
-// Definitions for day numbers
-typedef struct {
-    const ledpos_t *weekdays[7];
-    const ledpos_t *days[31];
-    const ledpos_t *months[12];
-} leddate_t;
+    const ledpos_t *half_to;    // Half to use for 'voor half xxx' = default 'half'
+    const ledpos_t *half_past;  // Half to use for 'over half xxx'
+    const ledpos_t *hour_full;    
+} ledtime_t;
 
 // Definitions for extra words
 typedef struct {
     const ledpos_t *no;
+    const ledpos_t *yes;
     const ledpos_t *wifi;
     const ledpos_t *myriadclock;
     const ledpos_t *myriadbits;
     const ledpos_t *bluetooth;
     const ledpos_t *passcode;
-    const ledpos_t *weddingday;
+    const ledpos_t *goodmorning;
     const ledpos_t *birthday;
     const ledpos_t *holiday;
     const ledpos_t *party;
+    const ledpos_t *wakeup;    
 } ledextra_t;
 
 // empty led position
 static const ledpos_t EMPTY[] = { WEND};
+
+// Definitions for extra words
+typedef struct 
+{
+    const ETimeFormat   timeFormat;
+    const ledtime_t     time;
+    const ledpos_t*     hours[12];
+    const ledpos_t*     weekdays[7];
+    const ledpos_t*     days[31];
+    const ledpos_t*     months[12];
+    const ledextra_t    extra;
+    const ledpos_t*     numbers[10];
+} ledclocklayout_t;
 

@@ -13,8 +13,6 @@ void DisplayStateUpdating::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSet
 {
     DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
     m_timeStamp = millis();
-    strcpy(m_sCommand, "update");
-    strcpy(m_sCommandDescription, "Update using FOTA");   
 }
 
 //
@@ -24,7 +22,7 @@ bool DisplayStateUpdating::HandleLoop(unsigned long epochTime)
 {
     FastLED.clear();
     FastLED.setBrightness(50);
-    AddWordToLeds((ledpos_t*) s_pLEDExtra->myriadclock, CRGB(0x00, 0x00, 0x7F));                           
+    AddWordToLeds((ledpos_t*) s_layout.extra.myriadclock, CRGB(0x00, 0x00, 0x7F));                           
     FastLED.show();   
 
     // Create new FOTA object 

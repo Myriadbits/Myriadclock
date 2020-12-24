@@ -1,12 +1,22 @@
 #pragma once
 
-#define MAXCOMMANDS          15       // Maximum # commands
-#define MAXARGUMENTS          3       // Maximum # command line arguments
-#define COMMAND_BUFFER_SIZE  40       // Character buffer size 
+#include <vector>
+#include <string>
+
+#define COMMAND_BUFFER_SIZE     256 // Maximum # chars on a line
 
 #ifndef NULL
 #define NULL    (void *)0
 #endif
+
+//
+// Handler for processing console commands
+//
+class ConsoleHandler
+{
+    public:
+    virtual void commandHandler(std::string command, std::vector<std::string> args) {};
+};
 
 ///////////////////////////////////////////////////////////////////////////////
 // Console class
@@ -15,36 +25,42 @@
 class Console
 {
     public:
-        Console (long baudrate);
-        ~Console(void);
-        void Start();
-        void Tick(void);
-        int  Add(const char *name, void (*cmd)(const char*, int, char **), const char *synopsis);
+        Console()
+            : m_started(false)
+        {
+        }
+
+        Console(Console const&) = delete;
+        void operator=(Console const&) = delete;
+
+        static Console& getInstance()
+        {
+            static Console instance; // Guaranteed to be destroyed. Instantiated on first use.
+            return instance;
+        }
+
+        void start(long baudrate);
+        void tick(void);
+        void add(std::string name, ConsoleHandler *phandler, std::string synopsis);
 
     private:
         typedef struct
         {
-            const char      *name;
-            void           (*handler)(const char*, int, char **);
-            const char      *synopsis;
+            std::string          name;
+            std::string          synopsis;
+            ConsoleHandler      *handler;
         } cmd_t;
 
-        typedef struct
-        {
-            char            line[COMMAND_BUFFER_SIZE];
-            unsigned char   index;
-        } line_t;
-
         // private variables
-        cmd_t           m_commands[MAXCOMMANDS];
-        char*           m_argv    [MAXARGUMENTS];
-        line_t          m_command;
+        std::vector<cmd_t>          m_commands;
+        std::vector<std::string>    m_args;
+        std::string                 m_line;
         bool            m_prompted;
         bool            m_started;
         long            m_baudrate;
         bool            m_espmon_on;
 
         // private functions
-        void Process(void);
-        void List(void);
+        void process(void);
+        void list(void);
 };

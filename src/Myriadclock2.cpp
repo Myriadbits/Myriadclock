@@ -42,16 +42,11 @@
 
 #include "Console.h"
 #define FASTLED_INTERNAL
-#include "FastLED.h"       // Fastled library to control the LEDs
+#include <FastLED.h>       // Fastled library to control the LEDs
 
-#include "DisplayStateNoWiFi.h"
-#include "DisplayStateBooting.h"
-#include "DisplayStateWords.h"
-#include "DisplayStateClock.h"
-#include "DisplayStateUpdating.h"
+#include "StateManager.h"
 #include "MyriadclockConfig.h"
 #include "MyriadclockSettings.h"
-#include "DisplayStateToilet.h"
 #include "WebHandler.h"
 #include <ESPiLight.h>
 #include <ArduinoJson.h>
@@ -66,21 +61,18 @@
 
 using namespace std;
 
-#define MAXSTATES               10      // Maximum number of LED states
-
 
 static CRGB         g_Leds[NUM_LEDS]; // Define the array of leds
-static Console*     g_pConsole = NULL;
 static uint32_t     g_timestamp  = 0;
-static DisplayStateBase* g_arStates[MAXSTATES] = {0};
-static int          g_nStateCounter = 0;
-static int          g_nCurrentState = 0;
 static bool         g_fNTPStarted = false;
 static int          g_nPreviousHour = 0;
 
 static MyriadclockSettings g_Settings;
 
 WiFiUDP             g_ntpUDP;
+
+// Manager containing all display state related functionality
+StateManager        g_stateManager;
 
 // By default 'pool.ntp.org' is used with 60 seconds update interval and no offset
 NTPClient           g_timeClient(g_ntpUDP, "pool.ntp.org");
@@ -113,57 +105,6 @@ uint32_t Elapsed(uint32_t ts)
     if (ts < now) return (now - ts);
     return(now + (0xffffffff - ts));
 }
-
-//
-// Activate another state
-//
-static void cmdStateChange(const char* command, int argc, char *argv[])
-{
-    // Find the command in the state array
-    for(int n = 0; n < g_nStateCounter; n++)
-    {
-        if (strcmp(command, g_arStates[n]->GetCommand()) == 0)
-        {
-            g_nCurrentState = n;
-            g_arStates[n]->Initialize(g_Leds, &g_CE, &g_Settings); // Reinitialize 
-            g_arStates[n]->CommandHandler(argc, argv);
-            break;
-        }
-    }
-}
-
-//
-// Add a new state to the state array
-//
-void addState(DisplayStateBase* pNewState)
-{
-    pNewState->Initialize(g_Leds, &g_CE, &g_Settings);
-    g_arStates[g_nStateCounter++] = pNewState;
-    g_pConsole->Add(pNewState->GetCommand(), cmdStateChange, pNewState->GetCommandDescription());    
-}
-
-//
-// Advertise presence using mDNS 
-//
-/*void AdvertiseServices(String myName)
-{
-    if (MDNS.begin(myName.c_str()))
-    {
-        Serial.println(F("mDNS responder started"));
-        Serial.print(F("I am: "));
-        Serial.println(myName.c_str());
-
-        // Add service to MDNS-SD
-        MDNS.addService("http", "tcp", 80);
-        MDNS.addServiceTxt("_http", "_tcp", "Myriadclock", "3");
-    }
-    else
-    {
-        Serial.println(F("Error setting up MDNS responder"));
-    }
-}
-*/
-
 
 
 // callback function. It is called on successfully received and parsed rc signal
@@ -220,7 +161,7 @@ void rfCallback(const String &protocol, const String &message, int status, size_
 void setup() 
 {
     // Create + start the console
-    g_pConsole = new Console(115200);   
+    Console::getInstance().start(115200);   
 
     // Determine the board type/capabilities
     pinMode(TYPE_PIN, INPUT_PULLDOWN);  // set pin as input
@@ -231,6 +172,9 @@ void setup()
 
     // Load/initialize all settings
     g_Settings.Initialize();
+
+    // Initialize all display related functionality
+    g_stateManager.initialize(g_Leds, &g_CE, &g_Settings);
 
     // Get CHIP ID:
     uint64_t chipid = ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
@@ -263,17 +207,6 @@ void setup()
    // g_pWebHandler = new WebHandler(g_server, g_Settings);
     //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
-    // Add all states to our statemachine
-    addState(new DisplayStateNoWiFi());
-    addState(new DisplayStateBooting());
-    addState(new DisplayStateClock());
-    addState(new DisplayStateWords());
-    addState(new DisplayStateUpdating());
-    addState(new DisplayStateToilet());
-    g_nCurrentState = 0;   
-
-    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
-
     //AutoConnectConfig config; 
     //config.apid = g_Settings.sClockName;
     //config.autoReconnect = true;
@@ -304,14 +237,7 @@ void loop()
     //g_rf.loop();   
 
     // TODO Make currentstate an ENUM
-    if (g_nCurrentState < g_nStateCounter)
-    {
-        if (!g_arStates[g_nCurrentState]->HandleLoop(g_timeClient.getEpochTime()))
-        {
-            // When handleloop returns false, select the next handler
-            g_nCurrentState = 0; // TODO always fallback to clock?
-        }
-    }
+    g_stateManager.handleLoop(g_timeClient.getEpochTime());
 
     // Allow the portal to handle stuff
     //g_acPortal.handleClient();
@@ -320,7 +246,7 @@ void loop()
     //g_server.handleClient();
         
     // And the console
-    g_pConsole->Tick();    
+    Console::getInstance().tick();    
 
     // Once every x seconds, check the NTP stuff
     if (Elapsed(g_timestamp) > 1000)
@@ -332,7 +258,7 @@ void loop()
         {
             if (!g_fNTPStarted)
             {
-                g_nCurrentState = 1; // Booting
+                g_stateManager.setState(1); // Booting
                 g_timeClient.begin();
                 g_fNTPStarted = true;
                 Serial.println("NTP starting");
@@ -341,7 +267,7 @@ void loop()
         else
         {
             // Show no-wifi   
-            g_nCurrentState = 0; // noWiFi
+            g_stateManager.setState(0); // No wifi
         }
 
         if (g_fNTPStarted)
@@ -358,13 +284,13 @@ void loop()
 
             if (currentYear > 1970 && g_nPreviousHour != hours)
             {
-                g_nCurrentState = 2; // Show clock
+                g_stateManager.setState(2); // Show clock
             }
 
             if (hours == 4 && g_nPreviousHour != 4)
             {
                 // Switch to updating
-                g_nCurrentState = 3;
+                g_stateManager.setState(3);
             }
             g_nPreviousHour = hours;
         }

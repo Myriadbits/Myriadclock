@@ -91,14 +91,6 @@ static const ledpos_t NLV1_pulse1    [] = { {15,0}, WEND};
 static const ledpos_t NLV1_pulse2    [] = { {0,15}, WEND};
 
 
-static const ledtime_t s_layoutNL_V1_time = {
-    TF_NL_EVERYMIN,
-    NLV1_pulse2, NLV1_itis, NLV1_minute_1, NLV1_minute_2, NLV1_minute_3, NLV1_minute_4, NLV1_minute_5, NLV1_minute_6, NLV1_minute_7, NLV1_minute_8, NLV1_minute_9, NLV1_minute_10,
-    NLV1_minute_11, NLV1_minute_12, NLV1_minute_13, NLV1_minute_14, NLV1_quarter, EMPTY, EMPTY, 
-    NLV1_past, NLV1_to, NLV1_half, NLV1_hour_full,
-    {NLV1_hour_12, NLV1_hour_1, NLV1_hour_2, NLV1_hour_3, NLV1_hour_4, NLV1_hour_5, NLV1_hour_6, NLV1_hour_7, NLV1_hour_8, NLV1_hour_9, NLV1_hour_10, NLV1_hour_11},        
-};
-
 
 static const ledpos_t NLV1_monday    [] = { {1,10}, {2,10}, WEND};
 static const ledpos_t NLV1_tuesday   [] = { {3,10}, {4,10}, WEND};
@@ -108,6 +100,7 @@ static const ledpos_t NLV1_friday    [] = { {9,10}, {10,10}, WEND};
 static const ledpos_t NLV1_saturday  [] = { {11,10}, {12,10}, WEND};
 static const ledpos_t NLV1_sunday    [] = { {13,10}, {14,10}, WEND};
 
+static const ledpos_t NLV1_day0      [] = { {2,11}, WEND};
 static const ledpos_t NLV1_day1      [] = { {3,11}, WEND};
 static const ledpos_t NLV1_day2      [] = { {5,11}, WEND};
 static const ledpos_t NLV1_day3      [] = { {7,11}, WEND};
@@ -153,20 +146,6 @@ static const ledpos_t NLV1_october  [] = { {7,15}, {8,15}, {9,15}, WEND};
 static const ledpos_t NLV1_november [] = { {10,15}, {11,15}, {12,15}, WEND};
 static const ledpos_t NLV1_december [] = { {13,15}, {14,15}, {15,15}, WEND};
 
-static const leddate_t s_layoutNL_V1_date = 
-{
-    {
-        NLV1_sunday, NLV1_monday, NLV1_tuesday, NLV1_wednesday, NLV1_thursday, NLV1_friday, NLV1_saturday
-    },
-    {
-        NLV1_day1, NLV1_day2, NLV1_day3, NLV1_day4, NLV1_day5, NLV1_day6, NLV1_day7, NLV1_day8, NLV1_day9, NLV1_day10, 
-        NLV1_day11, NLV1_day12, NLV1_day13, NLV1_day14, NLV1_day15, NLV1_day16, NLV1_day17, NLV1_day18, NLV1_day19, NLV1_day20, 
-        NLV1_day21, NLV1_day22, NLV1_day23, NLV1_day24, NLV1_day25, NLV1_day26, NLV1_day27, NLV1_day28, NLV1_day29, NLV1_day30, NLV1_day31
-    },
-    {
-        NLV1_januari, NLV1_februari, NLV1_march, NLV1_april, NLV1_may, NLV1_june, NLV1_july, NLV1_august, NLV1_september, NLV1_october, NLV1_november, NLV1_december
-    }
-};
 
 static const ledpos_t NLV1_myriadbits  [] = { {0,1}, {0,2}, {0,3}, {0,4}, {0,5}, {0,6}, {0,7}, {0,8}, {0,9}, {0,10}, {0,11}, {0,12}, {0,13}, {0,14}, WEND};
 static const ledpos_t NLV1_myriadclock  [] = { {2,9}, {3,9}, {4,9}, {5,9}, {6,9}, {7,9}, {8,9}, {9,9}, {10,9}, {11,9}, {12,9}, WEND};
@@ -179,17 +158,64 @@ static const ledpos_t NLV1_nok  [] = { {14,5}, WEND};
 static const ledpos_t NLV1_heart [] = { {9,13}, WEND};
 static const ledpos_t NLV1_flag [] = { {1,7}, WEND};
 
-static const ledextra_t s_layoutNL_V1_extra = 
+//
+// Complete clock definition for old NL variant
+//
+static const ledclocklayout_t s_layoutNL_V1 = 
 {
-    NLV1_no,
-    NLV1_wifi,
-    NLV1_myriadclock,
-    NLV1_myriadbits,
-    EMPTY,
-    EMPTY,
-    NLV1_heart,
-    NLV1_flag,
-    NLV1_flag
+    // Time display method
+    TF_NL_EVERYMIN,
+
+    // Time parts
+    {
+        NLV1_pulse2, NLV1_itis, NLV1_minute_1, NLV1_minute_2, NLV1_minute_3, NLV1_minute_4, NLV1_minute_5, NLV1_minute_6, NLV1_minute_7, NLV1_minute_8, NLV1_minute_9, NLV1_minute_10,
+        NLV1_minute_11, NLV1_minute_12, NLV1_minute_13, NLV1_minute_14, NLV1_quarter, EMPTY, EMPTY, 
+        NLV1_past, NLV1_to, NLV1_past, NLV1_to, NLV1_past, NLV1_to, NLV1_past, NLV1_to, NLV1_past, NLV1_to, 
+        NLV1_half, NLV1_half, NLV1_hour_full
+    },
+
+    // 12x Hours
+    {
+        NLV1_hour_12, NLV1_hour_1, NLV1_hour_2, NLV1_hour_3, NLV1_hour_4, NLV1_hour_5, NLV1_hour_6, NLV1_hour_7, NLV1_hour_8, NLV1_hour_9, NLV1_hour_10, NLV1_hour_11       
+    },
+
+    // 7x Day of the week
+    {
+        NLV1_sunday, NLV1_monday, NLV1_tuesday, NLV1_wednesday, NLV1_thursday, NLV1_friday, NLV1_saturday
+    },
+
+    // 31x Day number
+    {
+        NLV1_day1, NLV1_day2, NLV1_day3, NLV1_day4, NLV1_day5, NLV1_day6, NLV1_day7, NLV1_day8, NLV1_day9, NLV1_day10, 
+        NLV1_day11, NLV1_day12, NLV1_day13, NLV1_day14, NLV1_day15, NLV1_day16, NLV1_day17, NLV1_day18, NLV1_day19, NLV1_day20, 
+        NLV1_day21, NLV1_day22, NLV1_day23, NLV1_day24, NLV1_day25, NLV1_day26, NLV1_day27, NLV1_day28, NLV1_day29, NLV1_day30, NLV1_day31
+    },        
+
+    // 12x Month
+    {
+        NLV1_januari, NLV1_februari, NLV1_march, NLV1_april, NLV1_may, NLV1_june, NLV1_july, NLV1_august, NLV1_september, NLV1_october, NLV1_november, NLV1_december
+    },
+
+    // Extra parts
+    {
+        NLV1_no,
+        NLV1_nok,
+        NLV1_wifi,
+        NLV1_myriadclock,
+        NLV1_myriadbits,
+        EMPTY,
+        EMPTY,
+        EMPTY,
+        NLV1_flag,
+        NLV1_flag,
+        NLV1_flag,
+        EMPTY,
+    },
+
+    // 10x number
+    {
+        NLV1_day0, NLV1_day1, NLV1_day2, NLV1_day3, NLV1_day4, NLV1_day5, NLV1_day6, NLV1_day7, NLV1_day8, NLV1_day9
+    }
 };
 
 

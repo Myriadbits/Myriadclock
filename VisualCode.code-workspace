@@ -23,10 +23,6 @@
 		},
 		{
 			"path": "..\\MyriadClockV4"
-		},
-		{
-			"name": "MyriadClockV5",
-			"path": "..\\MyriadClockV5"
 		}
 	],
 	"settings": {
@@ -84,7 +80,8 @@
 			"future": "cpp",
 			"mutex": "cpp",
 			"thread": "cpp",
-			"string": "cpp"
+			"string": "cpp",
+			"*.ipp": "cpp"
 		}
 	}
 }

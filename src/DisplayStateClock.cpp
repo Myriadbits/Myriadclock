@@ -23,8 +23,6 @@ void DisplayStateClock::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettin
 {
     DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
     m_nPreviousBrightness = 0;
-    strcpy(m_sCommand, "clock");
-    strcpy(m_sCommandDescription, "Show the normal clock");
 }
 
 
@@ -129,6 +127,8 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         // Convert to local time
         time_t t = (m_pTZ != NULL) ? m_pTZ->toLocal(epochTime, &tcr) : 0; // (Note: tcr cannot be NULL)
 
+        CRGB colDefault = m_pSettings->colTime;
+
         m_nWeekDay = weekday(t) - 1; // Weekday returns (1 - 7), Sunday = 1
         m_nSeconds = second(t);
         m_nHours = hour(t);
@@ -193,11 +193,13 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         const ledpos_t* pHalfWord = NULL;
         const ledpos_t* pToPastWord = NULL;
 
-        switch (s_pLEDTime->timeFormat)
+        const ledtime_t* pTime = &(s_layout.time);
+
+        switch (s_layout.timeFormat)
         {
         case ETimeFormat::TF_NL_EVERYMIN:
             {
-                pMinutesMainWord = s_pLEDTime->leadtext;
+                pMinutesMainWord = pTime->leadtext;
 
                 // Quarter past 1 => 14 minutes to half two (in Dutch this is correct, English I don't know)
                 int quarterNum = m_nMinutes / 15;
@@ -213,38 +215,38 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
                     switch (quarterNum)             
                     {
                         case 0:                
-                            pMinutesRestWord = s_pLEDTime->hour_full;
+                            pMinutesRestWord = pTime->hour_full;
                             pToPastWord = NULL; 
                             break;
                         case 1:                
-                            pMinutesRestWord = s_pLEDTime->quarter;
-                            pToPastWord = s_pLEDTime->past; 
+                            pMinutesRestWord = pTime->quarter;
+                            pToPastWord = pTime->past_15; 
                             break;
                         case 2:                
-                            pMinutesRestWord = s_pLEDTime->half;
+                            pMinutesRestWord = pTime->half_to;
                             pToPastWord = NULL; 
                             break;
                         case 3:                
-                            pMinutesRestWord = s_pLEDTime->quarter;
-                            pToPastWord = s_pLEDTime->to; 
+                            pMinutesRestWord = pTime->quarter;
+                            pToPastWord = pTime->to_15; 
                             break;
                     }
                 }
                 else
                 {
-                    pToPastWord = s_pLEDTime->past;
+                    pToPastWord = pTime->past_5;
                     if (quarterNum == 1 || quarterNum == 3)
                     {
                         min1 = 15 - min1;
-                        pToPastWord = s_pLEDTime->to;
+                        pToPastWord = pTime->to_5;
                     }
                     if (m_nMinutes > 15 && m_nMinutes < 45)
                     {
-                        pHalfWord =s_pLEDTime-> half;
+                        pHalfWord =pTime-> half_to;
                     }
-                    const ledpos_t* pMinuteWords[15] {NULL,s_pLEDTime->minute_1, s_pLEDTime->minute_2, s_pLEDTime->minute_3, s_pLEDTime->minute_4, 
-                        s_pLEDTime->minute_5, s_pLEDTime->minute_6, s_pLEDTime->minute_7, s_pLEDTime->minute_8, s_pLEDTime->minute_10, 
-                        s_pLEDTime->minute_11, s_pLEDTime->minute_12, s_pLEDTime->minute_13, s_pLEDTime->minute_14};
+                    const ledpos_t* pMinuteWords[15] {NULL,pTime->minute_1, pTime->minute_2, pTime->minute_3, pTime->minute_4, 
+                        pTime->minute_5, pTime->minute_6, pTime->minute_7, pTime->minute_8, pTime->minute_10, 
+                        pTime->minute_11, pTime->minute_12, pTime->minute_13, pTime->minute_14};
                     pMinutesRestWord = pMinuteWords[min1 % 15];
                 }               
             }
@@ -254,21 +256,21 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
             {
                 switch(min5)
                 {
-                    case  0: pMinutesMainWord = s_pLEDTime->hour_full; break;
-                    case  1: pMinutesMainWord = s_pLEDTime->minute_5 ; pToPastWord = s_pLEDTime->past; break;
-                    case  2: pMinutesMainWord = s_pLEDTime->minute_10; pToPastWord = s_pLEDTime->past; break;
-                    case  3: pMinutesMainWord = s_pLEDTime->quarter;   pToPastWord = s_pLEDTime->past; break;
-                    case  4: pMinutesMainWord = s_pLEDTime->minute_10; pToPastWord = s_pLEDTime->to  ; pHalfWord = s_pLEDTime->half; break;
-                    case  5: pMinutesMainWord = s_pLEDTime->minute_5 ; pToPastWord = s_pLEDTime->to  ; pHalfWord = s_pLEDTime->half; break;
-                    case  6: pMinutesMainWord = s_pLEDTime->half; break;
-                    case  7: pMinutesMainWord = s_pLEDTime->minute_5 ; pToPastWord = s_pLEDTime->past; pHalfWord = s_pLEDTime->half; break;
-                    case  8: pMinutesMainWord = s_pLEDTime->minute_10; pToPastWord = s_pLEDTime->past; pHalfWord = s_pLEDTime->half; break;
-                    case  9: pMinutesMainWord = s_pLEDTime->quarter;   pToPastWord = s_pLEDTime->to  ; break;
-                    case 10: pMinutesMainWord = s_pLEDTime->minute_10; pToPastWord = s_pLEDTime->to  ; break;
-                    case 11: pMinutesMainWord = s_pLEDTime->minute_5 ; pToPastWord = s_pLEDTime->to  ; break;
+                    case  0: pMinutesMainWord = pTime->hour_full; break;
+                    case  1: pMinutesMainWord = pTime->minute_5 ; pToPastWord = pTime->past_5 ; break;
+                    case  2: pMinutesMainWord = pTime->minute_10; pToPastWord = pTime->past_10; break;
+                    case  3: pMinutesMainWord = pTime->quarter;   pToPastWord = pTime->past_15; break;
+                    case  4: pMinutesMainWord = pTime->minute_10; pToPastWord = pTime->to_10  ; pHalfWord = pTime->half_to; break;
+                    case  5: pMinutesMainWord = pTime->minute_5 ; pToPastWord = pTime->to_5   ; pHalfWord = pTime->half_to; break;
+                    case  6: pMinutesMainWord = pTime->half_to; break;
+                    case  7: pMinutesMainWord = pTime->minute_5 ; pToPastWord = pTime->past_5 ; pHalfWord = pTime->half_past; break;
+                    case  8: pMinutesMainWord = pTime->minute_10; pToPastWord = pTime->past_10; pHalfWord = pTime->half_past; break;
+                    case  9: pMinutesMainWord = pTime->quarter;   pToPastWord = pTime->to_15  ; break;
+                    case 10: pMinutesMainWord = pTime->minute_10; pToPastWord = pTime->to_10  ; break;
+                    case 11: pMinutesMainWord = pTime->minute_5 ; pToPastWord = pTime->to_5   ; break;
                 }
                 
-                const ledpos_t* pMinute5Words[5] {NULL, s_pLEDTime->minute_1, s_pLEDTime->minute_2, s_pLEDTime->minute_3,s_pLEDTime->minute_4};
+                const ledpos_t* pMinute5Words[5] {NULL, pTime->minute_1, pTime->minute_2, pTime->minute_3,pTime->minute_4};
                 pMinutesRestWord = pMinute5Words[min1];
             }
             break;
@@ -282,11 +284,11 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         }
 
         const ledpos_t* pHourWord = NULL;
-        pHourWord = s_pLEDTime->hours[hours % 12];
+        pHourWord = s_layout.hours[hours % 12];
 
-        const ledpos_t* pDayWord = s_pLEDDate->weekdays[m_nWeekDay % 7];
-        const ledpos_t* pDayOfMonthWord = s_pLEDDate->days[(monthday - 1) % 31]; // Days start at 1
-        const ledpos_t* pMonthWord = s_pLEDDate->months[monthnum % 12];
+        const ledpos_t* pDayWord = s_layout.weekdays[m_nWeekDay % 7];
+        const ledpos_t* pDayOfMonthWord = s_layout.days[(monthday - 1) % 31]; // Days start at 1
+        const ledpos_t* pMonthWord = s_layout.months[monthnum % 12];
 
         // And now for the LEDS
         FastLED.clear();
@@ -301,21 +303,21 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         UpdateBrightness(epochTime);        
 
         // Always show it-is
-        AddWordToLeds((ledpos_t*) pToPastWord, EColorElement::CE_TIME); // (AddWordToLeds can handle NULL pointers!)
-        AddWordToLeds((ledpos_t*) pMinutesMainWord, EColorElement::CE_TIME);
-        AddWordToLeds((ledpos_t*) pMinutesRestWord, EColorElement::CE_TIME);
-        AddWordToLeds((ledpos_t*) pHalfWord, EColorElement::CE_TIME);
-        AddWordToLeds((ledpos_t*) pHourWord, EColorElement::CE_TIME);
+        AddWordToLeds((ledpos_t*) pToPastWord, colDefault, EColorElement::CE_TIME); // (AddWordToLeds can handle NULL pointers!)
+        AddWordToLeds((ledpos_t*) pMinutesMainWord, colDefault, EColorElement::CE_TIME);
+        AddWordToLeds((ledpos_t*) pMinutesRestWord, colDefault, EColorElement::CE_TIME);
+        AddWordToLeds((ledpos_t*) pHalfWord, colDefault, EColorElement::CE_TIME);
+        AddWordToLeds((ledpos_t*) pHourWord, colDefault, EColorElement::CE_TIME);
 
         // Display day of the week
-        AddWordToLeds((ledpos_t*) pDayWord, EColorElement::CE_WEEKDAY);
+        AddWordToLeds((ledpos_t*) pDayWord, colDefault, EColorElement::CE_WEEKDAY);
 
         // Ad the date
-        AddWordToLeds((ledpos_t*) pDayOfMonthWord, EColorElement::CE_DATE);        
-        AddWordToLeds((ledpos_t*) pMonthWord, EColorElement::CE_DATE); 
+        AddWordToLeds((ledpos_t*) pDayOfMonthWord, colDefault, EColorElement::CE_DATE);        
+        AddWordToLeds((ledpos_t*) pMonthWord, colDefault, EColorElement::CE_DATE); 
         
         // Second heartbeat fading led
-        AddWordToLeds((ledpos_t*) s_pLEDTime->second, EColorElement::CE_PULSE);
+        AddWordToLeds((ledpos_t*) pTime->second, colDefault, EColorElement::CE_PULSE);
         
         FastLED.show();   
     }
@@ -326,7 +328,7 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
 //
 // Overridden from DisplayStateBase to provide the color for a word or character
 //
-CRGB DisplayStateClock::ColorHandler(uint32_t customParam)
+CRGB DisplayStateClock::ColorHandler(CRGB defaultColor, int customParam)
 {
     switch ((EColorElement) customParam)
     {
@@ -346,7 +348,7 @@ CRGB DisplayStateClock::ColorHandler(uint32_t customParam)
             return CRGB(m_pSettings->colDate).fadeToBlackBy(127 * (cos(2.0 * PI * m_timeStamp / 6000.0) + 1.0));
 
         default:
-            return CRGB(customParam);
+            return defaultColor;
     }
 }
 
