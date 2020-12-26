@@ -77,4 +77,15 @@ void DisplayStateBase::FillBackground(void)
     }
 }
 
-
+//
+// Simple log function
+void DisplayStateBase::log(const char* format, ...)
+{
+    static char sBuffer[256];
+    va_list ap;
+    va_start(ap, format);
+    Serial.printf("[%s %lu] ", m_name.c_str(), millis());
+    vsprintf(sBuffer, format, ap);
+    Serial.println(sBuffer);
+    va_end(ap);
+}

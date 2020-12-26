@@ -18,8 +18,8 @@ public:
     {
     }
 
-    void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
-    bool HandleLoop(unsigned long epochTime);  
+    virtual void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
+    virtual bool HandleLoop(unsigned long epochTime);  
 
 private:
     esp32FOTA*       m_pesp32FOTA; //("Myriadclock-fota", 1);

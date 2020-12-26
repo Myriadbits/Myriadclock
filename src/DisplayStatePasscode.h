@@ -3,21 +3,25 @@
 #include "DisplayStateBase.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Base class for all display states
-// Command line interpreter
+// NoWiFi display state
 ///////////////////////////////////////////////////////////////////////////////
-class DisplayStateToilet : public DisplayStateBase
+class DisplayStatePasscode : public DisplayStateBase
 {
 public:
-    DisplayStateToilet() : DisplayStateBase("toilet") 
+    DisplayStatePasscode() : DisplayStateBase("passcode") 
     {
     }
 
     virtual void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
     virtual bool HandleLoop(unsigned long epochTime);  
 
+    void setResult(bool success);
+
 private:
-    static uint8_t     s_toiletSign[16 * 16];
-    uint8_t     m_nWordIndexTop;
-    uint8_t     m_nWordIndexBottom;
+    int             m_nCounter;
+    int             m_nSubCounter;
+    int             m_nDelay;
+    bool            m_fShowResult;
+    bool            m_fResult;
+    std::string     m_codeAsString;
 };

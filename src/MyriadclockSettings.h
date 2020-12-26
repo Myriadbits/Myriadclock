@@ -15,6 +15,22 @@ private:
     Preferences m_preferences;
 
 public:
+    MyriadclockSettings()
+        : sClockName()
+        , nSerialNumber(0)
+        , nBrightnessDay(80)
+        , nBrightnessNight(30)
+        , nBrightnessBackground(4)
+        , eDisplayOptionsTime(DO_NORMAL)    
+        , eDisplayOptionsWeekday(DO_NORMAL) 
+        , eDisplayOptionsDate(DO_NORMAL)
+        , eDisplayOptionsBirthday(DO_COLOR_PARTY_MINUTE)
+        , eDisplayOptionsHoliday(DO_COLOR_PARTY_MINUTE)
+        , bluetoothPasscode(0)
+    {
+        
+    }
+
     enum EDisplayOptions
     {
         DO_NORMAL,              // Single color
@@ -49,6 +65,9 @@ public:
 
     time_t      dateBirthdays[MAX_BIRTHDAYS];   // Special days
     time_t      dateHolidays[MAX_HOLIDAYS];     // Holidays
+
+    // Volatile parameters
+    uint32_t    bluetoothPasscode; 
 
     void Initialize();
     void Store();

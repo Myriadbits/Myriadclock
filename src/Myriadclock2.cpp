@@ -44,7 +44,7 @@
 #define FASTLED_INTERNAL
 #include <FastLED.h>       // Fastled library to control the LEDs
 
-#include "StateManager.h"
+#include "DisplayStateManager.h"
 #include "MyriadclockConfig.h"
 #include "MyriadclockSettings.h"
 #include "WebHandler.h"
@@ -72,7 +72,7 @@ static MyriadclockSettings g_Settings;
 WiFiUDP             g_ntpUDP;
 
 // Manager containing all display state related functionality
-StateManager        g_stateManager;
+DisplayStateManager g_stateManager;
 
 // By default 'pool.ntp.org' is used with 60 seconds update interval and no offset
 NTPClient           g_timeClient(g_ntpUDP, "pool.ntp.org");
@@ -219,7 +219,7 @@ void setup()
     //g_acPortal.begin();
     //g_acUpdate.attach(g_acPortal);
 
-    g_miot.setup();
+    g_miot.setup(&g_stateManager);
 
     //Serial.println("Webserver started: " + WiFi.localIP().toString());    
     //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
@@ -258,7 +258,7 @@ void loop()
         {
             if (!g_fNTPStarted)
             {
-                g_stateManager.setState(1); // Booting
+                g_stateManager.changeState(DS_BOOTING); // Booting
                 g_timeClient.begin();
                 g_fNTPStarted = true;
                 Serial.println("NTP starting");
@@ -267,7 +267,7 @@ void loop()
         else
         {
             // Show no-wifi   
-            g_stateManager.setState(0); // No wifi
+            g_stateManager.changeState(DS_NOWIFI); // No wifi
         }
 
         if (g_fNTPStarted)
@@ -284,13 +284,13 @@ void loop()
 
             if (currentYear > 1970 && g_nPreviousHour != hours)
             {
-                g_stateManager.setState(2); // Show clock
+                g_stateManager.changeState(DS_CLOCK); // Show clock
             }
 
             if (hours == 4 && g_nPreviousHour != 4)
             {
                 // Switch to updating
-                g_stateManager.setState(3);
+                g_stateManager.changeState(DS_UPDATING);
             }
             g_nPreviousHour = hours;
         }

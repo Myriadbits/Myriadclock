@@ -45,6 +45,19 @@ void MIOTConfigurator::changeState(EMIOTState newState)
     m_millisLastStateChange = millis();
 }
 
+// entities
+//  entity
+//   id?
+//   name
+//   description
+//   type = rgblight
+//          effect
+//          switch
+//          battery
+//          motor
+//    
+
+
 //
 // setup the MIOT Configurator, call this method in the setup function
 // This setup will:
@@ -53,8 +66,9 @@ void MIOTConfigurator::changeState(EMIOTState newState)
 //   and the password (as argument)
 // Note that the password should be entered by the user of the configuration tool
 // Might be good to add that as a QR code to the product itself
-void MIOTConfigurator::setup(String softAPPassword, unsigned long wifiConnectionTimeout, unsigned long wifiConnectionLostTimeout, unsigned long wifiAPSettingTimeout)
+void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, String softAPPassword, unsigned long wifiConnectionTimeout, unsigned long wifiConnectionLostTimeout, unsigned long wifiAPSettingTimeout)
 {
+    m_pCallBacks = pCallBacks;
     m_softAPPassword = softAPPassword;
     m_wifiConnectionTimeout = wifiConnectionTimeout;
     m_wifiConnectionLostTimeout = wifiConnectionLostTimeout;   
@@ -62,8 +76,6 @@ void MIOTConfigurator::setup(String softAPPassword, unsigned long wifiConnection
 
     // See statemachine in handlelient
     m_state = MIOTState_Unconnected;
-
-
 
     // Default device ID is the serial number of the Chip
     if (m_deviceId.isEmpty())
@@ -245,7 +257,9 @@ uint32_t MIOTConfigurator::onPassKeyRequest()
 
 void MIOTConfigurator::onPassKeyNotify(uint32_t pass_key)
 {       
-     MIOT_LOG("The passkey Notify number:%d\n", pass_key);
+    MIOT_LOG("The passkey Notify number:%d\n", pass_key); // <--- this one
+    if (m_pCallBacks)
+        m_pCallBacks->onDisplayPassKey(pass_key);
 }
 
 bool MIOTConfigurator::onConfirmPIN(uint32_t pass_key)
@@ -269,6 +283,9 @@ void MIOTConfigurator::onAuthenticationComplete(esp_ble_auth_cmpl_t auth_cmpl)
         MIOT_LOG("address type = %d\n", auth_cmpl.addr_type);
     }
     MIOT_LOG("Pair status = %s\n", auth_cmpl.success ? "success" : "fail");
+
+    if (m_pCallBacks)
+        m_pCallBacks->onBluetoothConnection(auth_cmpl.success);
 }
 
 //

@@ -99,6 +99,25 @@ typedef enum
     MIOTState_ConnectionLost
 } EMIOTState;
 
+
+//
+// Callbacks called by MIOT class
+class MIOTCallbacks
+{
+public:
+    virtual ~MIOTCallbacks() {};
+
+	//
+    // Callback that will be called with a random passkey to should be displayed
+    //
+	virtual void onDisplayPassKey(uint32_t passkey) = 0;
+
+    //
+    // Callback that will be called when the bluetooth connection is established or has failed
+    //
+	virtual void onBluetoothConnection(bool success) = 0;
+};
+
 ///////////////////////////////////////////////////////////////////////////////
 // MIOTConfigurator
 // Automatic SmartConfig/Wifi connection
@@ -108,7 +127,7 @@ class MIOTConfigurator : public BLESecurityCallbacks
 public:
     MIOTConfigurator(WiFiUDP& udp, String productName = MIOT_DEFAULT_PRODUCTNAME, int version = MIOT_DEFAULT_VERSION);
 
-    void setup(String softAPPassword = MIOT_DEFAULT_SOFTAPPASSWORD, unsigned long wifiConnectionTimeout = MIOT_TIMEOUT_WIFICONNECTION, unsigned long wifiConnectionLostTimeout = MIOT_TIMEOUT_WIFICONNECTIONLOST, unsigned long smartConfigTimeout = MIOT_TIMEOUT_SMARTCONFIG);    
+    void setup(MIOTCallbacks* pCallBacks, String softAPPassword = MIOT_DEFAULT_SOFTAPPASSWORD, unsigned long wifiConnectionTimeout = MIOT_TIMEOUT_WIFICONNECTION, unsigned long wifiConnectionLostTimeout = MIOT_TIMEOUT_WIFICONNECTIONLOST, unsigned long smartConfigTimeout = MIOT_TIMEOUT_SMARTCONFIG);    
     void handleClient();        
 
     void setProductName(String productName) { m_productName = productName; }
@@ -131,7 +150,8 @@ private:
     bool handleMulticast(int sock);
 
 protected:
-    //
+    // Internal stuff
+    MIOTCallbacks*          m_pCallBacks;
     BLEServer*              m_pBLEServer;
 
     // Statemachine related

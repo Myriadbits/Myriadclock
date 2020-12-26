@@ -36,7 +36,7 @@ void Console::start(long baudrate)
 //
 // Add a command to the command list
 //
-void Console::add(string name, ConsoleHandler *phandler, string synopsis)
+void Console::add(string name, ConsoleCallbacks *phandler, string synopsis)
 {
     cmd_t cmd = { name, synopsis, phandler };
     m_commands.push_back(cmd);

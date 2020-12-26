@@ -12,7 +12,7 @@
 //
 // Handler for processing console commands
 //
-class ConsoleHandler
+class ConsoleCallbacks
 {
     public:
     virtual void commandHandler(std::string command, std::vector<std::string> args) {};
@@ -41,14 +41,14 @@ class Console
 
         void start(long baudrate);
         void tick(void);
-        void add(std::string name, ConsoleHandler *phandler, std::string synopsis);
+        void add(std::string name, ConsoleCallbacks *phandler, std::string synopsis);
 
     private:
         typedef struct
         {
             std::string          name;
             std::string          synopsis;
-            ConsoleHandler      *handler;
+            ConsoleCallbacks      *handler;
         } cmd_t;
 
         // private variables

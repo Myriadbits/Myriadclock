@@ -105,8 +105,7 @@ void DisplayStateClock::UpdateBrightness(unsigned long epochTime)
     FastLED.setBrightness(brightness);
     if (brightness != m_nPreviousBrightness)
     {
-        Serial.print("Brightness changed to: ");
-        Serial.println(brightness);
+        log("Brightness changed to: %d", brightness);
         m_nPreviousBrightness = brightness;
     }    
 }

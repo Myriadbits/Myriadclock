@@ -14,11 +14,15 @@
 // Base class for all display states
 // Command line interpreter
 ///////////////////////////////////////////////////////////////////////////////
-class DisplayStateBase : public ConsoleHandler
+class DisplayStateBase : public ConsoleCallbacks
 {
 public:
     DisplayStateBase(std::string name)
         : m_name(name)
+        , m_timeStamp(0)
+        , m_pLEDs(NULL)
+        , m_pTZ(NULL)
+        , m_pSettings(NULL)
     {
     }
 
@@ -29,6 +33,7 @@ public:
         m_pTZ = pTZ;
         m_pSettings = pSettings;
         m_timeStamp = millis();
+        log("State initialized");
     };    
 
     virtual bool HandleLoop(unsigned long epochTime) { return false; };        
@@ -44,6 +49,9 @@ protected:
     void FillBackground(void);
     int16_t CalcLedPos(int8_t x, int8_t y);
     uint32_t Elapsed(uint32_t ts);
+
+    void  log(const char* format, ...);
+
 
 protected:
     std::string                     m_name;
