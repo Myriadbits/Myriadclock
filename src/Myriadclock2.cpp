@@ -220,6 +220,11 @@ void setup()
     //g_acUpdate.attach(g_acPortal);
 
     g_miot.setup(&g_stateManager);
+    g_miot.addConfigItem(1, CT_WIFI_SSID, "SSID", "WiFi SSID");
+    g_miot.addConfigItem(2, CT_WIFI_PASSWORD, "Passphrase", "WiFi Passphrase");
+    g_miot.addConfigItem(10, CT_RGBCOLOR, "Time color", "Color of the time part");
+    g_miot.addConfigItem(11, CT_RGBCOLOR, "Date color", "Color of the date part");
+    g_miot.addConfigItem(12, CT_RGBCOLOR, "DayOfWeek color", "Color of the day of the week");
 
     //Serial.println("Webserver started: " + WiFi.localIP().toString());    
     //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
@@ -248,6 +253,12 @@ void loop()
     // And the console
     Console::getInstance().tick();    
 
+    // Show no-wifi while there is still no Wifi  
+    if (WiFi.status() != WL_CONNECTED)
+    {
+        g_stateManager.changeState(DS_NOWIFI); // No wifi
+    }
+
     // Once every x seconds, check the NTP stuff
     if (Elapsed(g_timestamp) > 1000)
     {                
@@ -263,11 +274,6 @@ void loop()
                 g_fNTPStarted = true;
                 Serial.println("NTP starting");
             }
-        }
-        else
-        {
-            // Show no-wifi   
-            g_stateManager.changeState(DS_NOWIFI); // No wifi
         }
 
         if (g_fNTPStarted)

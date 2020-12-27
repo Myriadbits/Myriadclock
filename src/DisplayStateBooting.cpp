@@ -16,17 +16,6 @@ void DisplayStateBooting::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
     m_nCounter = 0;
     m_nCycleCounter = 0;
     m_nDir = 1;
-
-    CRGB colGreen = CRGB(0x00, 0x3E, 0x00);
-
-    FastLED.clear();
-    AddWordToLeds((ledpos_t*) s_layout.extra.myriadclock, colGreen);         
-
-    // Show the version
-    const ledpos_t* pNumber = s_layout.numbers[(FIRMWARE_VERSION - 1) % 31]; 
-    AddWordToLeds((ledpos_t*) pNumber, colGreen);    
-    
-    FastLED.show();   
 }
 
 //

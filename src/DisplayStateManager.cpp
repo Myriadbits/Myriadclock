@@ -43,9 +43,12 @@ void DisplayStateManager::changeState(const EDisplayState eState)
     auto it = m_states.find(eState);
     if (it != m_states.end())
     {
-        m_pCurrentState = it->second;
-        m_pCurrentState->Initialize(m_pLEDs, m_pTZ, m_pSettings);
-        
+        // Only switch to new display state when it is a different state
+        if (m_pCurrentState != it->second)
+        {
+            m_pCurrentState = it->second;
+            m_pCurrentState->Initialize(m_pLEDs, m_pTZ, m_pSettings);
+        }        
     }
 }
 

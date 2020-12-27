@@ -16,14 +16,6 @@ void DisplayStateNoWiFi::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSetti
     m_nCounter = 0;
     m_nCycleCounter = 0;
     m_nDir = 1;
-
-    CRGB colOrange = CRGB(0xFF, 0x7E, 0x00);
-
-    FastLED.clear();
-    AddWordToLeds((ledpos_t*) s_layout.extra.no, colOrange);
-    AddWordToLeds((ledpos_t*) s_layout.extra.wifi, colOrange);
-   
-    FastLED.show();   
 }
 
 //

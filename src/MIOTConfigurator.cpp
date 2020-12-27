@@ -24,7 +24,7 @@
 // @param wifiConnectionTimeout Timeout for connecting to the WiFi
 // @param wifiConnectionLostTimeout Timeout for restarting the SmartConfig when an existing WiFi connection is lost
 // @param smartConfigTimeout Timeout for retrying the WiFi credentials (if any) when the SmartConfig does not receive credentials
-MIOTConfigurator::MIOTConfigurator(WiFiUDP& udp, String productName, int version)
+MIOTConfigurator::MIOTConfigurator(WiFiUDP& udp, std::string productName, int version)
     : m_state(MIOTState_Unconnected)
     , m_wifiConnectionTimeout(MIOT_TIMEOUT_WIFICONNECTION)
     , m_wifiConnectionLostTimeout(MIOT_TIMEOUT_WIFICONNECTIONLOST)    
@@ -66,7 +66,7 @@ void MIOTConfigurator::changeState(EMIOTState newState)
 //   and the password (as argument)
 // Note that the password should be entered by the user of the configuration tool
 // Might be good to add that as a QR code to the product itself
-void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, String softAPPassword, unsigned long wifiConnectionTimeout, unsigned long wifiConnectionLostTimeout, unsigned long wifiAPSettingTimeout)
+void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, std::string softAPPassword, unsigned long wifiConnectionTimeout, unsigned long wifiConnectionLostTimeout, unsigned long wifiAPSettingTimeout)
 {
     m_pCallBacks = pCallBacks;
     m_softAPPassword = softAPPassword;
@@ -78,30 +78,40 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, String softAPPassword, u
     m_state = MIOTState_Unconnected;
 
     // Default device ID is the serial number of the Chip
-    if (m_deviceId.isEmpty())
+    if (m_deviceId.empty())
     {
         uint64_t chipid = ESP.getEfuseMac(); //The chip ID is essentially its MAC address(length: 6 bytes).
         // Chip ID is 64 bit, I find that a bit large for an ID, make it 16 bit (I know, there is a chance some are the same)
-        m_deviceId = String((uint16_t)((chipid >> 32) & 0xFFFF) ^ (uint16_t)((chipid >> 16) & 0xFFFF) ^ (uint16_t)(chipid & 0xFFFF), 16);
-        m_deviceId.toUpperCase();
+        char hex[32];
+        snprintf(hex, 32, "%04X", (uint16_t)((chipid >> 32) & 0xFFFF) ^ (uint16_t)((chipid >> 16) & 0xFFFF) ^ (uint16_t)(chipid & 0xFFFF));
+        m_deviceId = std::string(hex);
     }
     m_deviceName = m_productName + "-" + m_deviceId;
     WiFi.setHostname(m_deviceName.c_str());
 
-    MIOT_LOG("Starting MIOT Configurator\n");
-    MIOT_LOG("- Product:  %s\n", m_productName.c_str());
-    MIOT_LOG("- DeviceId: %s\n", m_deviceId.c_str());
-    MIOT_LOG("- DeviceName: %s\n", m_deviceName.c_str());
-    MIOT_LOG("- Version:  %d\n", m_version);
+    MIOT_LOG("Starting MIOT Configurator");
+    MIOT_LOG("- Product:  %s", m_productName.c_str());
+    MIOT_LOG("- DeviceId: %s", m_deviceId.c_str());
+    MIOT_LOG("- DeviceName: %s", m_deviceName.c_str());
+    MIOT_LOG("- Version:  %d", m_version);
 
 
+    //
+    // BLE initializatons
+    //
     BLEDevice::init(m_deviceName.c_str());
     m_pBLEServer = BLEDevice::createServer();
     BLEService *pService = m_pBLEServer->createService(MIOT_SERVICE_UUID);
-    BLECharacteristic *pCharacteristic = pService->createCharacteristic(MIOT_CHARACTERISTIC_UUID, 
-                                                BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
-    pCharacteristic->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
-    pCharacteristic->setValue("01234567890123456789012345678901234567890");
+    m_pCharInfo = pService->createCharacteristic(MIOT_CHAR_INFO_UUID, BLECharacteristic::PROPERTY_READ);
+    m_pCharInfo->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED);
+
+    m_pCharRequest = pService->createCharacteristic(MIOT_CHAR_REQUEST_UUID, BLECharacteristic::PROPERTY_WRITE);
+    m_pCharRequest->setAccessPermissions(ESP_GATT_PERM_WRITE_ENCRYPTED);
+    m_pCharRequest->setCallbacks(this);
+
+    m_pCharResponse = pService->createCharacteristic(MIOT_CHAR_RESPONSE_UUID, BLECharacteristic::PROPERTY_READ);
+    m_pCharResponse->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED);
+    m_pCharResponse->setCallbacks(this);
 
     pService->start();
 
@@ -118,6 +128,15 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, String softAPPassword, u
     pSecurity->setCapability(ESP_IO_CAP_OUT);
     pSecurity->setAuthenticationMode(ESP_LE_AUTH_REQ_SC_BOND);
     BLEDevice::setSecurityCallbacks(this);
+}
+
+
+//
+// Add a config item to the list
+void MIOTConfigurator::addConfigItem(uint32_t id, EConfigType type, std::string name, std::string synopsis)
+{
+    MIOTConfigItem item = MIOTConfigItem(id, type, name, synopsis);
+    m_configItems.push_back(item);
 }
 
 //
@@ -238,7 +257,7 @@ bool MIOTConfigurator::handleMulticast(int sock)
 
         ((struct sockaddr_in *)res->ai_addr)->sin_port = htons(MIOT_MULTICAST_UDP_PORT);
         inet_ntoa_r(((struct sockaddr_in *)res->ai_addr)->sin_addr, addrbuf, sizeof(addrbuf) - 1);
-        MIOT_LOG("Sending to IPV4 multicast address %s [%s]...\n", addrbuf, sendbuf);
+        MIOT_LOG("Sending to IPV4 multicast address %s [%s]...", addrbuf, sendbuf);
         err = sendto(sock, sendbuf, len, 0, res->ai_addr, res->ai_addrlen);
         if (err < 0)
         {
@@ -257,14 +276,14 @@ uint32_t MIOTConfigurator::onPassKeyRequest()
 
 void MIOTConfigurator::onPassKeyNotify(uint32_t pass_key)
 {       
-    MIOT_LOG("The passkey Notify number:%d\n", pass_key); // <--- this one
+    MIOT_LOG("The passkey Notify number:%d", pass_key); // <--- this one
     if (m_pCallBacks)
         m_pCallBacks->onDisplayPassKey(pass_key);
 }
 
 bool MIOTConfigurator::onConfirmPIN(uint32_t pass_key)
 {
-    MIOT_LOG("The passkey YES/NO number:%d\n", pass_key);
+    MIOT_LOG("The passkey YES/NO number:%d", pass_key);
     vTaskDelay(1000);
     return true;
 }
@@ -274,15 +293,16 @@ bool MIOTConfigurator::onSecurityRequest()
     MIOT_LOG("Security Request\n");
     return true;
 }
+
 void MIOTConfigurator::onAuthenticationComplete(esp_ble_auth_cmpl_t auth_cmpl)
 {
     if(auth_cmpl.success)
     {
-        MIOT_LOG("remote BD_ADDR:");
+        MIOT_LOG("remote BD_ADDR: %d.%d.%d.%d.%d.%d", auth_cmpl.bd_addr[0], auth_cmpl.bd_addr[1], auth_cmpl.bd_addr[2], auth_cmpl.bd_addr[3], auth_cmpl.bd_addr[4], auth_cmpl.bd_addr[5]);
         //esp_log_buffer_hex(LOG_TAG, auth_cmpl.bd_addr, sizeof(auth_cmpl.bd_addr));
-        MIOT_LOG("address type = %d\n", auth_cmpl.addr_type);
+        MIOT_LOG("address type = %d", auth_cmpl.addr_type);
     }
-    MIOT_LOG("Pair status = %s\n", auth_cmpl.success ? "success" : "fail");
+    MIOT_LOG("Pair status = %s", auth_cmpl.success ? "success" : "fail");
 
     if (m_pCallBacks)
         m_pCallBacks->onBluetoothConnection(auth_cmpl.success);
@@ -302,12 +322,12 @@ void MIOTConfigurator::handleClient()
     case MIOTState_Unconnected:
         if (m_preferences.begin(MIOT_PREF_CONFIG, false)) // Open storage
         {
-            String ssid = m_preferences.getString("ssid", "");
-            if (!ssid.isEmpty())
+            std::string ssid = std::string(m_preferences.getString("ssid", "").c_str());
+            if (!ssid.empty())
             //if (false) 
             {
-                String passphrase = m_preferences.getString("passphrase", "");
-                MIOT_LOG("Found credentials, trying to connect to WiFi '%s'\n", ssid.c_str());
+                std::string passphrase = std::string(m_preferences.getString("passphrase", "").c_str());
+                MIOT_LOG("Found credentials, trying to connect to WiFi '%s'", ssid.c_str());
 
                 // Yes, start connecting using these settings
                 WiFi.begin(ssid.c_str(), passphrase.c_str());
@@ -328,20 +348,20 @@ void MIOTConfigurator::handleClient()
             delay(100);
             if (WiFi.softAPConfig(IPAddress(192, 168, 4, 1), IPAddress(192, 168, 4, 1), IPAddress(255, 255, 255, 0)))
             {
-                MIOT_LOG("Start listening for SoftAP Setting\n");
-                MIOT_LOG("- SoftAP IP Address:  %s\n", WiFi.softAPIP().toString().c_str());
+                MIOT_LOG("Start listening for SoftAP Setting");
+                MIOT_LOG("- SoftAP IP Address:  %s", WiFi.softAPIP().toString().c_str());
 
                 if (m_pUDP)
                 {
                     if (!m_pUDP->begin(MIOT_AP_SETTINGS_PORT))
                     {
-                        MIOT_LOG("- Failed to open UDP port!\n");
+                        MIOT_LOG("- Failed to open UDP port!");
                         WiFi.softAPdisconnect();
                     }
                     else
                     {
-                        MIOT_LOG("- SoftAP IP Port:  %d\n", MIOT_AP_SETTINGS_PORT);
-                        MIOT_LOG("Waiting for SoftAP settings.\n");                  
+                        MIOT_LOG("- SoftAP IP Port:  %d", MIOT_AP_SETTINGS_PORT);
+                        MIOT_LOG("Waiting for SoftAP settings.");                  
                         changeState(MIOTState_WaitingForAPSettings);
                     }                    
                 }
@@ -355,7 +375,7 @@ void MIOTConfigurator::handleClient()
         }
         else
         {
-            MIOT_LOG("Failed to create the soft AP!\n");
+            MIOT_LOG("Failed to create the soft AP!");
         }
         break;
 
@@ -363,7 +383,7 @@ void MIOTConfigurator::handleClient()
         // When we do not receive smart config message, retry the stored credentials (if any)
         if ((millis() - m_millisLastStateChange) > m_wifiAPSettingsTimeout)
         {
-            MIOT_LOG("APSettings timed-out. Retrying WiFi credentials\n");
+            MIOT_LOG("APSettings timed-out. Retrying WiFi credentials");
             changeState(MIOTState_Unconnected);
         }
         else if (m_pUDP)
@@ -371,34 +391,34 @@ void MIOTConfigurator::handleClient()
             if (WiFi.softAPgetStationNum() != m_clients)
             {
                 m_clients = WiFi.softAPgetStationNum();
-                MIOT_LOG("SoftAP number of clients: %d.\n", m_clients);
+                MIOT_LOG("SoftAP number of clients: %d.", m_clients);
             }
 
             int dataSize = m_pUDP->parsePacket();
             if (dataSize > 0) 
             {
-                MIOT_LOG("Received %d bytes from %s, port %d\n", dataSize, m_pUDP->remoteIP().toString().c_str(), m_pUDP->remotePort());
+                MIOT_LOG("Received %d bytes from %s, port %d", dataSize, m_pUDP->remoteIP().toString().c_str(), m_pUDP->remotePort());
 
                 // Read the packet into packetBufffer
                 char packetBuffer[2048]; //buffer to hold incoming packet,
                 m_pUDP->read(packetBuffer, 2048);
                 packetBuffer[dataSize] = 0;
-                MIOT_LOG("-------> Received: %s.\n", packetBuffer);
+                MIOT_LOG("-------> Received: %s.", packetBuffer);
 
                 // Expected json format
                 // {"ssid":"<ssid>", "passphrase":"*****"}
                 StaticJsonDocument<2048> doc;
                 if (deserializeJson(doc, packetBuffer) == DeserializationError::Ok)
                 { 
-                    String ssid = doc["ssid"];
-                    String passphrase = doc["passphrase"];
+                    std::string ssid = doc["ssid"];
+                    std::string passphrase = doc["passphrase"];
 
                     // Send an ack
                     sprintf(packetBuffer, "ACK");
                     m_pUDP->beginPacket(m_pUDP->remoteIP(), m_pUDP->remotePort());
                     m_pUDP->write((const uint8_t*) packetBuffer, strlen(packetBuffer));
                     m_pUDP->endPacket();
-                    MIOT_LOG("-------> Send: %s.\n", packetBuffer);
+                    MIOT_LOG("-------> Send: %s.", packetBuffer);
 
                     // Stop the UDP
                     m_pUDP->stop();
@@ -411,7 +431,7 @@ void MIOTConfigurator::handleClient()
 
                     // Wait for the WiFi
                     changeState(MIOTState_WaitingForWifi);
-                    MIOT_LOG("SmartConfig credentials received (%s, %s). Waiting for WiFi.\n", ssid.c_str(), passphrase.c_str());
+                    MIOT_LOG("SmartConfig credentials received (%s, %s). Waiting for WiFi.", ssid.c_str(), passphrase.c_str());
                 }
                 else
                 {
@@ -419,7 +439,7 @@ void MIOTConfigurator::handleClient()
                     m_pUDP->beginPacket(m_pUDP->remoteIP(), m_pUDP->remotePort());
                     m_pUDP->write((const uint8_t*) packetBuffer, strlen(packetBuffer));
                     m_pUDP->endPacket();
-                    MIOT_LOG("-------> Send: %s.\n", packetBuffer);
+                    MIOT_LOG("-------> Send: %s.", packetBuffer);
                 }
             }
         }
@@ -430,10 +450,10 @@ void MIOTConfigurator::handleClient()
         if (WiFi.status() == WL_CONNECTED)
         {
             // Yes, WiFi is connected!
-            MIOT_LOG("WiFi connected to %s\n", WiFi.SSID().c_str());
-            MIOT_LOG("- IP Address:  %s\n", WiFi.localIP().toString().c_str());
-            MIOT_LOG("- Subnet mask: %s\n", WiFi.subnetMask().toString().c_str());
-            MIOT_LOG("- Gateway:     %s\n", WiFi.gatewayIP().toString().c_str());
+            MIOT_LOG("WiFi connected to %s", WiFi.SSID().c_str());
+            MIOT_LOG("- IP Address:  %s", WiFi.localIP().toString().c_str());
+            MIOT_LOG("- Subnet mask: %s", WiFi.subnetMask().toString().c_str());
+            MIOT_LOG("- Gateway:     %s", WiFi.gatewayIP().toString().c_str());
 
             // Store the WiFi credentials
             if (m_preferences.begin(MIOT_PREF_CONFIG, false)) // Open storage
@@ -463,7 +483,7 @@ void MIOTConfigurator::handleClient()
             // Check timeout
             if ((millis() - m_millisLastStateChange) > m_wifiConnectionTimeout)
             {
-                MIOT_LOG("WiFi connection timeout. Restarting SmartConfig\n");
+                MIOT_LOG("WiFi connection timeout. Restarting SmartConfig");
                 WiFi.disconnect();
                 changeState(MIOTState_StartingAPSettings); // This takes too long, jump back to waiting for smartconfig
             }
@@ -474,7 +494,7 @@ void MIOTConfigurator::handleClient()
         // Connected state, everything is working
         if (WiFi.status() != WL_CONNECTED)
         {
-            MIOT_LOG("WiFi connection lost\n");
+            MIOT_LOG("WiFi connection lost");
             changeState(MIOTState_ConnectionLost);
         }
         else
@@ -488,7 +508,7 @@ void MIOTConfigurator::handleClient()
     case MIOTState_ConnectionLost:
         if (WiFi.status() == WL_CONNECTED)
         {
-            MIOT_LOG("WiFi connection re-established\n");
+            MIOT_LOG("WiFi connection re-established");
             changeState(MIOTState_Connected);
         }
         else
@@ -497,7 +517,7 @@ void MIOTConfigurator::handleClient()
             if ((millis() - m_millisLastStateChange) > m_wifiConnectionLostTimeout)
             {
                 // This takes too long, jump back to waiting for smartconfig
-                MIOT_LOG("WiFi connection timeout due to lost connection. Restarting SmartConfig\n");
+                MIOT_LOG("WiFi connection timeout due to lost connection. Restarting SmartConfig");
                 changeState(MIOTState_StartingAPSettings);
             }
         }
@@ -506,5 +526,23 @@ void MIOTConfigurator::handleClient()
     default: // Should never occur
         changeState(MIOTState_Unconnected);
         break;
+    }
+}
+
+
+//
+// BLE Characteristic is written
+void MIOTConfigurator::onWrite(BLECharacteristic* pCharacteristic)
+{
+    if (pCharacteristic == m_pCharRequest)
+    {
+        MIOTMessage msg(pCharacteristic->getValue());
+        MIOT_LOG("Incoming command: %d, Number: %d", msg.getCommand(), msg.getNumber() );
+        if (msg.getCommand() == 2)
+        {
+            MIOTMessage msgResponse(3, msg.getNumber());
+            
+            m_pCharResponse->setValue(msgResponse.encode());
+        }
     }
 }

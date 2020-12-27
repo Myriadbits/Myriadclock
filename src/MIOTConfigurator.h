@@ -56,6 +56,12 @@
     #include <WiFi.h>
 #endif
 
+#include <vector>
+
+#include "MIOTConfigItem.h"
+#include "MIOTMessage.h"
+
+
 // TODO Remove
 #define  MIOT_DEBUG
 
@@ -64,7 +70,7 @@
     #define MIOT_DEBUG_PORT Serial
 #endif 
 #ifdef MIOT_DEBUG
-    #define MIOT_LOG(...) do {MIOT_DEBUG_PORT.printf("[MIOT %lu] ", millis()); MIOT_DEBUG_PORT.printf( __VA_ARGS__ );} while (0)
+    #define MIOT_LOG(...) do {MIOT_DEBUG_PORT.printf("[MIOT %lu] ", millis()); MIOT_DEBUG_PORT.printf( __VA_ARGS__ ); MIOT_DEBUG_PORT.println();} while (0)
 #else
     #define MIOT_LOG(...)
 #endif 
@@ -87,7 +93,17 @@
 #define MIOT_MULTICAST_TTL              32 // Restrict multicasts to same site
 
 #define MIOT_SERVICE_UUID               "a8264447-fdbd-4668-a422-9c38494f5400"
-#define MIOT_CHARACTERISTIC_UUID        "a8264447-fdbd-4668-a422-9c3d494f5401"
+#define MIOT_CHAR_INFO_UUID             "a8264447-fdbd-4668-a422-9c3d494f5401"
+#define MIOT_CHAR_REQUEST_UUID          "a8264447-fdbd-4668-a422-9c3d494f5402"
+#define MIOT_CHAR_RESPONSE_UUID         "a8264447-fdbd-4668-a422-9c3d494f5402"
+
+// App requests config item X, MIOT response with 
+// <command>
+//      - 1: getConfigItem X
+//           GetConfigResponse: 81 - X - value - name - description
+//      - 2: setConfigItem X - Newvalue
+//           SetConfigResponse: 82 - x - ok
+//
 
 typedef enum
 {
@@ -122,27 +138,32 @@ public:
 // MIOTConfigurator
 // Automatic SmartConfig/Wifi connection
 ///////////////////////////////////////////////////////////////////////////////
-class MIOTConfigurator : public BLESecurityCallbacks
+class MIOTConfigurator : public BLESecurityCallbacks, public BLECharacteristicCallbacks
 {
 public:
-    MIOTConfigurator(WiFiUDP& udp, String productName = MIOT_DEFAULT_PRODUCTNAME, int version = MIOT_DEFAULT_VERSION);
+    MIOTConfigurator(WiFiUDP& udp, std::string productName = MIOT_DEFAULT_PRODUCTNAME, int version = MIOT_DEFAULT_VERSION);
 
-    void setup(MIOTCallbacks* pCallBacks, String softAPPassword = MIOT_DEFAULT_SOFTAPPASSWORD, unsigned long wifiConnectionTimeout = MIOT_TIMEOUT_WIFICONNECTION, unsigned long wifiConnectionLostTimeout = MIOT_TIMEOUT_WIFICONNECTIONLOST, unsigned long smartConfigTimeout = MIOT_TIMEOUT_SMARTCONFIG);    
+    void setup(MIOTCallbacks* pCallBacks, std::string softAPPassword = MIOT_DEFAULT_SOFTAPPASSWORD, unsigned long wifiConnectionTimeout = MIOT_TIMEOUT_WIFICONNECTION, unsigned long wifiConnectionLostTimeout = MIOT_TIMEOUT_WIFICONNECTIONLOST, unsigned long smartConfigTimeout = MIOT_TIMEOUT_SMARTCONFIG);    
     void handleClient();        
 
-    void setProductName(String productName) { m_productName = productName; }
-    void setDeviceId(String deviceId) { m_deviceId = deviceId; }
+    void setProductName(std::string productName) { m_productName = productName; }
+    void setDeviceId(std::string deviceId) { m_deviceId = deviceId; }
     void setVersion(int version) { m_version = version; }
 
-    String getProductName() {return  m_productName; }
-    String getDeviceId() { return m_deviceId; }
+    std::string getProductName() {return  m_productName; }
+    std::string getDeviceId() { return m_deviceId; }
     int getVersion() { return m_version; }
+
+    // Config items related
+    void addConfigItem(uint32_t id, EConfigType type, std::string name, std::string synopsis);
 
 	virtual uint32_t onPassKeyRequest();
 	virtual void onPassKeyNotify(uint32_t pass_key);
 	virtual bool onSecurityRequest();
 	virtual void onAuthenticationComplete(esp_ble_auth_cmpl_t);
 	virtual bool onConfirmPIN(uint32_t pin);
+
+	virtual void onWrite(BLECharacteristic* pCharacteristic);
 
 private:
     void changeState(EMIOTState newState);
@@ -154,6 +175,9 @@ protected:
     MIOTCallbacks*          m_pCallBacks;
     BLEServer*              m_pBLEServer;
 
+    // Config items
+    std::vector<MIOTConfigItem>  m_configItems;
+
     // Statemachine related
     EMIOTState              m_state;
     unsigned long           m_wifiConnectionTimeout;        // Timeout for new wifi networks
@@ -163,11 +187,15 @@ protected:
     unsigned long           m_millisLastUDP;
     Preferences             m_preferences;
 
+    BLECharacteristic       *m_pCharInfo;
+    BLECharacteristic       *m_pCharRequest;
+    BLECharacteristic       *m_pCharResponse;
+
     // Product info
-    String                  m_productName;
-    String                  m_softAPPassword;
-    String                  m_deviceId;
-    String                  m_deviceName;
+    std::string             m_productName;
+    std::string             m_softAPPassword;
+    std::string             m_deviceId;
+    std::string             m_deviceName;
     int                     m_version;
     WiFiUDP*                m_pUDP;
     int                     m_clients;

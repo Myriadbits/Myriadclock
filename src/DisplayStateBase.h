@@ -33,7 +33,6 @@ public:
         m_pTZ = pTZ;
         m_pSettings = pSettings;
         m_timeStamp = millis();
-        log("State initialized");
     };    
 
     virtual bool HandleLoop(unsigned long epochTime) { return false; };        
