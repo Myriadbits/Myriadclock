@@ -14,7 +14,6 @@ void DisplayStateNoWiFi::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSetti
     DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
     m_timeStamp = millis();
     m_nCounter = 0;
-    m_nCycleCounter = 0;
     m_nDir = 1;
 }
 
@@ -40,7 +39,6 @@ bool DisplayStateNoWiFi::HandleLoop(unsigned long epochTime)
         {
             m_nCounter = 0;
             m_nDir *= -1;
-            m_nCycleCounter++;
         }
         
         FastLED.clear();
@@ -65,5 +63,5 @@ bool DisplayStateNoWiFi::HandleLoop(unsigned long epochTime)
         FastLED.show();   
     }
 
-    return (m_nCycleCounter < 4);
+    return true; // This state has no end
 }

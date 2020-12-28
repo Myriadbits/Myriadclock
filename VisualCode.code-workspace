@@ -81,7 +81,8 @@
 			"mutex": "cpp",
 			"thread": "cpp",
 			"string": "cpp",
-			"*.ipp": "cpp"
+			"*.ipp": "cpp",
+			"random": "cpp"
 		}
 	}
 }

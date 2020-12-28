@@ -33,6 +33,9 @@ void DisplayStateManager::initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
 
     Console::getInstance().add("state", this, "Switch the display state");
     Console::getInstance().add("layout", this, "Switch the layout");
+
+    // Start the default state
+    changeState(m_eDefaultState);
 }
 
 //
@@ -40,16 +43,7 @@ void DisplayStateManager::initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
 //
 void DisplayStateManager::changeState(const EDisplayState eState)
 {
-    auto it = m_states.find(eState);
-    if (it != m_states.end())
-    {
-        // Only switch to new display state when it is a different state
-        if (m_pCurrentState != it->second)
-        {
-            m_pCurrentState = it->second;
-            m_pCurrentState->Initialize(m_pLEDs, m_pTZ, m_pSettings);
-        }        
-    }
+    m_eNewState = eState;
 }
 
 //
@@ -91,12 +85,23 @@ void DisplayStateManager::commandHandler(std::string command, std::vector<std::s
 //
 void DisplayStateManager::handleLoop(unsigned long epochTime)
 {
-    if (m_pCurrentState != NULL)
+    if (m_eNewState != m_eCurrentState)
     {
-        if (!m_pCurrentState->HandleLoop(epochTime))
+        auto it = m_states.find(m_eNewState);
+        if (it != m_states.end())
         {
-            // When handleloop returns false, select the next handler
-            changeState(DS_CLOCK);
+            it->second->Initialize(m_pLEDs, m_pTZ, m_pSettings);
+            m_eCurrentState = m_eNewState;
+        }        
+    }
+
+    auto it = m_states.find(m_eCurrentState);
+    if (it != m_states.end())
+    {
+        if (!it->second->HandleLoop(epochTime))
+        {
+            // When handleloop returns false, fallback to the default state
+            changeState(m_eDefaultState);
         }
     }
 }
@@ -116,8 +121,12 @@ void DisplayStateManager::onDisplayPassKey(uint32_t passkey)
 // 
 void DisplayStateManager::onBluetoothConnection(bool success)
 {
-    DisplayStatePasscode* passcodeState = (DisplayStatePasscode*)m_pCurrentState;
-    if (passcodeState)
-        passcodeState->setResult(success);
+    auto it = m_states.find(m_eNewState);
+    if (it != m_states.end())
+    {
+        DisplayStatePasscode* passcodeState = (DisplayStatePasscode*)it->second;
+        if (passcodeState)
+            passcodeState->setResult(success);
+    }
 }
 

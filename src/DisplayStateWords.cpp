@@ -95,5 +95,5 @@ bool DisplayStateWords::HandleLoop(unsigned long epochTime)
 
         FastLED.show();   
     }
-    return true;
+    return true; // State has no end
 }

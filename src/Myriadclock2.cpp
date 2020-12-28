@@ -256,7 +256,8 @@ void loop()
     // Show no-wifi while there is still no Wifi  
     if (WiFi.status() != WL_CONNECTED)
     {
-        g_stateManager.changeState(DS_NOWIFI); // No wifi
+        // When no other state is active, fallback to the no-wifi state
+        g_stateManager.setDefaultState(DS_NOWIFI);
     }
 
     // Once every x seconds, check the NTP stuff
@@ -290,7 +291,7 @@ void loop()
 
             if (currentYear > 1970 && g_nPreviousHour != hours)
             {
-                g_stateManager.changeState(DS_CLOCK); // Show clock
+                g_stateManager.setDefaultState(DS_CLOCK);
             }
 
             if (hours == 4 && g_nPreviousHour != 4)

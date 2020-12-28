@@ -115,6 +115,8 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, std::string softAPPasswo
 
     pService->start();
 
+    m_pCharInfo->setValue("I'm a Myriadclock");
+
     // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
     BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
     pAdvertising->addServiceUUID(MIOT_SERVICE_UUID);

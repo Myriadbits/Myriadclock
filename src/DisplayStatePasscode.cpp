@@ -29,13 +29,14 @@ void DisplayStatePasscode::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSet
     m_nSubCounter = 0;
     m_nDelay = 0;
     m_fShowResult = false;
-    m_fResult = false;
+    m_fResult = false;    
 }
 
 //
 // Show hide the connection result
 void DisplayStatePasscode::setResult(bool success)
 {
+    log("Passcode result = %d", success);
     m_fShowResult = true;
     m_fResult = success;
     m_nCounter = 0;
