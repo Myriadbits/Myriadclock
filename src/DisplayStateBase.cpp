@@ -37,15 +37,15 @@ void DisplayStateBase::setLayout(const ledclocklayout_t *playout)
 
 //
 // Color handler for words
-CRGB DisplayStateBase::ColorHandler(CRGB defaultColor, int customParam)
+CRGB DisplayStateBase::ColorHandler(CRGB defaultColor, int brightness, int customParam)
 {
-    return defaultColor;
+    return defaultColor.fadeLightBy(255-brightness);
 }
 
 //
 // Add a single word to the display/leds
 // customParam can be any value, normal operation when ColorHandler is not overriden: customParam is the color
-void DisplayStateBase::AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int customParam) 
+void DisplayStateBase::AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int brightness, int customParam) 
 {
     if (pCurrentWord == NULL) return;
     if (m_pLEDs == NULL) return;
@@ -55,7 +55,7 @@ void DisplayStateBase::AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultC
     while (ledPos.x >= 0 && ledPos.y >= 0)
     {
         // Led numbers are inverted left to right every other row:        
-        m_pLEDs[CalcLedPos(ledPos.x, ledPos.y)] = ColorHandler(defaultColor, customParam);
+        m_pLEDs[CalcLedPos(ledPos.x, ledPos.y)] = ColorHandler(defaultColor, brightness, customParam);
         
         // Next char
         charIndex++;
@@ -70,10 +70,10 @@ void DisplayStateBase::FillBackground(void)
     // Set the background color
     if (m_pSettings->nBrightnessBackground != 0)
     {
-        CRGB rgbBackground = m_pSettings->colBackground;
-        rgbBackground.fadeToBlackBy( 255 - (255 * m_pSettings->nBrightnessBackground) / 100 );
+        //CRGB rgbBackground = m_pSettings->colBackground;
+        //rgbBackground.fadeToBlackBy( 255 - (255 * m_pSettings->nBrightnessBackground) / 100 );
         for(int n = 0; n < NUM_LEDS; n++)
-            m_pLEDs[n] = rgbBackground;
+            m_pLEDs[n] = CRGB(m_pSettings->nBrightnessBackground, m_pSettings->nBrightnessBackground, m_pSettings->nBrightnessBackground);
     }
 }
 

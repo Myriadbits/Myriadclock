@@ -2,27 +2,6 @@
 	"folders": [
 		{
 			"path": "."
-		},
-		{
-			"name": "Myriadbot",
-			"path": "..\\Myriadbot"
-		},
-		{
-			"name": "NucleoRobot",
-			"path": "C:\\Projects\\NucleoRobot"
-		},
-		{
-			"name": "MyriadClockV2",
-			"path": "..\\MyriadClockV2"
-		},
-		{
-			"path": "..\\MyriadclockESPHome"
-		},
-		{
-			"path": "..\\MyriadClockV3"
-		},
-		{
-			"path": "..\\MyriadClockV4"
 		}
 	],
 	"settings": {

@@ -48,7 +48,7 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime)
         FillBackground();
 
         // Show the myriadclock text
-        AddWordToLeds(s_layout.extra.myriadclock, colTop);   
+        AddWordToLeds(s_layout.extra.myriadclock, colTop, 255);   
 
         // Show the codes
    //     AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colVersion); TODO

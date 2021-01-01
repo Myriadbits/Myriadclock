@@ -73,7 +73,7 @@ void DisplayStateManager::commandHandler(std::string command, std::vector<std::s
             }
         }
     }
-    if (command == "layout" && args.size() > 0)
+    else if (command == "layout" && args.size() > 0)
     {
         if (args[1] == "0") DisplayStateBase::setLayout(const_cast<ledclocklayout_t*>(&s_layoutNL_V1));
         if (args[1] == "1") DisplayStateBase::setLayout(const_cast<ledclocklayout_t*>(&s_layoutNL_V2));

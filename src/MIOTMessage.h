@@ -18,11 +18,13 @@ using namespace std;
 class MIOTMessage
 {
 public:
-    MIOTMessage(uint8_t command, uint8_t number)
-        : m_protocolVersion(MIOTMESSAGE_PROTOCOL_VERSION)
-        , m_command(command)
-        , m_number(number)
+    MIOTMessage(uint8_t command, uint8_t number, uint8_t datalength = 0, uint8_t *pdata = NULL)
     {        
+        m_data[0] = MIOTMESSAGE_PROTOCOL_VERSION;
+        m_data[1] = command;
+        m_data[2] = number;
+        m_data[3] = (uint8_t) min((int)datalength, 0xF0);
+        memcpy(&(m_data[4]), pdata, m_data[3]);
     }
 
     MIOTMessage(std::string value)
@@ -30,16 +32,17 @@ public:
         decode(value);
     }
     
-    uint8_t getProtocolVersion() { return m_protocolVersion; }
-    uint8_t getCommand() { return m_command; }
-    uint8_t getNumber() { return m_number; }
+    uint8_t getProtocolVersion() { return m_data[0]; }
+    uint8_t getCommand() { return m_data[1]; }
+    uint8_t getNumber() { return m_data[2]; }
+    uint8_t getDataLength() { return m_data[3]; }
 
     std::string encode()
     {
-        m_data[0] = m_command;
-        size_t len = 0;
-        unsigned char* encoded = base64_encode(m_data, 1, &len); 
-        return std::string((const char*) encoded);
+        unsigned char* encoded = base64_encode(m_data, 1, NULL); 
+        std::string output((const char*) encoded);
+        free(encoded);
+        return output;
     }
 
     void decode(std::string value)
@@ -47,20 +50,9 @@ public:
         size_t len = 0;
         unsigned char* pdata = base64_decode((const unsigned char *) value.c_str(), value.length(), &len); 
         memcpy(m_data, pdata, len);
-        if (len > 0)
-        {
-            m_protocolVersion = m_data[0];
-            if (m_protocolVersion == MIOTMESSAGE_PROTOCOL_VERSION)
-            {
-                m_command = m_data[1];
-                m_number = m_data[2];
-            }
-        }
+        free(pdata);
     }
 
 private:
-    uint8_t         m_protocolVersion;
-    uint8_t         m_command;
-    uint8_t         m_number;
-    uint8_t         m_data[32];
+    uint8_t         m_data[256]; // 250 datalength + header
 };

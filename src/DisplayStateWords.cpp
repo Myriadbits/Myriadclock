@@ -73,7 +73,7 @@ bool DisplayStateWords::HandleLoop(unsigned long epochTime)
         } while (pCurrentWord == EMPTY);
         
         if (pCurrentWord != NULL)
-            AddWordToLeds(pCurrentWord, colTop);                       
+            AddWordToLeds(pCurrentWord, colTop, 255);                       
 
         do
         {
@@ -87,10 +87,10 @@ bool DisplayStateWords::HandleLoop(unsigned long epochTime)
         } while (pCurrentWord == EMPTY);
 
         if (pCurrentWord != NULL)
-            AddWordToLeds(pCurrentWord, colBottom);        
+            AddWordToLeds(pCurrentWord, colBottom, 255);        
 
         
-        AddWordToLeds((ledpos_t*) s_layout.days[m_nWordIndexDay % 31], colCenter);                       
+        AddWordToLeds((ledpos_t*) s_layout.days[m_nWordIndexDay % 31], colCenter, 255);                       
         m_nWordIndexDay++;
 
         FastLED.show();   

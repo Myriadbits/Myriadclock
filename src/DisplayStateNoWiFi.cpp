@@ -47,11 +47,11 @@ bool DisplayStateNoWiFi::HandleLoop(unsigned long epochTime)
         FillBackground();
 
         // Show the NoWiFi
-        AddWordToLeds((ledpos_t*) s_layout.extra.no, colNoWiFi);         
-        AddWordToLeds((ledpos_t*) s_layout.extra.wifi, colNoWiFi);         
+        AddWordToLeds((ledpos_t*) s_layout.extra.no, colNoWiFi, 255);         
+        AddWordToLeds((ledpos_t*) s_layout.extra.wifi, colNoWiFi, 255);         
 
         // Show the myriadclock text
-        AddWordToLeds((ledpos_t*) s_layout.extra.myriadclock, colMyriadclock);   
+        AddWordToLeds((ledpos_t*) s_layout.extra.myriadclock, colMyriadclock, 255);   
 
         // Show the codes
         //AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colMyriadclock);

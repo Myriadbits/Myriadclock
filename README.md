@@ -14,6 +14,7 @@ To get a nice front panel, it is essential that the `bottom thickness` is at lea
 Some supports are needed, for the wire hole and the PCB holder. I prefer to set `Support Structure` to `Tree` since the tree's are rather easy to remove.
 The casing should be printed in white since the white is partly transparent and will make the characters of the word clock shine through.
 Rather obvious, but print the casing with the open part to the top. 
+Infill pattern: Cubic, 20%
 
 ###Backplane
 *WHITE PLA, 9 hours, 50 minutes, +- 27 meter (80g)*
@@ -31,6 +32,7 @@ Normal print settings, `standard quality` is fine.
 *BLACK PLA, 6 hours 34 minutes, +- 8 meter (26g)*
 For best result: Print the plate UPSIDE-DOWN. That way the smooth part will be touching the casing.
 Print this in black. The plate is only 5 layers tick, all layers should be printed. You might want to tweak some setting to prevent holes getting accidentally be filled with debris/hairs/wires (allthough I didn't find the correct setting for that yet...)
+Travel-Combining mode: All
 
 PLA: 105m (for me that is approx €6)
 

@@ -22,7 +22,7 @@ bool DisplayStateUpdating::HandleLoop(unsigned long epochTime)
 {
     FastLED.clear();
     FastLED.setBrightness(50);
-    AddWordToLeds((ledpos_t*) s_layout.extra.myriadclock, CRGB(0x00, 0x00, 0x7F));                           
+    AddWordToLeds((ledpos_t*) s_layout.extra.myriadclock, CRGB(0x00, 0x00, 0x7F), 255);                           
     FastLED.show();   
 
     // Create new FOTA object 

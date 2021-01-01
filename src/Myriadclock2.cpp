@@ -48,7 +48,7 @@
 #include "MyriadclockConfig.h"
 #include "MyriadclockSettings.h"
 #include "WebHandler.h"
-#include <ESPiLight.h>
+//#include <ESPiLight.h>
 #include <ArduinoJson.h>
 
 #include "MIOTConfigurator.h"
@@ -94,7 +94,7 @@ Timezone            g_CE(CEST, CET);
 //WebHandler*        g_pWebHandler { NULL };
 
 // RF433 Mhz receiver
-ESPiLight          g_rf(-1);  // use -1 to disable transmitter
+//ESPiLight          g_rf(-1);  // use -1 to disable transmitter
 
 //
 // Time elapsed??
@@ -108,51 +108,51 @@ uint32_t Elapsed(uint32_t ts)
 
 
 // callback function. It is called on successfully received and parsed rc signal
-void rfCallback(const String &protocol, const String &message, int status, size_t repeats, const String &deviceID) 
-{
-    Serial.print("RF signal arrived [");
-    Serial.print(protocol);  // protocoll used to parse
-    Serial.print("][");
-    Serial.print(deviceID);  // value of id key in json message
-    Serial.print("] (");
-    Serial.print(status);  // status of message, depending on repeat, either:
-                        // FIRST   - first message of this protocoll within the
-                        //           last 0.5 s
-                        // INVALID - message repeat is not equal to the
-                        //           previous message
-                        // VALID   - message is equal to the previous message
-                        // KNOWN   - repeat of a already valid message
-    Serial.print(") ");
-    Serial.print(message);  // message in json format
-    Serial.println();
+// void rfCallback(const String &protocol, const String &message, int status, size_t repeats, const String &deviceID) 
+// {
+//     Serial.print("RF signal arrived [");
+//     Serial.print(protocol);  // protocoll used to parse
+//     Serial.print("][");
+//     Serial.print(deviceID);  // value of id key in json message
+//     Serial.print("] (");
+//     Serial.print(status);  // status of message, depending on repeat, either:
+//                         // FIRST   - first message of this protocoll within the
+//                         //           last 0.5 s
+//                         // INVALID - message repeat is not equal to the
+//                         //           previous message
+//                         // VALID   - message is equal to the previous message
+//                         // KNOWN   - repeat of a already valid message
+//     Serial.print(") ");
+//     Serial.print(message);  // message in json format
+//     Serial.println();
 
-    // check if message is valid and process it
-    if (status == VALID) {
-        Serial.print("Valid message: [");
-        Serial.print(protocol);
-        Serial.print("] ");
-        Serial.print(message);
-        Serial.println();
+//     // check if message is valid and process it
+//     if (status == VALID) {
+//         Serial.print("Valid message: [");
+//         Serial.print(protocol);
+//         Serial.print("] ");
+//         Serial.print(message);
+//         Serial.println();
 
-        StaticJsonDocument<200> doc;
-        DeserializationError error = deserializeJson(doc, message);
-        if (!error)
-        {
-            const char* s = doc["state"];
-            if (strcasecmp(s, "opened") == 0)
-            {
-                Serial.println("--OPENED");
-                g_Settings.colTime = 0x00FF00;
-            }
-            if (strcasecmp(s, "closed") == 0)
-            {
-                Serial.println("--CLOSED");
-                g_Settings.colTime = 0xFF0000;
-            }
-        }
+//         StaticJsonDocument<200> doc;
+//         DeserializationError error = deserializeJson(doc, message);
+//         if (!error)
+//         {
+//             const char* s = doc["state"];
+//             if (strcasecmp(s, "opened") == 0)
+//             {
+//                 Serial.println("--OPENED");
+//                 g_Settings.colTime = 0x00FF00;
+//             }
+//             if (strcasecmp(s, "closed") == 0)
+//             {
+//                 Serial.println("--CLOSED");
+//                 g_Settings.colTime = 0xFF0000;
+//             }
+//         }
         
-    }
-}
+//     }
+// }
 
 
 //
@@ -196,10 +196,10 @@ void setup()
     //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
    //Sset callback function
-    g_rf.setCallback(rfCallback);
+    //g_rf.setCallback(rfCallback);
 
     // Initialize receiver
-    g_rf.initReceiver(RECEIVER_PIN);
+    //g_rf.initReceiver(RECEIVER_PIN);
 
     //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
@@ -228,8 +228,6 @@ void setup()
 
     //Serial.println("Webserver started: " + WiFi.localIP().toString());    
     //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
-
-    //AdvertiseServices(g_Settings.sClockName);
 }
 
 

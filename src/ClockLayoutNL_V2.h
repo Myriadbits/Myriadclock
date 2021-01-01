@@ -33,34 +33,15 @@
 // Latest characters:
 //   0123456789012345
 // ----------------
-// 0|KWARTIEN0VIJFPC•
-// 1|OVERVOOR1HALFAO•
-// 2|DRIETWEE2EEN3SD•
-// 3|VIJFVIER4ZES5SE•
-// 4|TIENACHT6ELF789M
-// 5|ZEVENEGENTWAALFY
-// 6|TROUWDAGBUURENAR
-// 7|VERJAARDAGABCDEI
-// 8|FEESTDAG←→FGHIJA
-// 9|KLMNOPQRSTUVWXYD
-// 0|MADIWODOVRZAZOZC
-// 1|101121314151617L
-// 2|181922023242526O
-// 3|27282930©JANFEBC
-// 4|MAAAPRMEIJUNJULK
-// 5|AUGSEPOKTNOVDEC•
-//
-//   0123456789012345
-// ----------------
 // 0|TIENKWARTPARTYW•
 // 1|VIJF-VOORLHALFA•
 // 2|NOYESOVERZHALFK•
 // 3|WIFIBT•PASSCODE•
-// 4|DRIETWEENBFGHIJM
-// 5|VIJFVIERZESLNQUY
-// 6|TIENACHTTWAALFPR
-// 7|ZEVENEGENELFTSVI
-// 8|GOEDEMORGENUURXA
+// 4|VIERTWEEENZESIJM
+// 5|VIJFDRIELFBLNQUY
+// 6|TIENACHTWAALF ️PR
+// 7|ZEVENEGENVUURGFI
+// 8|GOEDEMORGENHSTXA
 // 9|FEESTVERJAARDAGD
 // 0|MADIWODOVRZAZOZC
 // 1|101121314151617L
@@ -68,6 +49,8 @@
 // 3|27282930@JANFEBC
 // 4|MAAAPRMEIJUNJULK
 // 5|AUGSEPOKTNOVDEC•
+//
+
 
 // Word definitions, {-1,-1} or WEND terminated (led numbers start at 0)
 
@@ -86,19 +69,19 @@ static const ledpos_t NLV2_to        [] = { {5,1}, {6,1}, {7,1}, {8,1}, WEND};
 static const ledpos_t NLV2_half1     [] = { {10,1}, {11,1}, {12,1}, {13,1}, WEND};
 static const ledpos_t NLV2_half2     [] = { {10,2}, {11,2}, {12,2}, {13,2}, WEND};
 
-static const ledpos_t NLV2_hour_1    [] = { {6,4}, {7,4}, {8,4}, WEND};
+static const ledpos_t NLV2_hour_1    [] = { {7,4}, {8,4}, {9,4}, WEND};
 static const ledpos_t NLV2_hour_2    [] = { {4,4}, {5,4}, {6,4}, {7,4}, WEND};
-static const ledpos_t NLV2_hour_3    [] = { {0,4}, {1,4}, {2,4}, {3,4}, WEND};
-static const ledpos_t NLV2_hour_4    [] = { {4,5}, {5,5}, {6,5}, {7,5}, WEND};
+static const ledpos_t NLV2_hour_3    [] = { {4,5}, {5,5}, {6,5}, {7,5}, WEND};
+static const ledpos_t NLV2_hour_4    [] = { {0,4}, {1,4}, {2,4}, {3,4}, WEND};
 static const ledpos_t NLV2_hour_5    [] = { {0,5}, {1,5}, {2,5}, {3,5}, WEND};
-static const ledpos_t NLV2_hour_6    [] = { {8,5}, {9,5}, {10,5}, WEND};
+static const ledpos_t NLV2_hour_6    [] = { {10,4}, {11,4}, {12,4}, WEND};
 static const ledpos_t NLV2_hour_7    [] = { {0,7}, {1,7}, {2,7}, {3,7}, {4,7}, WEND};
 static const ledpos_t NLV2_hour_8    [] = { {4,6}, {5,6}, {6,6}, {7,6}, WEND};
 static const ledpos_t NLV2_hour_9    [] = { {4,7}, {5,7}, {6,7}, {7,7}, {8,7}, WEND};
 static const ledpos_t NLV2_hour_10   [] = { {0,6}, {1,6}, {2,6}, {3,6}, WEND};
-static const ledpos_t NLV2_hour_11   [] = { {9,7}, {10,7}, {11,7}, WEND};
-static const ledpos_t NLV2_hour_12   [] = { {8,6}, {9,6}, {10,6}, {11,6}, {12,6}, {13,6}, WEND};
-static const ledpos_t NLV2_hour_full [] = { {11,8}, {12,8}, {13,8}, WEND};
+static const ledpos_t NLV2_hour_11   [] = { {7,5}, {8,5}, {9,5}, WEND};
+static const ledpos_t NLV2_hour_12   [] = { {7,6}, {8,6}, {9,6}, {10,6}, {11,6}, {12,6}, WEND};
+static const ledpos_t NLV2_hour_full [] = { {10,7}, {11,7}, {12,7}, WEND};
 
 
 static const ledpos_t NLV2_monday    [] = { {0,10}, {1,10}, WEND};

@@ -325,10 +325,16 @@ void MIOTConfigurator::handleClient()
         if (m_preferences.begin(MIOT_PREF_CONFIG, false)) // Open storage
         {
             std::string ssid = std::string(m_preferences.getString("ssid", "").c_str());
+            std::string passphrase = std::string(m_preferences.getString("passphrase", "").c_str());
+            if (ssid.empty())
+            {
+                ssid = "Jamelejo";
+                passphrase = "Mer@lijn31801";
+            }
+
             if (!ssid.empty())
             //if (false) 
             {
-                std::string passphrase = std::string(m_preferences.getString("passphrase", "").c_str());
                 MIOT_LOG("Found credentials, trying to connect to WiFi '%s'", ssid.c_str());
 
                 // Yes, start connecting using these settings
@@ -337,6 +343,7 @@ void MIOTConfigurator::handleClient()
             }
             else
             {
+
                 changeState(MIOTState_StartingAPSettings);
             }
             m_preferences.end();

@@ -95,7 +95,7 @@
 #define MIOT_SERVICE_UUID               "a8264447-fdbd-4668-a422-9c38494f5400"
 #define MIOT_CHAR_INFO_UUID             "a8264447-fdbd-4668-a422-9c3d494f5401"
 #define MIOT_CHAR_REQUEST_UUID          "a8264447-fdbd-4668-a422-9c3d494f5402"
-#define MIOT_CHAR_RESPONSE_UUID         "a8264447-fdbd-4668-a422-9c3d494f5402"
+#define MIOT_CHAR_RESPONSE_UUID         "a8264447-fdbd-4668-a422-9c3d494f5403"
 
 // App requests config item X, MIOT response with 
 // <command>

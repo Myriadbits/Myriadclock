@@ -1,17 +1,18 @@
+//
+// !!! WARNING !!! AUTO-GENERATED FILE!
+// PLEASE DO NOT MODIFY IT AND USE "platformio.ini":
+// https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags
+//
 {
     "configurations": [
         {
-            "name": "!!! WARNING !!! AUTO-GENERATED FILE, PLEASE DO NOT MODIFY IT AND USE https://docs.platformio.org/page/projectconf/section_env_build.html#build-flags"
-        },
-        {
-            "name": "Win32",
+            "name": "PlatformIO",
             "includePath": [
                 "D:/Projects/Myriadclock/include",
                 "D:/Projects/Myriadclock/src",
                 "C:/Users/Jochem/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                 "C:/Users/Jochem/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
                 "C:/Users/Jochem/.platformio/lib/NTPClient_ID551",
-                "C:/Users/Jochem/.platformio/lib/ESPiLight/src",
                 "C:/Users/Jochem/.platformio/packages/framework-arduinoespressif32/libraries/BLE/src",
                 "C:/Users/Jochem/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
                 "C:/Users/Jochem/.platformio/lib/esp32FOTA_ID5953/src",
@@ -91,6 +92,7 @@
                 "C:/Users/Jochem/.platformio/lib/Adafruit SSD1306",
                 "C:/Users/Jochem/.platformio/lib/Adafruit STMPE610",
                 "C:/Users/Jochem/.platformio/lib/Adafruit TouchScreen",
+                "C:/Users/Jochem/.platformio/lib/ESPiLight/src",
                 "C:/Users/Jochem/.platformio/lib/PinChangeInterruptHandler_ID1499",
                 "C:/Users/Jochem/.platformio/lib/RFReceiver_ID1500",
                 "C:/Users/Jochem/.platformio/lib/Servo/src",
@@ -122,7 +124,6 @@
                     "C:/Users/Jochem/.platformio/packages/framework-arduinoespressif32/libraries/WebServer/src",
                     "C:/Users/Jochem/.platformio/packages/framework-arduinoespressif32/libraries/FS/src",
                     "C:/Users/Jochem/.platformio/lib/NTPClient_ID551",
-                    "C:/Users/Jochem/.platformio/lib/ESPiLight/src",
                     "C:/Users/Jochem/.platformio/packages/framework-arduinoespressif32/libraries/BLE/src",
                     "C:/Users/Jochem/.platformio/packages/framework-arduinoespressif32/libraries/Preferences/src",
                     "C:/Users/Jochem/.platformio/lib/esp32FOTA_ID5953/src",
@@ -202,6 +203,7 @@
                     "C:/Users/Jochem/.platformio/lib/Adafruit SSD1306",
                     "C:/Users/Jochem/.platformio/lib/Adafruit STMPE610",
                     "C:/Users/Jochem/.platformio/lib/Adafruit TouchScreen",
+                    "C:/Users/Jochem/.platformio/lib/ESPiLight/src",
                     "C:/Users/Jochem/.platformio/lib/PinChangeInterruptHandler_ID1499",
                     "C:/Users/Jochem/.platformio/lib/RFReceiver_ID1500",
                     "C:/Users/Jochem/.platformio/lib/Servo/src",
@@ -227,7 +229,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=50003",
+                "PLATFORMIO=50004",
                 "ARDUINO_LOLIN_D32",
                 "ESP32",
                 "ESP_PLATFORM",
@@ -240,7 +242,6 @@
                 "ARDUINO_BOARD=\"WEMOS LOLIN D32\"",
                 ""
             ],
-            "intelliSenseMode": "gcc-x64",
             "cStandard": "c99",
             "cppStandard": "c++11",
             "compilerPath": "C:/Users/Jochem/.platformio/packages/toolchain-xtensa32@2.50200.80/bin/xtensa-esp32-elf-gcc.exe",

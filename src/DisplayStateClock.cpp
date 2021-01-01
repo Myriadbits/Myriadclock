@@ -6,6 +6,7 @@
 #include "DisplayStateClock.h"
 #include <time.h>
 #include <Timezone.h>  
+#include "Console.h"
 
 // For now assume home
 #define CLOCK_LATITUDE      52.306772
@@ -23,6 +24,8 @@ void DisplayStateClock::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettin
 {
     DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
     m_nPreviousBrightness = 0;
+
+    Console::getInstance().add("backlight", this, "Set the intensity of the backlight");
 }
 
 
@@ -101,12 +104,12 @@ void DisplayStateClock::UpdateBrightness(unsigned long epochTime)
     {
         // Evening Twilight
         brightness = m_pSettings->nBrightnessDay - ((epochTime - sunset) * brightnessDiff) / deltaTime;
-    }
-    FastLED.setBrightness(brightness);
+    }    
     if (brightness != m_nPreviousBrightness)
     {
         log("Brightness changed to: %d", brightness);
         m_nPreviousBrightness = brightness;
+        m_nBrightness = brightness;
     }    
 }
 
@@ -302,21 +305,21 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         UpdateBrightness(epochTime);        
 
         // Always show it-is
-        AddWordToLeds((ledpos_t*) pToPastWord, colDefault, EColorElement::CE_TIME); // (AddWordToLeds can handle NULL pointers!)
-        AddWordToLeds((ledpos_t*) pMinutesMainWord, colDefault, EColorElement::CE_TIME);
-        AddWordToLeds((ledpos_t*) pMinutesRestWord, colDefault, EColorElement::CE_TIME);
-        AddWordToLeds((ledpos_t*) pHalfWord, colDefault, EColorElement::CE_TIME);
-        AddWordToLeds((ledpos_t*) pHourWord, colDefault, EColorElement::CE_TIME);
+        AddWordToLeds((ledpos_t*) pToPastWord, colDefault, m_nBrightness, EColorElement::CE_TIME); // (AddWordToLeds can handle NULL pointers!)
+        AddWordToLeds((ledpos_t*) pMinutesMainWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
+        AddWordToLeds((ledpos_t*) pMinutesRestWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
+        AddWordToLeds((ledpos_t*) pHalfWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
+        AddWordToLeds((ledpos_t*) pHourWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
 
         // Display day of the week
-        AddWordToLeds((ledpos_t*) pDayWord, colDefault, EColorElement::CE_WEEKDAY);
+        AddWordToLeds((ledpos_t*) pDayWord, colDefault, m_nBrightness, EColorElement::CE_WEEKDAY);
 
         // Ad the date
-        AddWordToLeds((ledpos_t*) pDayOfMonthWord, colDefault, EColorElement::CE_DATE);        
-        AddWordToLeds((ledpos_t*) pMonthWord, colDefault, EColorElement::CE_DATE); 
+        AddWordToLeds((ledpos_t*) pDayOfMonthWord, colDefault, m_nBrightness, EColorElement::CE_DATE);        
+        AddWordToLeds((ledpos_t*) pMonthWord, colDefault, m_nBrightness, EColorElement::CE_DATE); 
         
         // Second heartbeat fading led
-        AddWordToLeds((ledpos_t*) pTime->second, colDefault, EColorElement::CE_PULSE);
+        AddWordToLeds((ledpos_t*) pTime->second, colDefault, m_nBrightness, EColorElement::CE_PULSE);
         
         FastLED.show();   
     }
@@ -327,28 +330,36 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
 //
 // Overridden from DisplayStateBase to provide the color for a word or character
 //
-CRGB DisplayStateClock::ColorHandler(CRGB defaultColor, int customParam)
+CRGB DisplayStateClock::ColorHandler(CRGB defaultColor, int brightness, int customParam)
 {
+    CRGB colRet = CRGB();
     switch ((EColorElement) customParam)
     {
         case EColorElement::CE_ITIS:        
-            return GetDisplayOptionsColor(m_pSettings->colTime, m_pSettings->eDisplayOptionsTime, m_randomTime);
+            colRet = GetDisplayOptionsColor(m_pSettings->colTime, m_pSettings->eDisplayOptionsTime, m_randomTime);
+            break;
 
         case EColorElement::CE_TIME:
-            return GetDisplayOptionsColor(m_pSettings->colTime, m_pSettings->eDisplayOptionsTime, m_randomTime);
+            colRet = GetDisplayOptionsColor(m_pSettings->colTime, m_pSettings->eDisplayOptionsTime, m_randomTime);
+            break;
 
         case EColorElement::CE_WEEKDAY:
-            return GetDisplayOptionsColor(m_pSettings->colWeekday, m_pSettings->eDisplayOptionsWeekday, m_randomWeekday);
+            colRet = GetDisplayOptionsColor(m_pSettings->colWeekday, m_pSettings->eDisplayOptionsWeekday, m_randomWeekday);
+            break;
 
         case EColorElement::CE_DATE: 
-            return GetDisplayOptionsColor(m_pSettings->colDate, m_pSettings->eDisplayOptionsDate, m_randomDate);
+            colRet = GetDisplayOptionsColor(m_pSettings->colDate, m_pSettings->eDisplayOptionsDate, m_randomDate);
+            break;
 
         case EColorElement::CE_PULSE:
-            return CRGB(m_pSettings->colDate).fadeToBlackBy(127 * (cos(2.0 * PI * m_timeStamp / 6000.0) + 1.0));
+            colRet = CRGB(m_pSettings->colDate).fadeToBlackBy(127 * (cos(2.0 * PI * m_timeStamp / 6000.0) + 1.0));
+            break;
 
         default:
-            return defaultColor;
+            colRet = defaultColor;
+            break;
     }
+    return colRet.fadeLightBy(255 - brightness);
 }
 
 //
@@ -388,6 +399,18 @@ CRGB DisplayStateClock::GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSet
         case MyriadclockSettings::DO_NORMAL:
             return defaultColor;
     }    
+}
+
+//
+// A command is called
+//
+void DisplayStateClock::commandHandler(std::string command, std::vector<std::string> args)
+{
+    if (command == "backlight" && args.size() > 0)
+    {
+        int value = atoi(args[1].c_str());
+        m_pSettings->nBrightnessBackground = value;
+    }
 }
 
 

@@ -25,10 +25,11 @@ public:
     }
 
     virtual void    Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
-    virtual bool    HandleLoop(unsigned long epochTime);  
-    
+    virtual bool    HandleLoop(unsigned long epochTime);      
+    virtual void    commandHandler(std::string command, std::vector<std::string> args);
+
 protected:
-    CRGB    ColorHandler(CRGB defaultColor, int customParam = 0);
+    CRGB    ColorHandler(CRGB defaultColor, int brightness, int customParam = 0);
 
     void    CalcSunriseSunset(unsigned long timestamp, float lat, float lon, float alt, unsigned long *sunrise, unsigned long *sunset);
     void    UpdateBrightness(unsigned long epochTime);
@@ -36,6 +37,7 @@ protected:
 
 private:
     unsigned long   m_nPreviousEpochTime;
+    int             m_nBrightness;
     int             m_nPreviousBrightness;
     int             m_nSeconds;
     int             m_nMinutes;

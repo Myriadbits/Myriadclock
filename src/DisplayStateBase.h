@@ -43,9 +43,9 @@ public:
     static void setLayout(const ledclocklayout_t *layout);
 
 protected:
-    virtual CRGB ColorHandler(CRGB defaultColor, int customParam = 0);
+    virtual CRGB ColorHandler(CRGB defaultColor, int brightness, int customParam = 0);
 
-    void AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int customParam = 0);
+    void AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int brightness, int customParam = 0);
     void FillBackground(void);
     int16_t CalcLedPos(int8_t x, int8_t y);
     uint32_t Elapsed(uint32_t ts);

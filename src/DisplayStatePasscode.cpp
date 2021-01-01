@@ -66,12 +66,12 @@ bool DisplayStatePasscode::HandleLoop(unsigned long epochTime)
         if (m_fShowResult)
         {
             colPasscode = (m_fResult) ? CRGB(0, 0xFF, 0) : CRGB(0xFF, 0, 0);
-            AddWordToLeds((ledpos_t*) s_layout.extra.bluetooth, colPasscode);
-            AddWordToLeds((ledpos_t*) s_layout.extra.passcode, colPasscode);
+            AddWordToLeds((ledpos_t*) s_layout.extra.bluetooth, colPasscode, 255);
+            AddWordToLeds((ledpos_t*) s_layout.extra.passcode, colPasscode, 255);
             if (m_fResult)
-                AddWordToLeds((ledpos_t*) s_layout.extra.yes, colPasscode);
+                AddWordToLeds((ledpos_t*) s_layout.extra.yes, colPasscode, 255);
             else
-                AddWordToLeds((ledpos_t*) s_layout.extra.no, colPasscode);
+                AddWordToLeds((ledpos_t*) s_layout.extra.no, colPasscode, 255);
             m_nDelay = 100;
             m_nCounter++;
             if (m_nCounter > 50)
@@ -80,8 +80,8 @@ bool DisplayStatePasscode::HandleLoop(unsigned long epochTime)
         else
         {
             // Show the passcode
-            AddWordToLeds((ledpos_t*) s_layout.extra.bluetooth, colPasscode);
-            AddWordToLeds((ledpos_t*) s_layout.extra.passcode, colPasscode);
+            AddWordToLeds((ledpos_t*) s_layout.extra.bluetooth, colPasscode, 255);
+            AddWordToLeds((ledpos_t*) s_layout.extra.passcode, colPasscode, 255);
 
             // Subcounter is used to show/hide a single number
             // Show every number for half a second, pause between numbers of 200 ms
@@ -97,7 +97,7 @@ bool DisplayStatePasscode::HandleLoop(unsigned long epochTime)
                     else if (m_nCounter == m_codeAsString.length() - 1) colText = colTextLast;
                     else colText = colTextMiddle;
 
-                    AddWordToLeds(s_layout.numbers[ch - 48], colText);
+                    AddWordToLeds(s_layout.numbers[ch - 48], colText, 255);
                     m_nDelay = (m_nCounter == 0) ? 3500 : 2500;
                 }
                 else if (m_nSubCounter == 1)
