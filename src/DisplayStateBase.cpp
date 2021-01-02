@@ -5,6 +5,7 @@
 
 #include "DisplayStateBase.h"
 
+
 ledclocklayout_t DisplayStateBase::s_layout = s_layoutNL_V1;
 
 //
@@ -30,9 +31,9 @@ int16_t DisplayStateBase::CalcLedPos(int8_t x, int8_t y)
 
 //
 // Set the clock layout
-void DisplayStateBase::setLayout(const ledclocklayout_t *playout) 
-{ 
-    memcpy(&s_layout, playout, sizeof(s_layout));
+void DisplayStateBase::setLayout(const ledclocklayout_t *layout) 
+{      
+    memcpy(&s_layout, layout, sizeof(s_layout));    
 };
 
 //

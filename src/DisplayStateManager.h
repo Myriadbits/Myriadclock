@@ -4,8 +4,7 @@
 
 #include "FastLED.h"            // Fastled library to control the LEDs
 #include "Console.h"
-#include "ClockLayoutNL_V1.h"
-#include "ClockLayoutNL_V2.h"
+
 #include <Timezone.h>
 #include "MyriadclockSettings.h"
 #include "DisplayStateBase.h"
@@ -60,6 +59,7 @@ public:
 
 private:
     void    addState(EDisplayState eState, DisplayStateBase* pNewState);
+    void    setLayout(const int nIndex);
 
 protected:
     EDisplayState                               m_eCurrentState;

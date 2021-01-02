@@ -410,6 +410,7 @@ void DisplayStateClock::commandHandler(std::string command, std::vector<std::str
     {
         int value = atoi(args[1].c_str());
         m_pSettings->nBrightnessBackground = value;
+         m_pSettings->Store();
     }
 }
 

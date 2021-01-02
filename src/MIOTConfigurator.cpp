@@ -130,15 +130,22 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, std::string softAPPasswo
     pSecurity->setCapability(ESP_IO_CAP_OUT);
     pSecurity->setAuthenticationMode(ESP_LE_AUTH_REQ_SC_BOND);
     BLEDevice::setSecurityCallbacks(this);
+
+//     addConfigItem(1, EConfigType::CT_WIFI_SSID, "SSID", "WiFi SSID", "");
+//     addConfigItem(2, EConfigType::CT_WIFI_PASSWORD, "Password", "WiFi Password", "");
+//     addConfigItem(10, EConfigType::CT_RGBCOLOR, "Time Color", "Color of the hours/minutes part", "");
+//     addConfigItem(11, EConfigType::CT_RGBCOLOR, "Weekday Color", "Color of the day of the week", "");
+//     addConfigItem(12, EConfigType::CT_RGBCOLOR, "Date Color", "Color of the day of the month and month", "");
 }
 
 
 //
 // Add a config item to the list
-void MIOTConfigurator::addConfigItem(uint32_t id, EConfigType type, std::string name, std::string synopsis)
+MIOTConfigItem* MIOTConfigurator::addConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit = "")
 {
-    MIOTConfigItem item = MIOTConfigItem(id, type, name, synopsis);
-    m_configItems.push_back(item);
+    MIOTConfigItem *pitem = new MIOTConfigItem(id, type, name, synopsis, unit);
+    m_configItems.push_back(pitem);
+    return pitem;
 }
 
 //
@@ -549,9 +556,25 @@ void MIOTConfigurator::onWrite(BLECharacteristic* pCharacteristic)
         MIOT_LOG("Incoming command: %d, Number: %d", msg.getCommand(), msg.getNumber() );
         if (msg.getCommand() == 2)
         {
-            MIOTMessage msgResponse(3, msg.getNumber());
-            
-            m_pCharResponse->setValue(msgResponse.encode());
+            // Request a config item
+            for (auto it : m_configItems)
+            {
+                if (it->getId() == msg.getNumber())
+                {
+                    MIOT_LOG("Found config item '%s'", it->getName().c_str());
+                    uint8_t datalen = 0;
+                    uint8_t* pdata = it->encode(&datalen);
+
+                    MIOT_LOG("Encode, length = %d", datalen);
+
+                    MIOTMessage msg(2, msg.getNumber(), datalen, pdata);
+                    m_pCharResponse->setValue(msg.encode());
+
+                    delete [] pdata;
+
+                    break;
+                }
+            }            
         }
     }
 }

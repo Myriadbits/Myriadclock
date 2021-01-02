@@ -13,6 +13,10 @@
 #include "DisplayStatePasscode.h"
 #include "DisplayStateToilet.h"
 
+#include "ClockLayoutNL_V1.h"
+#include "ClockLayoutNL_V2.h"
+#include "ClockLayoutEN_V1.h"
+
 //
 //  Initialize/setup this class
 //
@@ -36,6 +40,9 @@ void DisplayStateManager::initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
 
     // Start the default state
     changeState(m_eDefaultState);
+
+    // Load the last layout
+    setLayout(pSettings->nLayout);
 }
 
 //
@@ -75,10 +82,31 @@ void DisplayStateManager::commandHandler(std::string command, std::vector<std::s
     }
     else if (command == "layout" && args.size() > 0)
     {
-        if (args[1] == "0") DisplayStateBase::setLayout(const_cast<ledclocklayout_t*>(&s_layoutNL_V1));
-        if (args[1] == "1") DisplayStateBase::setLayout(const_cast<ledclocklayout_t*>(&s_layoutNL_V2));
+        int value = atoi(args[1].c_str());
+        m_pSettings->nLayout = value;
+        m_pSettings->Store();
+
+        setLayout(value);
     }
 }
+
+
+//
+// Set the clock layout
+void DisplayStateManager::setLayout(const int nIndex) 
+{   
+    Serial.printf("Layout: %d\n", nIndex);
+
+    // Default is new dutch layout
+    ledclocklayout_t *playout = const_cast<ledclocklayout_t*>(&s_layoutNL_V2);
+
+    // Get the correct layout
+    if (nIndex == 1) playout = const_cast<ledclocklayout_t*>(&s_layoutNL_V1);
+    if (nIndex == 2) playout = const_cast<ledclocklayout_t*>(&s_layoutEN_V1);
+    
+    // Inform all display states of the new layout
+    DisplayStateBase::setLayout(playout);    
+};
 
 //
 // Pass control to through the current display state

@@ -28,7 +28,6 @@ public:
 
     virtual void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings) 
     {        
-        setLayout(&s_layoutNL_V2);
         m_pLEDs = pLEDs;
         m_pTZ = pTZ;
         m_pSettings = pSettings;

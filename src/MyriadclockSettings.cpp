@@ -26,6 +26,7 @@ void MyriadclockSettings::Store()
     m_preferences.putShort("brightnessDay", nBrightnessDay);
     m_preferences.putShort("brightnessNight", nBrightnessNight);
     m_preferences.putShort("brightnessBack", nBrightnessBackground);
+    m_preferences.putShort("layout", nLayout);
     m_preferences.putInt("doTime", eDisplayOptionsTime);
     m_preferences.putInt("doWeekday", eDisplayOptionsWeekday);
     m_preferences.putInt("doDate", eDisplayOptionsDate);
@@ -63,6 +64,7 @@ void MyriadclockSettings::Load()
     eDisplayOptionsDate = (EDisplayOptions) m_preferences.getInt("doDate", DO_NORMAL);
     eDisplayOptionsBirthday = (EDisplayOptions) m_preferences.getInt("doBirthdays", DO_COLOR_PARTY_MINUTE);
     eDisplayOptionsHoliday = (EDisplayOptions) m_preferences.getInt("doHolidays", DO_NORMAL);
+    nLayout = m_preferences.getShort("layout", 0);
 
     char buff[32];
     for(int n = 0; n < MAX_BIRTHDAYS; n++)
@@ -79,7 +81,6 @@ void MyriadclockSettings::Load()
         else if (n == 2) dateHolidays[n] = m_preferences.getULong64(buff, 977832000L); // Christmas 2
         else dateHolidays[n] = m_preferences.getULong64(buff, 0L);
     }
-
 }
 
 

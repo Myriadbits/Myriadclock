@@ -21,6 +21,7 @@ public:
         , nBrightnessDay(80)
         , nBrightnessNight(30)
         , nBrightnessBackground(4)
+        , nLayout(0)
         , eDisplayOptionsTime(DO_NORMAL)    
         , eDisplayOptionsWeekday(DO_NORMAL) 
         , eDisplayOptionsDate(DO_NORMAL)
@@ -56,6 +57,8 @@ public:
     int16_t     nBrightnessDay;     // Day brightness
     int16_t     nBrightnessNight;   // Day night
     int16_t     nBrightnessBackground;  // Background brightness
+
+    int16_t     nLayout;  // Layout index
 
     EDisplayOptions  eDisplayOptionsTime;    
     EDisplayOptions  eDisplayOptionsWeekday;    

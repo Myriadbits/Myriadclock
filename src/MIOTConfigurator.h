@@ -155,7 +155,7 @@ public:
     int getVersion() { return m_version; }
 
     // Config items related
-    void addConfigItem(uint32_t id, EConfigType type, std::string name, std::string synopsis);
+    MIOTConfigItem* addConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit);
 
 	virtual uint32_t onPassKeyRequest();
 	virtual void onPassKeyNotify(uint32_t pass_key);
@@ -176,7 +176,7 @@ protected:
     BLEServer*              m_pBLEServer;
 
     // Config items
-    std::vector<MIOTConfigItem>  m_configItems;
+    std::vector<MIOTConfigItem*>  m_configItems;
 
     // Statemachine related
     EMIOTState              m_state;

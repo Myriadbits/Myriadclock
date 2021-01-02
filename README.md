@@ -38,6 +38,9 @@ Normal print settings, `standard quality` is fine.
 For best result: Print the plate UPSIDE-DOWN. That way the smooth part will be touching the casing.
 Print this in black. The plate is only 5 layers tick, all layers should be printed. You might want to tweak some setting to prevent holes getting accidentally be filled with debris/hairs/wires (allthough I didn't find the correct setting for that yet...)
 Travel-Combining mode: All
+Retract at layer change: True
+Z Hop Height: 0.4
+Avoid printed parts when travelling: False (I rather not travel over the holes!)
 
 PLA: 105m (for me that is approx €6)
 

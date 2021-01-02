@@ -18,17 +18,22 @@ enum EConfigType
 class MIOTConfigItem
 {
 public:
-    MIOTConfigItem(uint32_t id, EConfigType type, std::string name, std::string synopsis)        
-        : m_id(id)
-        , m_eType(type)
-        , m_sName(name)
-        , m_sSynopsis(synopsis)
-    {        
-    }
+    MIOTConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit);
 
-    uint32_t        m_id;
+    uint8_t getId() { return m_id;}
+    EConfigType getType() { return m_eType;}
+    std::string getName() { return m_sName;}    
+
+    void setValue(uint32_t newValue) { m_value = newValue; }
+    uint32_t getValue() { return m_value;}
+
+    uint8_t* encode(uint8_t* outputLen);
+
+private:
+    uint8_t         m_id; // Unique ID 
     EConfigType     m_eType; // The configuratio item type
-    std::string     m_sName; // Name of this config item
+    std::string     m_sName; // Short name of this config item
     std::string     m_sSynopsis; // Short description
+    std::string     m_sUnit; // Unit
     uint32_t        m_value;
 };
