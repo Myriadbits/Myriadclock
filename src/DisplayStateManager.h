@@ -56,6 +56,8 @@ public:
     // MIOT Callbacks
     virtual void onDisplayPassKey(uint32_t passkey);
     virtual void onBluetoothConnection(bool success);
+    virtual void onConfigItemWrite(MIOTConfigItem *pconfigItem);
+    virtual void onConfigItemRead(MIOTConfigItem *pconfigItem);
 
 private:
     void    addState(EDisplayState eState, DisplayStateBase* pNewState);

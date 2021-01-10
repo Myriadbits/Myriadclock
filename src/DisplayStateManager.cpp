@@ -158,3 +158,17 @@ void DisplayStateManager::onBluetoothConnection(bool success)
     }
 }
 
+//
+// A config item has changed, forward to the settings
+// 
+void DisplayStateManager::onConfigItemWrite(MIOTConfigItem *pconfigItem)
+{
+    if (m_pSettings != NULL)
+        m_pSettings->configItemWrite(pconfigItem);
+}
+
+void DisplayStateManager::onConfigItemRead(MIOTConfigItem *pconfigItem)
+{
+    if (m_pSettings != NULL)
+        m_pSettings->configItemRead(pconfigItem);
+}

@@ -19,6 +19,8 @@ void MyriadclockSettings::Initialize()
 //
 void MyriadclockSettings::Store()
 {
+    m_preferences.putString("ssid", sSSID.c_str());
+    m_preferences.putString("passphrase", sPassPhrase.c_str());
     m_preferences.putUInt("colorTime", colTime);
     m_preferences.putUInt("colorWeekday", colWeekday);
     m_preferences.putUInt("colorDate", colDate);
@@ -51,6 +53,9 @@ void MyriadclockSettings::Store()
 //
 void MyriadclockSettings::Load()
 {
+    sSSID = std::string(m_preferences.getString("ssid", "").c_str());
+    sPassPhrase = std::string(m_preferences.getString("passphrase", "").c_str());            
+
     colTime = m_preferences.getUInt("colorTime", 0x00FF00);
     colWeekday = m_preferences.getUInt("colorWeekday", 0xFFA500);
     colDate = m_preferences.getUInt("colorDate", 0xE59400);
@@ -83,5 +88,65 @@ void MyriadclockSettings::Load()
     }
 }
 
+//
+// Register all settings with the MIOT library
+void MyriadclockSettings::registerConfigItems(MIOTConfigurator *pmiot)
+{
+    pmiot->addConfigItem(1, CT_WIFI_SSID, "SSID", "WiFi SSID");
+    pmiot->addConfigItem(2, CT_WIFI_PASSPHRASE, "Passphrase", "WiFi Passphrase");
+    pmiot->addConfigItem(10, CT_RGBCOLOR, "Time color", "Color of the hours/minutes part");
+    pmiot->addConfigItem(11, CT_RGBCOLOR, "Weekday Color", "Color of the day of the week");
+    pmiot->addConfigItem(12, CT_RGBCOLOR, "Date color", "Color of the date part");
 
+    pmiot->addConfigItem(13, CT_SLIDER, "Brightness Day", "Brightness during the day");
+    pmiot->addConfigItem(14, CT_SLIDER, "Brightness Night", "Brightness during the night");
+    pmiot->addConfigItem(15, CT_SLIDER, "Background Brightness", "Brightness of the background");
+}
 
+//
+// Callback that is called when a config item is read 
+void MyriadclockSettings::configItemRead(MIOTConfigItem *pconfigItem)
+{
+    switch (pconfigItem->getId())
+    {
+    case 1: pconfigItem->setValue(sSSID); break;
+    case 2: pconfigItem->setValue(""); break; // ALWAYS send back an empty passphrase!
+
+    case 10: pconfigItem->setValue(colTime); break;
+    case 11: pconfigItem->setValue(colWeekday); break;
+    case 12: pconfigItem->setValue(colDate); break;
+    
+    case 13: pconfigItem->setValue(nBrightnessDay); break;
+    case 14: pconfigItem->setValue(nBrightnessNight); break;
+    case 15: pconfigItem->setValue(nBrightnessBackground); break;
+
+    default:
+        break;
+    }
+}
+
+//
+// Callback that is called when a config item changes 
+void MyriadclockSettings::configItemWrite(MIOTConfigItem *pconfigItem)
+{
+    switch (pconfigItem->getId())
+    {
+        case 1: sSSID = pconfigItem->getValueString(); break;
+        case 2: sPassPhrase = pconfigItem->getValueString(); break;
+
+        case 10: colTime = pconfigItem->getValue(); break;
+        case 11: colWeekday = pconfigItem->getValue(); break;
+        case 12: colDate = pconfigItem->getValue(); break;
+
+        case 13: nBrightnessDay = (pconfigItem->getValue() % 100); break;
+        case 14: nBrightnessNight = (pconfigItem->getValue() % 100); break;
+        case 15: nBrightnessBackground = (pconfigItem->getValue() % 100); break;
+
+        default:
+            // Nothing set, return
+            return;
+    }
+
+    // Something probably changed, safe the new settings
+    Store();
+}

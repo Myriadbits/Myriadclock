@@ -190,7 +190,7 @@ void setup()
    // snprintf(buff, sizeof(buff), "Myriadclock%s", s_wordCodes[chipNumber % 32].text); TODO
 
     // Put name + serial number in settings (volatile, not store to DB)
-    g_Settings.sClockName = String(buff);
+    g_Settings.sClockName = string(buff);
     g_Settings.nSerialNumber = chipNumber;
 
     //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
@@ -219,12 +219,13 @@ void setup()
     //g_acPortal.begin();
     //g_acUpdate.attach(g_acPortal);
 
+
+    // Add all config items to the MIOT library
+    g_Settings.registerConfigItems(&g_miot);
+
+    // Start the MIOT BLE stuff
     g_miot.setup(&g_stateManager);
-    g_miot.addConfigItem(1, CT_WIFI_SSID, "SSID", "WiFi SSID", "");
-    g_miot.addConfigItem(2, CT_WIFI_PASSWORD, "Passphrase", "WiFi Passphrase", "");
-    g_miot.addConfigItem(10, CT_RGBCOLOR, "Time color", "Color of the hours/minutes part", "");
-    g_miot.addConfigItem(11, CT_RGBCOLOR, "Weekday Color", "Color of the day of the week", "");
-    g_miot.addConfigItem(12, CT_RGBCOLOR, "Date color", "Color of the date part", "");
+
 
 
     //Serial.println("Webserver started: " + WiFi.localIP().toString());    

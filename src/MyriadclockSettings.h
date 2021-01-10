@@ -2,6 +2,7 @@
 
 #include "FastLED.h"
 #include <Preferences.h>
+#include "MiotConfigurator.h"
 
 #define MAX_BIRTHDAYS       10
 #define MAX_HOLIDAYS        10
@@ -16,7 +17,9 @@ private:
 
 public:
     MyriadclockSettings()
-        : sClockName()
+        : sSSID()
+        , sPassPhrase()
+        , sClockName()
         , nSerialNumber(0)
         , nBrightnessDay(80)
         , nBrightnessNight(30)
@@ -28,8 +31,7 @@ public:
         , eDisplayOptionsBirthday(DO_COLOR_PARTY_MINUTE)
         , eDisplayOptionsHoliday(DO_COLOR_PARTY_MINUTE)
         , bluetoothPasscode(0)
-    {
-        
+    {        
     }
 
     enum EDisplayOptions
@@ -45,7 +47,9 @@ public:
         DO_COLOR_WEEK_THAI,     // Different color for each weekday according to the Thai
     };
 
-    String      sClockName;     // Name of the clock, filled in by the main setup (not stored to DB)
+    std::string sSSID;
+    std::string sPassPhrase;
+    std::string sClockName;     // Name of the clock, filled in by the main setup (not stored to DB)
     uint16_t    nSerialNumber;  // Serial number (not stored to db)
 
     uint32_t    colTime;   // Color of time part
@@ -76,4 +80,7 @@ public:
     void Store();
     void Load();
 
+    void registerConfigItems(MIOTConfigurator *pmiot);
+    void configItemWrite(MIOTConfigItem *pconfigItem);
+    void configItemRead(MIOTConfigItem *pconfigItem);
 };

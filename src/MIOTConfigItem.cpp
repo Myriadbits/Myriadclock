@@ -5,7 +5,8 @@
 
 #include "MIOTConfigItem.h"
 
-MIOTConfigItem::MIOTConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit)        
+
+MIOTConfigItem::MIOTConfigItem(uint16_t id, EConfigType type, std::string name, std::string synopsis, std::string unit)        
         : m_id(id)
         , m_eType(type)
         , m_sName(name)
@@ -14,11 +15,27 @@ MIOTConfigItem::MIOTConfigItem(uint8_t id, EConfigType type, std::string name, s
 {        
 }
 
+std::string MIOTConfigItem::getValueString() 
+{
+    if (m_eType == CT_WIFI_SSID ||
+        m_eType == CT_WIFI_PASSPHRASE ||
+        m_eType == CT_STRING)
+    {
+        return m_valueString;
+    }
+    else
+    {
+        char stemp[32];
+        snprintf(stemp, 32, "%08X", m_value);
+        return std::string(stemp);
+    }    
+}
 
-uint8_t* MIOTConfigItem::encode(uint8_t* outputLen)
+
+uint8_t MIOTConfigItem::encode(uint8_t *pdata, int dataLen)
 {
     int slen = 0;
-    uint8_t* pdata = new uint8_t[256]; // 250 datalength + header
+    if (dataLen < 256) return 0; // TODO CALCULATE THE DESIRED BUFFER/DATALENGTH
 
     pdata[0] = m_id;
     pdata[1] = (uint8_t) m_eType;
@@ -39,13 +56,61 @@ uint8_t* MIOTConfigItem::encode(uint8_t* outputLen)
     for(int n = 0; n < slen; n++)
         pdata[idx++] = m_sUnit.c_str()[n];
 
-    pdata[idx++] = (m_value & 0xFF000000) >> 24;
-    pdata[idx++] = (m_value & 0x00FF0000) >> 16;
-    pdata[idx++] = (m_value & 0x0000FF00) >> 8;
-    pdata[idx++] = (m_value & 0x000000FF) >> 0;
+    switch (m_eType)
+    {
+    case CT_WIFI_SSID:
+    case CT_WIFI_PASSPHRASE:
+    case CT_STRING:
+        slen = (uint8_t) min((int) m_valueString.length(), 0xF0);
+        pdata[idx++] = slen;
+        for(int n = 0; n < slen; n++)
+            pdata[idx++] = m_valueString.c_str()[n];
+        break;
 
-    if (outputLen != NULL)
-        *outputLen = idx;
+    case CT_SLIDER:
+        pdata[idx++] = (uint8_t)(m_value & 0x000000FF);
+        break;
+    
+    case CT_RGBCOLOR:
+    case CT_UINT32:
+        pdata[idx++] = (uint8_t)((m_value & 0xFF000000) >> 24);
+        pdata[idx++] = (uint8_t)((m_value & 0x00FF0000) >> 16);
+        pdata[idx++] = (uint8_t)((m_value & 0x0000FF00) >> 8);
+        pdata[idx++] = (uint8_t)((m_value & 0x000000FF) >> 0);
+        break;
 
-    return pdata;
+    default:
+        break;
+    }
+
+    return idx;
+}
+
+
+bool MIOTConfigItem::decode(std::string data, uint8_t *pdata)
+{
+    switch (m_eType)
+    {
+    case CT_WIFI_SSID:
+    case CT_WIFI_PASSPHRASE:
+    case CT_STRING:
+        m_valueString = data; 
+        break;
+
+    case CT_SLIDER:
+        {
+            m_value = pdata[0] % 100;
+        }
+        break;
+    
+    case CT_RGBCOLOR:
+    case CT_UINT32:
+        m_value = (uint32_t)(pdata[0] << 24) | (uint32_t)(pdata[1] << 16) | (uint32_t)(pdata[2] << 8) | (uint32_t)(pdata[3]);
+        break;
+
+    default:
+        break;
+    }
+
+    return true;
 }

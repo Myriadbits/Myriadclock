@@ -92,10 +92,12 @@
 #define MIOT_MULTICAST_UDP_PORT         2323
 #define MIOT_MULTICAST_TTL              32 // Restrict multicasts to same site
 
-#define MIOT_SERVICE_UUID               "a8264447-fdbd-4668-a422-9c38494f5400"
-#define MIOT_CHAR_INFO_UUID             "a8264447-fdbd-4668-a422-9c3d494f5401"
-#define MIOT_CHAR_REQUEST_UUID          "a8264447-fdbd-4668-a422-9c3d494f5402"
-#define MIOT_CHAR_RESPONSE_UUID         "a8264447-fdbd-4668-a422-9c3d494f5403"
+// BLE
+#define MIOT_SERVICE_UUID               "ebd7dc16-04a0-4f9c-96f3-05644d494f54"
+#define MIOT_CHAR_INFO_UUID             "ebd7dc18-04a0-4f9c-96f3-05644d494f54"
+#define MIOT_CHAR_CONFIG                "ebd7%04x-04a0-4f9c-96f3-05644d494f54" // snprintf Format (do not use 0000)
+#define MIOT_APPEARANCE                 256 // Clock see also: https://developer.nordicsemi.com/nRF5_SDK/nRF51_SDK_v4.x.x/doc/html/group___b_l_e___a_p_p_e_a_r_a_n_c_e_s.html
+
 
 // App requests config item X, MIOT response with 
 // <command>
@@ -132,6 +134,16 @@ public:
     // Callback that will be called when the bluetooth connection is established or has failed
     //
 	virtual void onBluetoothConnection(bool success) = 0;
+
+    //
+    // Callback that is called when an config item need to be changed
+    //
+    virtual void onConfigItemWrite(MIOTConfigItem *pconfigItem);
+
+    //
+    // Callback that is called when an config item value is requested
+    //
+    virtual void onConfigItemRead(MIOTConfigItem *pconfigItem);
 };
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -155,8 +167,9 @@ public:
     int getVersion() { return m_version; }
 
     // Config items related
-    MIOTConfigItem* addConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit);
+    MIOTConfigItem* addConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit = "");
 
+protected:
 	virtual uint32_t onPassKeyRequest();
 	virtual void onPassKeyNotify(uint32_t pass_key);
 	virtual bool onSecurityRequest();
@@ -166,9 +179,11 @@ public:
 	virtual void onWrite(BLECharacteristic* pCharacteristic);
 
 private:
-    void changeState(EMIOTState newState);
-    int createMulticastGroup();    
-    bool handleMulticast(int sock);
+    void    addConfigCharacteristic(BLEService *pMIOTService, MIOTConfigItem* pitem);
+    uint8_t setConfigValueForCharacteristic(BLECharacteristic *pChar, MIOTConfigItem* pitem);
+    void    changeState(EMIOTState newState);
+    int     createMulticastGroup();    
+    bool    handleMulticast(int sock);
 
 protected:
     // Internal stuff
@@ -187,9 +202,7 @@ protected:
     unsigned long           m_millisLastUDP;
     Preferences             m_preferences;
 
-    BLECharacteristic       *m_pCharInfo;
-    BLECharacteristic       *m_pCharRequest;
-    BLECharacteristic       *m_pCharResponse;
+    vector<BLECharacteristic*>  m_vecCharConfigItems;
 
     // Product info
     std::string             m_productName;

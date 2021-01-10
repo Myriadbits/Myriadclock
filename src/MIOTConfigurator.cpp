@@ -95,31 +95,74 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, std::string softAPPasswo
     MIOT_LOG("- DeviceName: %s", m_deviceName.c_str());
     MIOT_LOG("- Version:  %d", m_version);
 
-
     //
     // BLE initializatons
     //
     BLEDevice::init(m_deviceName.c_str());
     m_pBLEServer = BLEDevice::createServer();
-    BLEService *pService = m_pBLEServer->createService(MIOT_SERVICE_UUID);
-    m_pCharInfo = pService->createCharacteristic(MIOT_CHAR_INFO_UUID, BLECharacteristic::PROPERTY_READ);
-    m_pCharInfo->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED);
 
-    m_pCharRequest = pService->createCharacteristic(MIOT_CHAR_REQUEST_UUID, BLECharacteristic::PROPERTY_WRITE);
-    m_pCharRequest->setAccessPermissions(ESP_GATT_PERM_WRITE_ENCRYPTED);
-    m_pCharRequest->setCallbacks(this);
+    // For BLE number, see: https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit%20UUID%20Numbers%20Document.pdf
+    // For the different standard services, see: https://www.bluetooth.com/specifications/gatt/
 
-    m_pCharResponse = pService->createCharacteristic(MIOT_CHAR_RESPONSE_UUID, BLECharacteristic::PROPERTY_READ);
-    m_pCharResponse->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED);
-    m_pCharResponse->setCallbacks(this);
+    ///////////////////////////////////
+    // Device information service
+    BLEUUID uuidDeviceInfo((uint16_t) 0x180a);
+    BLEService *pDeviceInfoService = m_pBLEServer->createService(uuidDeviceInfo, 16, 0);
+    // Manufacturer
+    BLECharacteristic *pCharManufacturer = pDeviceInfoService->createCharacteristic(BLEUUID((uint16_t) 0x2a29), BLECharacteristic::PROPERTY_READ);
+    pCharManufacturer->setAccessPermissions(ESP_GATT_PERM_READ);
+    pCharManufacturer->setValue("Myriadbits.com");
+    // Model
+    BLECharacteristic *pCharModel = pDeviceInfoService->createCharacteristic(BLEUUID((uint16_t) 0x2a24), BLECharacteristic::PROPERTY_READ);
+    pCharModel->setAccessPermissions(ESP_GATT_PERM_READ);
+    pCharModel->setValue(m_productName);
+    // Serial number
+    BLECharacteristic *pCharSerialNumber = pDeviceInfoService->createCharacteristic(BLEUUID((uint16_t) 0x2a25), BLECharacteristic::PROPERTY_READ);
+    pCharSerialNumber->setAccessPermissions(ESP_GATT_PERM_READ);
+    pCharSerialNumber->setValue(m_deviceId);    
+    pDeviceInfoService->start();
 
-    pService->start();
+    ///////////////////////////////////
+    // Time service
+    BLEUUID uuidTimeService((uint16_t) 0x1805);
+    BLEService *pTimeService = m_pBLEServer->createService(uuidTimeService, 16, 1);
 
-    m_pCharInfo->setValue("I'm a Myriadclock");
+    // Time service
+    BLECharacteristic *pTime = pTimeService->createCharacteristic(BLEUUID((uint16_t) 0x2a2b), BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+    pTime->setAccessPermissions(ESP_GATT_PERM_READ);
+    uint8_t datetime[16] = {0};
+    datetime[0] = 2021 / 256;
+    datetime[1] = 2021 % 256;
+    datetime[2] = 1;
+    datetime[3] = 9;
+    datetime[4] = 12;
+    datetime[5] = 23;
+    datetime[6] = 00;
+    pTime->setValue(datetime, 16);
+    pTimeService->start();
 
-    // BLEAdvertising *pAdvertising = pServer->getAdvertising();  // this still is working for backward compatibility
+    ///////////////////////////////////
+    // MIOT service
+    MIOT_LOG("Starting BLU service with %d config items", m_configItems.size());
+    BLEUUID uuidMIOTService(MIOT_SERVICE_UUID);
+    BLEService *pMIOTService = m_pBLEServer->createService(uuidMIOTService, m_configItems.size() * 4, 2);
+    for (auto it : m_configItems)
+    {
+        if (m_pCallBacks != NULL)
+            m_pCallBacks->onConfigItemRead(it); // Update the config item
+        addConfigCharacteristic(pMIOTService, it);
+    }
+
+    ///////////////////////////////////
+    // Finally: start the service
+    pMIOTService->start();
+    
+
     BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    pAdvertising->addServiceUUID(MIOT_SERVICE_UUID);
+    pAdvertising->setAppearance(MIOT_APPEARANCE);
+    pAdvertising->addServiceUUID(uuidDeviceInfo);
+    pAdvertising->addServiceUUID(uuidTimeService);
+    pAdvertising->addServiceUUID(uuidMIOTService);
     pAdvertising->setScanResponse(true);
     pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
     pAdvertising->setMinPreferred(0x12);
@@ -131,22 +174,92 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, std::string softAPPasswo
     pSecurity->setAuthenticationMode(ESP_LE_AUTH_REQ_SC_BOND);
     BLEDevice::setSecurityCallbacks(this);
 
-//     addConfigItem(1, EConfigType::CT_WIFI_SSID, "SSID", "WiFi SSID", "");
-//     addConfigItem(2, EConfigType::CT_WIFI_PASSWORD, "Password", "WiFi Password", "");
-//     addConfigItem(10, EConfigType::CT_RGBCOLOR, "Time Color", "Color of the hours/minutes part", "");
-//     addConfigItem(11, EConfigType::CT_RGBCOLOR, "Weekday Color", "Color of the day of the week", "");
-//     addConfigItem(12, EConfigType::CT_RGBCOLOR, "Date Color", "Color of the day of the month and month", "");
 }
 
 
 //
+// Add a characteristic to the MIOT service
+// Note that 'id' should be 1 or higher!
+// Returns the BLEUUID of the config item
+void MIOTConfigurator::addConfigCharacteristic(BLEService *pMIOTService, MIOTConfigItem* pitem)
+{
+    char uuid[64];
+    snprintf(uuid, 64, MIOT_CHAR_CONFIG, pitem->getId());
+    BLEUUID uuidConfig(uuid);
+
+    
+    BLECharacteristic *pChar = pMIOTService->createCharacteristic(uuidConfig, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+    pChar->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
+    pChar->setCallbacks(this);
+
+    // Value consist
+    uint8_t byteCount = setConfigValueForCharacteristic(pChar, pitem);
+    MIOT_LOG("- Adding characteristic: %s [%d bytes]", uuidConfig.toString().c_str(), byteCount);
+
+    // snprintf(charName, 64, MIOT_CHAR_CONFIG, n + 0x0101); // Do NOT start at 0!
+    // BLEDescriptor *pdesc = new BLEDescriptor(charName);       
+    // pdesc->setAccessPermissions(ESP_GATT_PERM_READ);         
+    // snprintf(text, 64, "Description [%d]", n + 1);
+    // pdesc->setValue(text);
+    // pChar->addDescriptor(pdesc);
+}
+
+//
+// Set the config value of a characteristics to the config item value + desciption etc.
+uint8_t MIOTConfigurator::setConfigValueForCharacteristic(BLECharacteristic *pChar, MIOTConfigItem* pitem)
+{
+    uint8_t numBytes = 0;
+    uint8_t buffer[256];
+    if (pitem != NULL)
+    {
+        numBytes = pitem->encode(buffer, 256);
+        pChar->setValue(buffer, numBytes);        
+    }   
+    return numBytes; 
+}
+
+//
 // Add a config item to the list
-MIOTConfigItem* MIOTConfigurator::addConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit = "")
+MIOTConfigItem* MIOTConfigurator::addConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit)
 {
     MIOTConfigItem *pitem = new MIOTConfigItem(id, type, name, synopsis, unit);
     m_configItems.push_back(pitem);
     return pitem;
 }
+
+
+//
+// BLE Characteristic is written
+void MIOTConfigurator::onWrite(BLECharacteristic* pCharacteristic)
+{
+    // Parse the 
+    uint32_t uid = 0; 
+    if (sscanf(pCharacteristic->getUUID().toString().c_str(), MIOT_CHAR_CONFIG, &uid) == 1)
+    {
+        MIOT_LOG("- Data received for config item %d", uid);
+
+        // Find the matching config item
+        bool found = false;
+        for (auto it : m_configItems)
+        {
+            if (it != NULL && it->getId() == uid)
+            {
+                it->decode(pCharacteristic->getValue(), pCharacteristic->getData());
+                MIOT_LOG("Setting config item [%d]: '%s' to '%s'", uid, it->getName().c_str(), it->getValueString().c_str());
+                if (m_pCallBacks != NULL)
+                    m_pCallBacks->onConfigItemWrite(it);
+
+                // Now set the value back to the full-descriptive text
+                setConfigValueForCharacteristic(pCharacteristic, it);
+                found = true;
+                break;
+            }
+        }
+        if (!found)
+            MIOT_LOG("Error. Data received for unknown config item %d", uid);
+    }
+}
+
 
 //
 // Create a multicast group (if it does not exist yet)
@@ -545,36 +658,3 @@ void MIOTConfigurator::handleClient()
     }
 }
 
-
-//
-// BLE Characteristic is written
-void MIOTConfigurator::onWrite(BLECharacteristic* pCharacteristic)
-{
-    if (pCharacteristic == m_pCharRequest)
-    {
-        MIOTMessage msg(pCharacteristic->getValue());
-        MIOT_LOG("Incoming command: %d, Number: %d", msg.getCommand(), msg.getNumber() );
-        if (msg.getCommand() == 2)
-        {
-            // Request a config item
-            for (auto it : m_configItems)
-            {
-                if (it->getId() == msg.getNumber())
-                {
-                    MIOT_LOG("Found config item '%s'", it->getName().c_str());
-                    uint8_t datalen = 0;
-                    uint8_t* pdata = it->encode(&datalen);
-
-                    MIOT_LOG("Encode, length = %d", datalen);
-
-                    MIOTMessage msg(2, msg.getNumber(), datalen, pdata);
-                    m_pCharResponse->setValue(msg.encode());
-
-                    delete [] pdata;
-
-                    break;
-                }
-            }            
-        }
-    }
-}
