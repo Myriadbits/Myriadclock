@@ -3,7 +3,6 @@
 #include "FastLED.h"
 #include <Preferences.h>
 
-
 enum EConfigType
 {
     CT_WIFI_SSID,        // WiFi SSID

@@ -119,7 +119,8 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, std::string softAPPasswo
     // Serial number
     BLECharacteristic *pCharSerialNumber = pDeviceInfoService->createCharacteristic(BLEUUID((uint16_t) 0x2a25), BLECharacteristic::PROPERTY_READ);
     pCharSerialNumber->setAccessPermissions(ESP_GATT_PERM_READ);
-    pCharSerialNumber->setValue(m_deviceId);    
+    pCharSerialNumber->setValue(m_deviceId);  
+      
     pDeviceInfoService->start();
 
     ///////////////////////////////////
@@ -131,7 +132,7 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, std::string softAPPasswo
     BLECharacteristic *pTime = pTimeService->createCharacteristic(BLEUUID((uint16_t) 0x2a2b), BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
     pTime->setAccessPermissions(ESP_GATT_PERM_READ);
     uint8_t datetime[16] = {0};
-    datetime[0] = 2021 / 256;
+    datetime[0] = 2021 / 256; // TODO Actual date time + timezone
     datetime[1] = 2021 % 256;
     datetime[2] = 1;
     datetime[3] = 9;
@@ -143,10 +144,10 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, std::string softAPPasswo
 
     ///////////////////////////////////
     // MIOT service
-    MIOT_LOG("Starting BLU service with %d config items", m_configItems.size());
+    MIOT_LOG("Starting BLU service with %d config items", m_vecConfigItems.size());
     BLEUUID uuidMIOTService(MIOT_SERVICE_UUID);
-    BLEService *pMIOTService = m_pBLEServer->createService(uuidMIOTService, m_configItems.size() * 4, 2);
-    for (auto it : m_configItems)
+    BLEService *pMIOTService = m_pBLEServer->createService(uuidMIOTService, m_vecConfigItems.size() * 4, 2);
+    for (auto it : m_vecConfigItems)
     {
         if (m_pCallBacks != NULL)
             m_pCallBacks->onConfigItemRead(it); // Update the config item
@@ -223,7 +224,7 @@ uint8_t MIOTConfigurator::setConfigValueForCharacteristic(BLECharacteristic *pCh
 MIOTConfigItem* MIOTConfigurator::addConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit)
 {
     MIOTConfigItem *pitem = new MIOTConfigItem(id, type, name, synopsis, unit);
-    m_configItems.push_back(pitem);
+    m_vecConfigItems.push_back(pitem);
     return pitem;
 }
 
@@ -240,7 +241,7 @@ void MIOTConfigurator::onWrite(BLECharacteristic* pCharacteristic)
 
         // Find the matching config item
         bool found = false;
-        for (auto it : m_configItems)
+        for (auto it : m_vecConfigItems)
         {
             if (it != NULL && it->getId() == uid)
             {

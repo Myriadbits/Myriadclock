@@ -59,7 +59,6 @@
 #include <vector>
 
 #include "MIOTConfigItem.h"
-#include "MIOTMessage.h"
 
 
 // TODO Remove
@@ -94,7 +93,6 @@
 
 // BLE
 #define MIOT_SERVICE_UUID               "ebd7dc16-04a0-4f9c-96f3-05644d494f54"
-#define MIOT_CHAR_INFO_UUID             "ebd7dc18-04a0-4f9c-96f3-05644d494f54"
 #define MIOT_CHAR_CONFIG                "ebd7%04x-04a0-4f9c-96f3-05644d494f54" // snprintf Format (do not use 0000)
 #define MIOT_APPEARANCE                 256 // Clock see also: https://developer.nordicsemi.com/nRF5_SDK/nRF51_SDK_v4.x.x/doc/html/group___b_l_e___a_p_p_e_a_r_a_n_c_e_s.html
 
@@ -191,7 +189,7 @@ protected:
     BLEServer*              m_pBLEServer;
 
     // Config items
-    std::vector<MIOTConfigItem*>  m_configItems;
+    std::vector<MIOTConfigItem*>    m_vecConfigItems;
 
     // Statemachine related
     EMIOTState              m_state;
@@ -202,7 +200,7 @@ protected:
     unsigned long           m_millisLastUDP;
     Preferences             m_preferences;
 
-    vector<BLECharacteristic*>  m_vecCharConfigItems;
+    std::vector<BLECharacteristic*>  m_vecCharConfigItems;
 
     // Product info
     std::string             m_productName;

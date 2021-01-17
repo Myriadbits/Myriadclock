@@ -17,18 +17,22 @@ MIOTConfigItem::MIOTConfigItem(uint16_t id, EConfigType type, std::string name, 
 
 std::string MIOTConfigItem::getValueString() 
 {
+    char stemp[32];
     if (m_eType == CT_WIFI_SSID ||
         m_eType == CT_WIFI_PASSPHRASE ||
         m_eType == CT_STRING)
     {
         return m_valueString;
     }
+    else if (m_eType == CT_RGBCOLOR)
+    {
+        snprintf(stemp, 32, "#%02X%02X%02X", (uint8_t)((m_value & 0x00FF0000) >> 16), (uint8_t)((m_value & 0x0000FF00) >> 8), (uint8_t)(m_value & 0x000000FF));
+    }
     else
     {
-        char stemp[32];
         snprintf(stemp, 32, "%08X", m_value);
-        return std::string(stemp);
     }    
+    return std::string(stemp);    
 }
 
 
@@ -60,6 +64,7 @@ uint8_t MIOTConfigItem::encode(uint8_t *pdata, int dataLen)
     {
     case CT_WIFI_SSID:
     case CT_WIFI_PASSPHRASE:
+    case CT_RGBCOLOR:
     case CT_STRING:
         slen = (uint8_t) min((int) m_valueString.length(), 0xF0);
         pdata[idx++] = slen;
@@ -70,8 +75,7 @@ uint8_t MIOTConfigItem::encode(uint8_t *pdata, int dataLen)
     case CT_SLIDER:
         pdata[idx++] = (uint8_t)(m_value & 0x000000FF);
         break;
-    
-    case CT_RGBCOLOR:
+            
     case CT_UINT32:
         pdata[idx++] = (uint8_t)((m_value & 0xFF000000) >> 24);
         pdata[idx++] = (uint8_t)((m_value & 0x00FF0000) >> 16);
@@ -99,18 +103,24 @@ bool MIOTConfigItem::decode(std::string data, uint8_t *pdata)
 
     case CT_SLIDER:
         {
-            m_value = pdata[0] % 100;
+            m_value = pdata[1] % 100;
         }
         break;
     
     case CT_RGBCOLOR:
+        {
+            int r, g, b;
+            sscanf(data.c_str(), "#%02x%02x%02x", &r, &g, &b);
+            m_value = (uint32_t)(0 << 24) | (uint32_t)(r << 16) | (uint32_t)(g << 8) | (uint32_t)(b);
+        }
+        break;
+
     case CT_UINT32:
-        m_value = (uint32_t)(pdata[0] << 24) | (uint32_t)(pdata[1] << 16) | (uint32_t)(pdata[2] << 8) | (uint32_t)(pdata[3]);
+        m_value = (uint32_t)(pdata[1] << 24) | (uint32_t)(pdata[2] << 16) | (uint32_t)(pdata[3] << 8) | (uint32_t)(pdata[4]);
         break;
 
     default:
         break;
     }
-
     return true;
 }
