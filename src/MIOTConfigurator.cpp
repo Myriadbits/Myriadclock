@@ -45,18 +45,6 @@ void MIOTConfigurator::changeState(EMIOTState newState)
     m_millisLastStateChange = millis();
 }
 
-// entities
-//  entity
-//   id?
-//   name
-//   description
-//   type = rgblight
-//          effect
-//          switch
-//          battery
-//          motor
-//    
-
 
 //
 // setup the MIOT Configurator, call this method in the setup function
@@ -149,8 +137,18 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, std::string softAPPasswo
     BLEService *pMIOTService = m_pBLEServer->createService(uuidMIOTService, m_vecConfigItems.size() * 4, 2);
     for (auto it : m_vecConfigItems)
     {
-        if (m_pCallBacks != NULL)
-            m_pCallBacks->onConfigItemRead(it); // Update the config item
+        // When the config item contains the CT_WIFI_SSID, fill in all the SSIDs
+        if (it->getType() == CT_WIFI)
+        {
+            // Fill in all SSIDs
+            addWiFiSSIDOptions(it);
+        }
+        else
+        {
+            // All other config items: request the current value from the callbacks
+            if (m_pCallBacks != NULL)
+                m_pCallBacks->onConfigItemRead(it); // Update the config item
+        }
         addConfigCharacteristic(pMIOTService, it);
     }
 
@@ -168,15 +166,54 @@ void MIOTConfigurator::setup(MIOTCallbacks* pCallBacks, std::string softAPPasswo
     pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
     pAdvertising->setMinPreferred(0x12);
     BLEDevice::startAdvertising();
-    Serial.println("Characteristic defined! Now you can read it in your phone!");
+    MIOT_LOG("All characteristic defined! Now you can read it in your phone!");
 
     BLESecurity *pSecurity = new BLESecurity();
     pSecurity->setCapability(ESP_IO_CAP_OUT);
     pSecurity->setAuthenticationMode(ESP_LE_AUTH_REQ_SC_BOND);
     BLEDevice::setSecurityCallbacks(this);
-
 }
 
+//
+// Fill all the SSIDs
+void MIOTConfigurator::addWiFiSSIDOptions(MIOTConfigItem* pitem)
+{
+    MIOT_LOG("Scanning for WiFi networks...");
+    int numSsid = WiFi.scanNetworks();
+    if (numSsid == -1) 
+    {
+        MIOT_LOG("Couldn't get a wifi connection!");
+        return;        
+    }
+
+    uint8_t indices[numSsid];
+    for (int i = 0; i< numSsid; i++)
+        indices[i] = i;
+
+    // Now do a simple sort 
+    for (int i = 0; i < numSsid; i++) 
+    {
+        for (int j = i + 1; j < numSsid; j++) 
+        {
+            if (WiFi.RSSI(indices[j]) > WiFi.RSSI(indices[i])) 
+            {
+                std::swap(indices[i], indices[j]);  
+            }
+        }
+    }
+
+    MIOT_LOG("Found %d WiFi networks", numSsid);
+    pitem->clearOptions();
+    int selected = 0;
+    for (int i = 0; i < numSsid && i < 16; i++)  // Add a maximum of 16 networks!
+    {
+        if (WiFi.SSID(indices[i]) == WiFi.SSID())
+            selected = i; // Remember the active SSID
+        MIOT_LOG("- Adding WiFi SSID '%s' [%d]", WiFi.SSID(indices[i]).c_str(), WiFi.RSSI(indices[i]));
+        pitem->addOption(indices[i], WiFi.SSID(indices[i]).c_str());
+    }
+    pitem->setValue(selected);
+}
 
 //
 // Add a characteristic to the MIOT service
@@ -221,13 +258,12 @@ uint8_t MIOTConfigurator::setConfigValueForCharacteristic(BLECharacteristic *pCh
 
 //
 // Add a config item to the list
-MIOTConfigItem* MIOTConfigurator::addConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit)
+MIOTConfigItem* MIOTConfigurator::addConfigItem(const uint8_t id, const EConfigType type, const std::string name, const bool secure, const std::string synopsis)
 {
-    MIOTConfigItem *pitem = new MIOTConfigItem(id, type, name, synopsis, unit);
+    MIOTConfigItem *pitem = new MIOTConfigItem(id, type, name, secure, synopsis);
     m_vecConfigItems.push_back(pitem);
     return pitem;
 }
-
 
 //
 // BLE Characteristic is written
@@ -245,10 +281,27 @@ void MIOTConfigurator::onWrite(BLECharacteristic* pCharacteristic)
         {
             if (it != NULL && it->getId() == uid)
             {
-                it->decode(pCharacteristic->getValue(), pCharacteristic->getData());
+                it->decode(pCharacteristic->getValue());//, pCharacteristic->getData());
                 MIOT_LOG("Setting config item [%d]: '%s' to '%s'", uid, it->getName().c_str(), it->getValueString().c_str());
-                if (m_pCallBacks != NULL)
-                    m_pCallBacks->onConfigItemWrite(it);
+                if (it->getType() == CT_WIFI)
+                {
+                    // Special case, we do the WiFi ourself
+                    MIOT_LOG("Setting WiFi to index %d", it->getValue());
+                    MIOTConfigOption_t* poption = it->getOption((uint8_t) it->getValue());
+                    if (poption != NULL)
+                    {
+                        MIOT_LOG("Switching to network: '%s' with passphrase '%s'", poption->m_sName.c_str(), it->getValueString().c_str());
+                        
+                        // Select the new WiFi network
+                        WiFi.begin(poption->m_sName.c_str(), it->getValueString().c_str());
+                    }
+                }
+                else
+                {
+                    // For all other items: forward to the callbacks!
+                    if (m_pCallBacks != NULL)
+                        m_pCallBacks->onConfigItemWrite(it);
+                }
 
                 // Now set the value back to the full-descriptive text
                 setConfigValueForCharacteristic(pCharacteristic, it);

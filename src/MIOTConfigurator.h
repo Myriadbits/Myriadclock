@@ -165,7 +165,7 @@ public:
     int getVersion() { return m_version; }
 
     // Config items related
-    MIOTConfigItem* addConfigItem(uint8_t id, EConfigType type, std::string name, std::string synopsis, std::string unit = "");
+    MIOTConfigItem* addConfigItem(const uint8_t id, const EConfigType type, const std::string name, const bool secure = true, const std::string synopsis = "");
 
 protected:
 	virtual uint32_t onPassKeyRequest();
@@ -179,6 +179,7 @@ protected:
 private:
     void    addConfigCharacteristic(BLEService *pMIOTService, MIOTConfigItem* pitem);
     uint8_t setConfigValueForCharacteristic(BLECharacteristic *pChar, MIOTConfigItem* pitem);
+    void    addWiFiSSIDOptions(MIOTConfigItem* pitem);
     void    changeState(EMIOTState newState);
     int     createMulticastGroup();    
     bool    handleMulticast(int sock);

@@ -64,6 +64,7 @@ void MyriadclockSettings::Load()
     nBrightnessDay = m_preferences.getShort("brightnessDay", 80);
     nBrightnessNight = m_preferences.getShort("brightnessNight", 30);
     nBrightnessBackground = m_preferences.getShort("brightnessBack", 4);
+
     eDisplayOptionsTime = (EDisplayOptions) m_preferences.getInt("doTime", DO_NORMAL);
     eDisplayOptionsWeekday = (EDisplayOptions) m_preferences.getInt("doWeekday", DO_NORMAL);
     eDisplayOptionsDate = (EDisplayOptions) m_preferences.getInt("doDate", DO_NORMAL);
@@ -92,15 +93,23 @@ void MyriadclockSettings::Load()
 // Register all settings with the MIOT library
 void MyriadclockSettings::registerConfigItems(MIOTConfigurator *pmiot)
 {
-    pmiot->addConfigItem(1, CT_WIFI_SSID, "SSID", "WiFi SSID");
-    pmiot->addConfigItem(2, CT_WIFI_PASSPHRASE, "Passphrase", "WiFi Passphrase");
-    pmiot->addConfigItem(10, CT_RGBCOLOR, "Time color", "Color of the hours/minutes part");
-    pmiot->addConfigItem(11, CT_RGBCOLOR, "Weekday Color", "Color of the day of the week");
-    pmiot->addConfigItem(12, CT_RGBCOLOR, "Date color", "Color of the date part");
+    pmiot->addConfigItem(1, CT_WIFI, "WiFi SSID", true);
+    
+    pmiot->addConfigItem(10, CT_RGBCOLOR, "Time color", true, "Color of the hours/minutes part");
+    pmiot->addConfigItem(11, CT_RGBCOLOR, "Weekday Color", true, "Color of the day of the week");
+    pmiot->addConfigItem(12, CT_RGBCOLOR, "Date color", true, "Color of the date part");
 
-    pmiot->addConfigItem(13, CT_SLIDER, "Brightness Day", "Brightness during the day");
-    pmiot->addConfigItem(14, CT_SLIDER, "Brightness Night", "Brightness during the night");
-    pmiot->addConfigItem(15, CT_SLIDER, "Background Brightness", "Brightness of the background");
+    pmiot->addConfigItem(13, CT_SLIDER, "Brightness Day", false, "Brightness during the day");
+    pmiot->addConfigItem(14, CT_SLIDER, "Brightness Night", false, "Brightness during the night");
+    pmiot->addConfigItem(15, CT_SLIDER, "Background Brightness", false, "Brightness of the background");
+
+    MIOTConfigItem* pconfig = pmiot->addConfigItem(20, CT_OPTION, "Time options");
+    pconfig->addOption((uint8_t) DO_NORMAL, "Normal");
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLENORMAL, "Color cycle normal");
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLEHOUR, "Color cycle hourly");
+    pconfig->addOption((uint8_t) DO_COLOR_PARTY_SLOW, "Party colors slow");
+    pconfig->addOption((uint8_t) DO_COLOR_PARTY_QUICK, "Party colors quick");
+    pconfig->addOption((uint8_t) DO_COLOR_PARTY_MINUTE, "Party colors minute");
 }
 
 //
@@ -119,6 +128,8 @@ void MyriadclockSettings::configItemRead(MIOTConfigItem *pconfigItem)
     case 13: pconfigItem->setValue(nBrightnessDay); break;
     case 14: pconfigItem->setValue(nBrightnessNight); break;
     case 15: pconfigItem->setValue(nBrightnessBackground); break;
+
+    case 20: pconfigItem->setValue(eDisplayOptionsTime); break;
 
     default:
         break;
@@ -141,6 +152,8 @@ void MyriadclockSettings::configItemWrite(MIOTConfigItem *pconfigItem)
         case 13: nBrightnessDay = (pconfigItem->getValue() % 100); break;
         case 14: nBrightnessNight = (pconfigItem->getValue() % 100); break;
         case 15: nBrightnessBackground = (pconfigItem->getValue() % 100); break;
+
+        case 20: eDisplayOptionsTime = (EDisplayOptions) pconfigItem->getValue(); break;
 
         default:
             // Nothing set, return
