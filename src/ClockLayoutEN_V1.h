@@ -147,7 +147,7 @@ static const ledpos_t ENV1_myriadclock  [] = { {15,4}, {15,5}, {15,6}, {15,7}, {
 static const ledpos_t ENV1_bt [] = { {4,3}, {5,3}, WEND};
 static const ledpos_t ENV1_passcode [] = { {7,3}, {8,3}, {9,3}, {10,3}, {11,3}, {12,3}, {13,3}, {14,3}, WEND};
 static const ledpos_t ENV1_no  [] = { {7,1}, {7,2}, WEND};
-static const ledpos_t ENV1_yes  [] = { {0,3}, {1,3}, {2,3}, {4,3}, WEND}; // Actually = GOOD
+static const ledpos_t ENV1_yes  [] = { {0,3}, {1,3}, {2,3}, {3,3}, WEND}; // Actually = GOOD
 static const ledpos_t ENV1_wifi  [] = { {7,5}, {7,6}, {7,7}, {7,8}, WEND};
 
 static const ledpos_t ENV1_birthday [] = { {0,9}, {1,9}, {2,9}, {3,9}, {4,9}, {5,9}, {6,9}, {7,9}, WEND};

@@ -17,6 +17,9 @@
 #include "ClockLayoutNL_V2.h"
 #include "ClockLayoutEN_V1.h"
 
+// Fake reset function
+void(* resetFunc) (void) = 0;//declare reset function at address 0
+
 //
 //  Initialize/setup this class
 //
@@ -37,6 +40,7 @@ void DisplayStateManager::initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
 
     Console::getInstance().add("state", this, "Switch the display state");
     Console::getInstance().add("layout", this, "Switch the layout");
+    Console::getInstance().add("reset", this, "Reset");
 
     // Start the default state
     changeState(m_eDefaultState);
@@ -87,6 +91,10 @@ void DisplayStateManager::commandHandler(std::string command, std::vector<std::s
         m_pSettings->Store();
 
         setLayout(value);
+    }
+    else if (command == "reset")
+    {
+        resetFunc();
     }
 }
 

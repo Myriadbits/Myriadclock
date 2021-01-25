@@ -89,7 +89,7 @@ void DisplayStateClock::UpdateBrightness(unsigned long epochTime)
 
     int brightness = m_pSettings->nBrightnessNight;
     unsigned long deltaTime = 30 * 60;
-    int brightnessDiff = (m_pSettings->nBrightnessDay -  m_pSettings->nBrightnessNight);
+    int brightnessDiff = (m_pSettings->nBrightnessDay - m_pSettings->nBrightnessNight);
     if (epochTime > sunrise - deltaTime && epochTime <= sunrise)
     {
         // Morning Twilight
@@ -328,22 +328,32 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         // Update the brightness
         UpdateBrightness(epochTime);        
 
+        // Check all dates
+        for(int n = 0; n < MAX_BIRTHDAYS; n++)
+        {
+            if ((day(m_pSettings->dateBirthdays[n]) == monthday) && (month(m_pSettings->dateBirthdays[n]) == monthnum + 1))
+            {
+                // It is a birthday, show the birthday text
+                AddWordToLeds(s_layout.extra.birthday, colDefault, m_nBrightness, EColorElement::CE_TIME);
+            }
+        }       
+
         // Always show it-is
-        AddWordToLeds((ledpos_t*) pToPastWord, colDefault, m_nBrightness, EColorElement::CE_TIME); // (AddWordToLeds can handle NULL pointers!)
-        AddWordToLeds((ledpos_t*) pMinutesMainWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
-        AddWordToLeds((ledpos_t*) pMinutesRestWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
-        AddWordToLeds((ledpos_t*) pHalfWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
-        AddWordToLeds((ledpos_t*) pHourWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
+        AddWordToLeds(pToPastWord, colDefault, m_nBrightness, EColorElement::CE_TIME); // (AddWordToLeds can handle NULL pointers!)
+        AddWordToLeds(pMinutesMainWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
+        AddWordToLeds(pMinutesRestWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
+        AddWordToLeds(pHalfWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
+        AddWordToLeds(pHourWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
 
         // Display day of the week
-        AddWordToLeds((ledpos_t*) pDayWord, colDefault, m_nBrightness, EColorElement::CE_WEEKDAY);
+        AddWordToLeds(pDayWord, colDefault, m_nBrightness, EColorElement::CE_WEEKDAY);
 
         // Ad the date
-        AddWordToLeds((ledpos_t*) pDayOfMonthWord, colDefault, m_nBrightness, EColorElement::CE_DATE);        
-        AddWordToLeds((ledpos_t*) pMonthWord, colDefault, m_nBrightness, EColorElement::CE_DATE); 
+        AddWordToLeds(pDayOfMonthWord, colDefault, m_nBrightness, EColorElement::CE_DATE);        
+        AddWordToLeds(pMonthWord, colDefault, m_nBrightness, EColorElement::CE_DATE); 
         
         // Second heartbeat fading led
-        AddWordToLeds((ledpos_t*) pTime->second, colDefault, m_nBrightness, EColorElement::CE_PULSE);
+        AddWordToLeds(pTime->second, colDefault, m_nBrightness, EColorElement::CE_PULSE);
         
         FastLED.show();   
     }
@@ -378,6 +388,10 @@ CRGB DisplayStateClock::ColorHandler(CRGB defaultColor, int brightness, int cust
         case EColorElement::CE_PULSE:
             colRet = CRGB(m_pSettings->colDate).fadeToBlackBy(127 * (cos(2.0 * PI * m_timeStamp / 6000.0) + 1.0));
             break;
+ 
+        case EColorElement::CE_SPECIAL:
+            colRet = GetDisplayOptionsColor(m_pSettings->colDate, m_pSettings->eDisplayOptionsBirthday, m_randomDate);
+            break;
 
         default:
             colRet = defaultColor;
@@ -391,7 +405,7 @@ CRGB DisplayStateClock::ColorHandler(CRGB defaultColor, int brightness, int cust
 //
 CRGB DisplayStateClock::GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSettings::EDisplayOptions eOption, std::minstd_rand0& generator)
 {
-    static CRGB colorLoop[] {CRGB::Navy, CRGB::Blue, CRGB::Aqua, CRGB::Teal, CRGB::Olive, CRGB::Green, CRGB::Lime, CRGB::Yellow, 
+    static CRGB colorLoop[] {CRGB::Navy, CRGB::LightBlue, CRGB::Aqua, CRGB::Teal, CRGB::Olive, CRGB::Green, CRGB::Lime, CRGB::Yellow, 
                              CRGB::Orange, CRGB::Red, CRGB::Maroon, CRGB::Fuchsia, CRGB::Purple, CRGB::Magenta, CRGB::Silver, CRGB::White};
 
     // Weekday colors (according to the Ayurveda) : https://blog.forret.com/2007/08/21/weekday-colours-ayurveda/

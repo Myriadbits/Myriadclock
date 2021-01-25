@@ -68,6 +68,7 @@ void MyriadclockSettings::Load()
     eDisplayOptionsTime = (EDisplayOptions) m_preferences.getInt("doTime", DO_NORMAL);
     eDisplayOptionsWeekday = (EDisplayOptions) m_preferences.getInt("doWeekday", DO_NORMAL);
     eDisplayOptionsDate = (EDisplayOptions) m_preferences.getInt("doDate", DO_NORMAL);
+
     eDisplayOptionsBirthday = (EDisplayOptions) m_preferences.getInt("doBirthdays", DO_COLOR_PARTY_MINUTE);
     eDisplayOptionsHoliday = (EDisplayOptions) m_preferences.getInt("doHolidays", DO_NORMAL);
     nLayout = m_preferences.getShort("layout", 0);
@@ -94,7 +95,12 @@ void MyriadclockSettings::Load()
 void MyriadclockSettings::registerConfigItems(MIOTConfigurator *pmiot)
 {
     pmiot->addConfigItem(1, CT_WIFI, "WiFi SSID", true);
-    
+
+    MIOTConfigItem* pconfigLayout = pmiot->addConfigItem(3, CT_OPTION, "Clock layout", true);
+    pconfigLayout->addOption((uint8_t) 0, "Dutch V2");
+    pconfigLayout->addOption((uint8_t) 1, "Dutch V1");
+    pconfigLayout->addOption((uint8_t) 2, "English");   
+
     pmiot->addConfigItem(10, CT_RGBCOLOR, "Time color", true, "Color of the hours/minutes part");
     pmiot->addConfigItem(11, CT_RGBCOLOR, "Weekday Color", true, "Color of the day of the week");
     pmiot->addConfigItem(12, CT_RGBCOLOR, "Date color", true, "Color of the date part");
@@ -103,13 +109,20 @@ void MyriadclockSettings::registerConfigItems(MIOTConfigurator *pmiot)
     pmiot->addConfigItem(14, CT_SLIDER, "Brightness Night", false, "Brightness during the night");
     pmiot->addConfigItem(15, CT_SLIDER, "Background Brightness", false, "Brightness of the background");
 
-    MIOTConfigItem* pconfig = pmiot->addConfigItem(20, CT_OPTION, "Time options");
-    pconfig->addOption((uint8_t) DO_NORMAL, "Normal");
-    pconfig->addOption((uint8_t) DO_COLOR_CYCLENORMAL, "Color cycle normal");
+    MIOTConfigItem* pconfig = pmiot->addConfigItem(20, CT_OPTION, "Color options");
+    pconfig->addOption((uint8_t) DO_NORMAL, "Manual");
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLENORMAL, "Color cycle");
     pconfig->addOption((uint8_t) DO_COLOR_CYCLEHOUR, "Color cycle hourly");
     pconfig->addOption((uint8_t) DO_COLOR_PARTY_SLOW, "Party colors slow");
     pconfig->addOption((uint8_t) DO_COLOR_PARTY_QUICK, "Party colors quick");
     pconfig->addOption((uint8_t) DO_COLOR_PARTY_MINUTE, "Party colors minute");
+    pconfig->addOption((uint8_t) DO_COLOR_WEEK_AYURVEDA, "Ayurveda colors daily");
+    pconfig->addOption((uint8_t) DO_COLOR_WEEK_THAI, "Thai colors daily");
+
+    pmiot->addConfigItem(30, CT_DATE, "Birthday 1", false);
+    pmiot->addConfigItem(31, CT_DATE, "Birthday 2", false);
+    pmiot->addConfigItem(32, CT_DATE, "Birthday 3", false);
+    pmiot->addConfigItem(33, CT_DATE, "Birthday 4", false);
 }
 
 //
@@ -121,6 +134,8 @@ void MyriadclockSettings::configItemRead(MIOTConfigItem *pconfigItem)
     case 1: pconfigItem->setValue(sSSID); break;
     case 2: pconfigItem->setValue(""); break; // ALWAYS send back an empty passphrase!
 
+    case 3: pconfigItem->setValue(nLayout); break;
+
     case 10: pconfigItem->setValue(colTime); break;
     case 11: pconfigItem->setValue(colWeekday); break;
     case 12: pconfigItem->setValue(colDate); break;
@@ -130,6 +145,11 @@ void MyriadclockSettings::configItemRead(MIOTConfigItem *pconfigItem)
     case 15: pconfigItem->setValue(nBrightnessBackground); break;
 
     case 20: pconfigItem->setValue(eDisplayOptionsTime); break;
+
+    case 30: pconfigItem->setDateValue(dateBirthdays[0]); break;
+    case 31: pconfigItem->setDateValue(dateBirthdays[1]); break;
+    case 32: pconfigItem->setDateValue(dateBirthdays[2]); break;
+    case 33: pconfigItem->setDateValue(dateBirthdays[3]); break;
 
     default:
         break;
@@ -145,15 +165,29 @@ void MyriadclockSettings::configItemWrite(MIOTConfigItem *pconfigItem)
         case 1: sSSID = pconfigItem->getValueString(); break;
         case 2: sPassPhrase = pconfigItem->getValueString(); break;
 
+        case 3: nLayout = pconfigItem->getValue(); break;
+
         case 10: colTime = pconfigItem->getValue(); break;
         case 11: colWeekday = pconfigItem->getValue(); break;
         case 12: colDate = pconfigItem->getValue(); break;
 
         case 13: nBrightnessDay = (pconfigItem->getValue() % 100); break;
         case 14: nBrightnessNight = (pconfigItem->getValue() % 100); break;
-        case 15: nBrightnessBackground = (pconfigItem->getValue() % 100); break;
+        case 15: nBrightnessBackground = (pconfigItem->getValue() % 100) / 5; break; // Limit background brightness to 0 - 20
 
-        case 20: eDisplayOptionsTime = (EDisplayOptions) pconfigItem->getValue(); break;
+        case 20: 
+        {
+            // Make the same for all parts
+            eDisplayOptionsTime = (EDisplayOptions) pconfigItem->getValue();
+            eDisplayOptionsDate = eDisplayOptionsTime;
+            eDisplayOptionsWeekday = eDisplayOptionsTime;
+        }
+        break;
+
+        case 30: dateBirthdays[0] = pconfigItem->getDateValue(); break;
+        case 31: dateBirthdays[1] = pconfigItem->getDateValue(); break;
+        case 32: dateBirthdays[2] = pconfigItem->getDateValue(); break;
+        case 33: dateBirthdays[3] = pconfigItem->getDateValue(); break;
 
         default:
             // Nothing set, return

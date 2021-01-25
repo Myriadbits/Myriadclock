@@ -40,7 +40,7 @@ void DisplayStateBase::setLayout(const ledclocklayout_t *layout)
 // Color handler for words
 CRGB DisplayStateBase::ColorHandler(CRGB defaultColor, int brightness, int customParam)
 {
-    return defaultColor.fadeLightBy(255-brightness);
+    return defaultColor.nscale8_video(brightness);
 }
 
 //

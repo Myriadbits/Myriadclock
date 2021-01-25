@@ -6,6 +6,7 @@
 #include "MIOTConfigItem.h"
 #include <stdio.h> 
 #include <algorithm>
+#include <time.h> // time_t, struct tm, time, mktime
 
 //
 // Constructor, create/fill this config item
@@ -16,6 +17,25 @@ MIOTConfigItem::MIOTConfigItem(const uint16_t id, const EConfigType type, const 
     , m_sSynopsis(synopsis)
     , m_fSecure(secure)
 {        
+}
+
+//
+// Set a time_t value, get the date part
+void MIOTConfigItem::setDateValue(const time_t newDate)
+{
+    if (m_eType == CT_DATE)
+        m_value = (day(newDate) << 24) | (month(newDate) << 16) | year(newDate);
+}
+
+//
+// Return the date value
+time_t MIOTConfigItem::getDateValue()
+{
+    tmElements_t tmSet;
+    tmSet.Year = 2000;
+    tmSet.Month =  (m_value & 0x00FF0000) >> 16;
+    tmSet.Day = (m_value & 0xFF000000) >> 24;
+    return makeTime(tmSet);
 }
 
 //
@@ -147,6 +167,8 @@ uint8_t MIOTConfigItem::encode(uint8_t *pdata, int dataLen)
         break;
     
     case CT_RGBCOLOR:
+    case CT_DATE:
+    case CT_TIME:
     case CT_UINT32:
         pdata[idx++] = (uint8_t)((m_value & 0xFF000000) >> 24);
         pdata[idx++] = (uint8_t)((m_value & 0x00FF0000) >> 16);
@@ -190,6 +212,8 @@ bool MIOTConfigItem::decode(std::string data)//, uint8_t *pdata)
         break;
     
     case CT_RGBCOLOR:
+    case CT_DATE:
+    case CT_TIME:
     case CT_UINT32:
         m_value = (uint32_t)(data[0] << 24) | (uint32_t)(data[1] << 16) | (uint32_t)(data[2] << 8) | (uint32_t)(data[3]);
         break;

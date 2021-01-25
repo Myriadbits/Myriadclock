@@ -35,8 +35,12 @@ public:
     EConfigType getType() { return m_eType;}
     std::string getName() { return m_sName;}    
 
-    void setValue(uint32_t newValue) { m_value = newValue; }
-    void setValue(std::string newValue) { m_valueString = newValue; }
+    void setValue(const uint32_t newValue) { m_value = newValue; }
+    void setValue(const std::string newValue) { m_valueString = newValue; }
+    
+    void setDateValue(const time_t newDate);
+    time_t getDateValue();
+
     uint32_t getValue() { return m_value;}
     std::string getValueString();
 

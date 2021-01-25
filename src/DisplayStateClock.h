@@ -17,6 +17,7 @@ class DisplayStateClock : public DisplayStateBase
         CE_WEEKDAY,
         CE_DATE,
         CE_PULSE,
+        CE_SPECIAL,
     };
 
 public:

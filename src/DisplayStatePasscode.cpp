@@ -66,8 +66,8 @@ bool DisplayStatePasscode::HandleLoop(unsigned long epochTime)
         if (m_fShowResult)
         {
             colPasscode = (m_fResult) ? CRGB(0, 0xFF, 0) : CRGB(0xFF, 0, 0);
-            AddWordToLeds((ledpos_t*) s_layout.extra.bluetooth, colPasscode, 255);
-            AddWordToLeds((ledpos_t*) s_layout.extra.passcode, colPasscode, 255);
+            AddWordToLeds((ledpos_t*) s_layout.extra.bluetooth, colPasscode.nscale8_video(100), 255);
+            AddWordToLeds((ledpos_t*) s_layout.extra.passcode, colPasscode.nscale8_video(100), 255);
             if (m_fResult)
                 AddWordToLeds((ledpos_t*) s_layout.extra.yes, colPasscode, 255);
             else
