@@ -20,25 +20,6 @@ MIOTConfigItem::MIOTConfigItem(const uint16_t id, const EConfigType type, const 
 }
 
 //
-// Set a time_t value, get the date part
-void MIOTConfigItem::setDateValue(const time_t newDate)
-{
-    if (m_eType == CT_DATE)
-        m_value = (day(newDate) << 24) | (month(newDate) << 16) | year(newDate);
-}
-
-//
-// Return the date value
-time_t MIOTConfigItem::getDateValue()
-{
-    tmElements_t tmSet;
-    tmSet.Year = 2000;
-    tmSet.Month =  (m_value & 0x00FF0000) >> 16;
-    tmSet.Day = (m_value & 0xFF000000) >> 24;
-    return makeTime(tmSet);
-}
-
-//
 // Returns the current value as a string
 std::string MIOTConfigItem::getValueString() 
 {

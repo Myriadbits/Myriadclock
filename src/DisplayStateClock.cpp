@@ -114,6 +114,55 @@ void DisplayStateClock::UpdateBrightness(unsigned long epochTime)
 }
 
 //
+// Check all special dates
+void DisplayStateClock::CheckSpecialDates(const int monthday, const int monthnum)
+{
+    // Check all birthdays
+    m_fShowBirthday = false;
+    for(int n = 0; n < MAX_BIRTHDAYS; n++)
+    {
+        if ( (((m_pSettings->dateBirthdays[n] & 0xFF000000) >> 24) == monthday) && 
+            (((m_pSettings->dateBirthdays[n] & 0x00FF0000) >> 16) == monthnum) )
+        {
+            // It is a birthday, show the birthday text
+            m_fShowBirthday = true;
+            break; // No need to check the rest
+        }
+    }       
+
+    // Check all holidays
+    m_fShowHoliday = false;
+    for(int n = 0; n < MAX_HOLIDAYS; n++)
+    {
+        if ( (((m_pSettings->dateHolidays[n] & 0xFF000000) >> 24) == monthday) && 
+            (((m_pSettings->dateHolidays[n] & 0x00FF0000) >> 16) == monthnum) )
+        {
+            m_fShowHoliday = true;
+            break; // No need to check the rest
+        }
+    }   
+}
+
+//
+// Get a seed for a specific display option
+int DisplayStateClock::GetSeed(const MyriadclockSettings::EDisplayOptions eOption)
+{
+    switch (eOption)
+    {
+    case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
+        return m_nHours + m_nMinutes + m_nSeconds;
+    case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
+        return m_nHours + m_nMinutes;
+        break;
+    case MyriadclockSettings::DO_COLOR_PARTY_SLOW:
+        return m_nHours + m_nMinutes + (m_nSeconds / 10);
+    default:
+        break;
+    }
+    return 0;
+}
+
+//
 // Loop
 //
 bool DisplayStateClock::HandleLoop(unsigned long epochTime)
@@ -138,50 +187,11 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         int monthday = day(t);
         int monthnum = month(t) - 1; // Januari = 1, we need it to be 0
 
-        switch (m_pSettings->eDisplayOptionsTime)
-        {
-        case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
-            m_randomTime.seed(m_nHours + m_nMinutes + m_nSeconds);
-            break;
-        case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
-            m_randomTime.seed(m_nHours + m_nMinutes);
-            break;
-        case MyriadclockSettings::DO_COLOR_PARTY_SLOW:
-            m_randomTime.seed(m_nHours + m_nMinutes + (m_nSeconds / 10));
-            break;
-        default:
-            break;
-        }
-
-        switch (m_pSettings->eDisplayOptionsWeekday)
-        {
-        case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
-            m_randomWeekday.seed(m_nHours + m_nMinutes + m_nSeconds);
-            break;
-        case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
-            m_randomWeekday.seed(m_nHours + m_nMinutes);
-            break;
-        case MyriadclockSettings::DO_COLOR_PARTY_SLOW:
-            m_randomWeekday.seed(m_nHours + m_nMinutes + (m_nSeconds / 10));
-            break;
-        default:
-            break;
-        }
-
-        switch (m_pSettings->eDisplayOptionsDate)
-        {
-        case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
-            m_randomDate.seed(m_nHours + m_nMinutes + m_nSeconds);
-            break;
-        case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
-            m_randomDate.seed(m_nHours + m_nMinutes);
-            break;
-        case MyriadclockSettings::DO_COLOR_PARTY_SLOW:
-            m_randomDate.seed(m_nHours + m_nMinutes + (m_nSeconds / 10));
-            break;
-        default:
-            break;
-        }
+        // Get the seed for a specific minute/hour/second
+        m_randomTime.seed(GetSeed(m_pSettings->eDisplayOptionsTime));
+        m_randomWeekday.seed(GetSeed(m_pSettings->eDisplayOptionsWeekday));
+        m_randomDate.seed(GetSeed(m_pSettings->eDisplayOptionsDate));
+        m_randomSpecial.seed(GetSeed(m_pSettings->eDisplayOptionsSpecial));      
 
         // Quarter past 1 => 14 minutes to half two (in Dutch this is correct, English I don't know)
         int min5 = m_nMinutes / 5;
@@ -194,6 +204,13 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         const ledpos_t* pToPastWord = NULL;
 
         const ledtime_t* pTime = &(s_layout.time);
+
+        // Once every minute, check birthdays
+        if (m_nPreviousMinute != m_nMinutes)
+        {
+            CheckSpecialDates(monthday, monthnum + 1);
+            m_nPreviousMinute = m_nMinutes;
+        }
 
         switch (s_layout.timeFormat)
         {
@@ -328,15 +345,11 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         // Update the brightness
         UpdateBrightness(epochTime);        
 
-        // Check all dates
-        for(int n = 0; n < MAX_BIRTHDAYS; n++)
-        {
-            if ((day(m_pSettings->dateBirthdays[n]) == monthday) && (month(m_pSettings->dateBirthdays[n]) == monthnum + 1))
-            {
-                // It is a birthday, show the birthday text
-                AddWordToLeds(s_layout.extra.birthday, colDefault, m_nBrightness, EColorElement::CE_TIME);
-            }
-        }       
+        // Show birthdays / holidays
+        if (m_fShowBirthday)
+            AddWordToLeds(s_layout.extra.birthday, colDefault, m_nBrightness, EColorElement::CE_SPECIAL);
+        if (m_fShowHoliday)
+            AddWordToLeds(s_layout.extra.holiday, colDefault, m_nBrightness, EColorElement::CE_SPECIAL);
 
         // Always show it-is
         AddWordToLeds(pToPastWord, colDefault, m_nBrightness, EColorElement::CE_TIME); // (AddWordToLeds can handle NULL pointers!)
@@ -390,7 +403,7 @@ CRGB DisplayStateClock::ColorHandler(CRGB defaultColor, int brightness, int cust
             break;
  
         case EColorElement::CE_SPECIAL:
-            colRet = GetDisplayOptionsColor(m_pSettings->colDate, m_pSettings->eDisplayOptionsBirthday, m_randomDate);
+            colRet = GetDisplayOptionsColor(m_pSettings->colDate, m_pSettings->eDisplayOptionsSpecial, m_randomSpecial);
             break;
 
         default:
@@ -434,7 +447,7 @@ CRGB DisplayStateClock::GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSet
             return colorLoop[generator() % 16];
 
         default:
-        case MyriadclockSettings::DO_NORMAL:
+        case MyriadclockSettings::DO_STATIC:
             return defaultColor;
     }    
 }

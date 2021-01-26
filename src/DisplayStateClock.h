@@ -21,8 +21,12 @@ class DisplayStateClock : public DisplayStateBase
     };
 
 public:
-    DisplayStateClock() : DisplayStateBase("clock") 
+    DisplayStateClock() 
+        : DisplayStateBase("clock") 
     {
+        m_nPreviousMinute = -1;
+        m_fShowBirthday = false;
+        m_fShowHoliday = false;
     }
 
     virtual void    Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
@@ -35,16 +39,21 @@ protected:
     void    CalcSunriseSunset(unsigned long timestamp, float lat, float lon, float alt, unsigned long *sunrise, unsigned long *sunset);
     void    UpdateBrightness(unsigned long epochTime);
     CRGB    GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSettings::EDisplayOptions eOption, std::minstd_rand0& generator);
+    void    CheckSpecialDates(const int monthday, const int monthnum);
+    int     GetSeed(const MyriadclockSettings::EDisplayOptions eOption);
 
 private:
-    unsigned long   m_nPreviousEpochTime;
-    int             m_nBrightness;
-    int             m_nPreviousBrightness;
-    int             m_nSeconds;
-    int             m_nMinutes;
-    int             m_nHours;
-    int             m_nWeekDay;
-    std::minstd_rand0 m_randomTime;
-    std::minstd_rand0 m_randomWeekday;
-    std::minstd_rand0 m_randomDate;
+    int                 m_nPreviousMinute;
+    int                 m_nBrightness;
+    int                 m_nPreviousBrightness;
+    int                 m_nSeconds;
+    int                 m_nMinutes;
+    int                 m_nHours;
+    int                 m_nWeekDay;
+    bool                m_fShowBirthday;
+    bool                m_fShowHoliday;
+    std::minstd_rand0   m_randomTime;
+    std::minstd_rand0   m_randomWeekday;
+    std::minstd_rand0   m_randomDate;
+    std::minstd_rand0   m_randomSpecial;
 };

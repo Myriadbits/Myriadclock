@@ -25,18 +25,17 @@ public:
         , nBrightnessNight(30)
         , nBrightnessBackground(4)
         , nLayout(0)
-        , eDisplayOptionsTime(DO_NORMAL)    
-        , eDisplayOptionsWeekday(DO_NORMAL) 
-        , eDisplayOptionsDate(DO_NORMAL)
-        , eDisplayOptionsBirthday(DO_COLOR_PARTY_MINUTE)
-        , eDisplayOptionsHoliday(DO_COLOR_PARTY_MINUTE)
+        , eDisplayOptionsTime(DO_STATIC)    
+        , eDisplayOptionsWeekday(DO_STATIC) 
+        , eDisplayOptionsDate(DO_STATIC)
+        , eDisplayOptionsSpecial(DO_COLOR_PARTY_MINUTE)
         , bluetoothPasscode(0)
     {        
     }
 
     enum EDisplayOptions
     {
-        DO_NORMAL,              // Single color
+        DO_STATIC,              // Static color
         DO_COLOR_CYCLENORMAL,   // Normal color cycle
         DO_COLOR_CYCLEHOUR,     // Color cycle per hour
         DO_COLOR_CYCLERESERVED, // <reserved>
@@ -67,11 +66,10 @@ public:
     EDisplayOptions  eDisplayOptionsTime;    
     EDisplayOptions  eDisplayOptionsWeekday;    
     EDisplayOptions  eDisplayOptionsDate;    
-    EDisplayOptions  eDisplayOptionsBirthday;
-    EDisplayOptions  eDisplayOptionsHoliday;
+    EDisplayOptions  eDisplayOptionsSpecial;
 
-    time_t      dateBirthdays[MAX_BIRTHDAYS];   // Special days
-    time_t      dateHolidays[MAX_HOLIDAYS];     // Holidays
+    uint32_t    dateBirthdays[MAX_BIRTHDAYS];   // Special days
+    uint32_t    dateHolidays[MAX_HOLIDAYS];     // Holidays
 
     // Volatile parameters
     uint32_t    bluetoothPasscode; 
