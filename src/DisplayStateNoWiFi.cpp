@@ -9,9 +9,9 @@
 //
 // Initialize
 //
-void DisplayStateNoWiFi::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
+void DisplayStateNoWiFi::Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayStateManager *pManager)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
+    DisplayStateBase::Initialize(pLEDs, pConfig, pManager);
     m_timeStamp = millis();
     m_nCounter = 0;
     m_nDir = 1;
@@ -20,7 +20,7 @@ void DisplayStateNoWiFi::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSetti
 //
 // Loop
 //
-bool DisplayStateNoWiFi::HandleLoop(unsigned long epochTime)
+bool DisplayStateNoWiFi::HandleLoop(unsigned long epochTime, time_t localTime)
 {
     CRGB colNoWiFi = CRGB(m_nCounter, 0, 0);
     CRGB colMyriadclock = CRGB(0, 128, 0);

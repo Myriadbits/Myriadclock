@@ -17,17 +17,28 @@
 #include "ClockLayoutNL_V2.h"
 #include "ClockLayoutEN_V1.h"
 
+// Australia 
+TimeChangeRule aEDT = {"AEDT", First, Sun, Oct, 2, 660};    // UTC + 11 hours
+TimeChangeRule aEST = {"AEST", First, Sun, Apr, 3, 600};    // UTC + 10 hours
+
+// US 
+
+
+// UTC
+TimeChangeRule utcRule = {"UTC", Last, Sun, Mar, 1, 0};     // UTC
+
+
 // Fake reset function
 void(* resetFunc) (void) = 0;//declare reset function at address 0
 
 //
 //  Initialize/setup this class
 //
-void DisplayStateManager::initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
+void DisplayStateManager::initialize(CRGB* pLEDs, BLEConfig* pConfig)
 { 
     m_pLEDs = pLEDs;
-    m_pTZ = pTZ;
-    m_pSettings = pSettings;
+    m_pTZ = NULL;
+    m_pConfig = pConfig;
 
     // Add all states to our statemachine
     addState(DS_NOWIFI, new DisplayStateNoWiFi());
@@ -46,7 +57,10 @@ void DisplayStateManager::initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
     changeState(m_eDefaultState);
 
     // Load the last layout
-    setLayout(pSettings->nLayout);
+    setLayout(m_pConfig->getConfigValue(CONFIG_LAYOUT));
+
+    // And initialize the timezone
+    setTimezone();
 }
 
 //
@@ -62,7 +76,7 @@ void DisplayStateManager::changeState(const EDisplayState eState)
 //
 void DisplayStateManager::addState(EDisplayState eState, DisplayStateBase* pNewState)
 {
-    pNewState->Initialize(m_pLEDs, m_pTZ, m_pSettings);
+    pNewState->Initialize(m_pLEDs, m_pConfig, this);
     m_states.insert(std::pair<EDisplayState, DisplayStateBase*>(eState, pNewState));
 }
 
@@ -87,9 +101,14 @@ void DisplayStateManager::commandHandler(std::string command, std::vector<std::s
     else if (command == "layout" && args.size() > 0)
     {
         int value = atoi(args[1].c_str());
-        m_pSettings->nLayout = value;
-        m_pSettings->Store();
 
+        if (m_pConfig != NULL)
+        {
+            BLEConfigItemUInt32* pItem = (BLEConfigItemUInt32*) m_pConfig->getConfigItem(CONFIG_LAYOUT);
+            if (pItem != NULL)
+                pItem->setValue(value); // Change the layout value
+            m_pConfig->store();
+        }        
         setLayout(value);
     }
     else if (command == "reset")
@@ -103,8 +122,6 @@ void DisplayStateManager::commandHandler(std::string command, std::vector<std::s
 // Set the clock layout
 void DisplayStateManager::setLayout(const int nIndex) 
 {   
-    Serial.printf("Layout: %d\n", nIndex);
-
     // Default is new dutch layout
     ledclocklayout_t *playout = const_cast<ledclocklayout_t*>(&s_layoutNL_V2);
 
@@ -114,19 +131,76 @@ void DisplayStateManager::setLayout(const int nIndex)
     
     // Inform all display states of the new layout
     DisplayStateBase::setLayout(playout);    
-};
+}
+
+
+//
+// Set the clock layout
+void DisplayStateManager::setTimezone() 
+{   
+    // Get the timezone
+    int timezone = m_pConfig->getConfigValue(CONFIG_TIMEZONE);
+    timezone -= 12;
+
+    // Calculate Daylight saving time
+    delete m_pTZ;
+    m_pTZ = NULL;
+    switch (m_pConfig->getConfigValue(CONFIG_DAYLIGHTSAVING))
+    {
+        default:
+        case 0: // Off
+            {
+                TimeChangeRule utcRule = {"UTC", Last, Sun, Mar, 1, (timezone * 60)};     // UTC
+                m_pTZ = new Timezone(utcRule);
+            }
+            break;
+        case 1: // Central European
+            {
+                TimeChangeRule CEST = {"CEST", Last, Sun, Mar, 2, (timezone * 60) + 60}; // Central European Summer Time
+                TimeChangeRule CET = {"CET ", Last, Sun, Oct, 3, (timezone * 60)}; // Central European Standard Time
+                m_pTZ = new Timezone(CEST, CET);
+            }
+            break;
+        case 2: // United Kingdom
+            {
+                TimeChangeRule BST = {"BST", Last, Sun, Mar, 1, (timezone * 60) + 60}; // British Summer Time
+                TimeChangeRule GMT = {"GMT", Last, Sun, Oct, 2, (timezone * 60)}; // Standard Time
+                m_pTZ = new Timezone(BST, GMT);
+            }
+            break;
+        case 3: // Australia
+            {
+                TimeChangeRule aEDT = {"AEDT", First, Sun, Oct, 2, (timezone * 60)}; // UTC + 11 hours
+                TimeChangeRule aEST = {"AEST", First, Sun, Apr, 3, (timezone * 60) - 60}; // UTC + 10 hours
+                m_pTZ = new Timezone(aEDT, aEST);
+            }
+            break;
+        case 4: // US
+            {
+                TimeChangeRule usEDT = {"EDT", Second, Sun, Mar, 2, (timezone * 60) + 60}; // Eastern Daylight Time = UTC - 4 hours (-240)
+                TimeChangeRule usEST = {"EST", First, Sun, Nov, 2, (timezone * 60)}; // Eastern Standard Time = UTC - 5 hours (-300)
+                m_pTZ = new Timezone(usEDT, usEST);
+            }
+            break;
+    }
+}
+
 
 //
 // Pass control to through the current display state
 //
 void DisplayStateManager::handleLoop(unsigned long epochTime)
 {
+    // Convert to local time
+    TimeChangeRule *tcr;    
+    time_t tLocal = (m_pTZ != NULL) ? m_pTZ->toLocal(epochTime, &tcr) : 0; // (Note: tcr cannot be NULL)
+
     if (m_eNewState != m_eCurrentState)
     {
         auto it = m_states.find(m_eNewState);
         if (it != m_states.end())
         {
-            it->second->Initialize(m_pLEDs, m_pTZ, m_pSettings);
+            it->second->Initialize(m_pLEDs, m_pConfig, this);
             m_eCurrentState = m_eNewState;
         }        
     }
@@ -134,7 +208,7 @@ void DisplayStateManager::handleLoop(unsigned long epochTime)
     auto it = m_states.find(m_eCurrentState);
     if (it != m_states.end())
     {
-        if (!it->second->HandleLoop(epochTime))
+        if (!it->second->HandleLoop(epochTime, tLocal))
         {
             // When handleloop returns false, fallback to the default state
             changeState(m_eDefaultState);
@@ -147,8 +221,7 @@ void DisplayStateManager::handleLoop(unsigned long epochTime)
 // 
 void DisplayStateManager::onDisplayPassKey(uint32_t passkey)
 {
-    if (m_pSettings)
-        m_pSettings->bluetoothPasscode = passkey;
+    m_bluetoothPasscode = passkey;
     changeState(DS_PASSCODE);
 }
 
@@ -169,14 +242,25 @@ void DisplayStateManager::onBluetoothConnection(bool success)
 //
 // A config item has changed, forward to the settings
 // 
-void DisplayStateManager::onConfigItemWrite(MIOTConfigItem *pconfigItem)
+void DisplayStateManager::onConfigItemChanged(BLEConfigItemBase *pconfigItem)
 {
-    if (m_pSettings != NULL)
-        m_pSettings->configItemWrite(pconfigItem);
+    if (pconfigItem != NULL)
+    {
+        switch (pconfigItem->getId())
+        {
+            case CONFIG_LAYOUT:
+                {
+                    // Clock layout has changed, 
+                    BLEConfigItemOption* pconfig = (BLEConfigItemOption*) pconfigItem;
+                    setLayout(pconfig->getValue());
+                }
+                break;
+
+            case CONFIG_TIMEZONE:
+            case CONFIG_DAYLIGHTSAVING:
+                setTimezone();
+                break;
+        }
+    }
 }
 
-void DisplayStateManager::onConfigItemRead(MIOTConfigItem *pconfigItem)
-{
-    if (m_pSettings != NULL)
-        m_pSettings->configItemRead(pconfigItem);
-}

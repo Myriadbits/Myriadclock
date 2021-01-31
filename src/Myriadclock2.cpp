@@ -12,33 +12,20 @@
         //Disabled:    Autoconnect stuff: https://github.com/Hieromon/AutoConnect
     TimeZone: https://github.com/JChristensen/Timezone
     Esp32FOTA: https://github.com/chrisjoyce911/esp32FOTA
-    PILigt (ESPPiLight): https://github.com/puuu/ESPiLight
 
     TODO:
     HOMEKIT: https://github.com/maximkulkin/esp-homekit
 
-    Bootstrap test page:
-    https://juzraai.github.io/bootstrap4-test-page/
-
-    s00500/ESPUI??
-    Bootstrap: https://diyprojects.io/bootstrap-create-beautiful-web-interface-projects-esp8266/#.XkhzFWhKiUk
-
-    Color picker:
-    https://itsjavi.com/bootstrap-colorpicker/module-options.html
-
     Colors:
     https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
-
-    
 */
 
 #include <NTPClient.h>
 #include <WiFi.h>
-#include <WebServer.h>
 #include <time.h>
 #include <Timezone.h>
-//#include <AutoConnect.h>
-//#include <ESPmDNS.h>
+
+#include "..\lib\BLEConfig\include\BLEConfig.h"
 
 #include "Console.h"
 #define FASTLED_INTERNAL
@@ -46,12 +33,11 @@
 
 #include "DisplayStateManager.h"
 #include "MyriadclockConfig.h"
-#include "MyriadclockSettings.h"
-#include "WebHandler.h"
-//#include <ESPiLight.h>
 #include <ArduinoJson.h>
 
-#include "MIOTConfigurator.h"
+#define MYRIADCLOCK_MANUFACTURER    "Myriadbits"
+#define MYRIADCLOCK_MODEL           "Myriadclock"
+#define MYRIADCLOCK_VERSION         "1.0.1"
 
 
 // Pin defines
@@ -67,8 +53,6 @@ static uint32_t     g_timestamp  = 0;
 static bool         g_fNTPStarted = false;
 static int          g_nPreviousHour = 0;
 
-static MyriadclockSettings g_Settings;
-
 WiFiUDP             g_ntpUDP;
 
 // Manager containing all display state related functionality
@@ -77,24 +61,8 @@ DisplayStateManager g_stateManager;
 // By default 'pool.ntp.org' is used with 60 seconds update interval and no offset
 NTPClient           g_timeClient(g_ntpUDP, "pool.ntp.org");
 
-// Webservers
-//WebServer           g_server;
-MIOTConfigurator    g_miot(g_ntpUDP, "Myriadclock", FIRMWARE_VERSION);
-
-//AutoConnect         g_acPortal(g_server);
-//AutoConnectUpdate   g_acUpdate("www.myriadbits.com", 80);  // Step #3
-
-
-// Central European Time (Frankfurt, Paris)
-TimeChangeRule      CEST {"CEST", Last, Sun, Mar, 2, 120};     // Central European Summer Time
-TimeChangeRule      CET {"CET ", Last, Sun, Oct, 3, 60};       // Central European Standard Time
-Timezone            g_CE(CEST, CET);
-
-// Create the webhandler
-//WebHandler*        g_pWebHandler { NULL };
-
-// RF433 Mhz receiver
-//ESPiLight          g_rf(-1);  // use -1 to disable transmitter
+// The BLE Config library
+BLEConfig           g_bleconfig(MYRIADCLOCK_MODEL, MYRIADCLOCK_MANUFACTURER, MYRIADCLOCK_VERSION, 256); // 256 = Clock TODO VERSION
 
 //
 // Time elapsed??
@@ -105,55 +73,6 @@ uint32_t Elapsed(uint32_t ts)
     if (ts < now) return (now - ts);
     return(now + (0xffffffff - ts));
 }
-
-
-// callback function. It is called on successfully received and parsed rc signal
-// void rfCallback(const String &protocol, const String &message, int status, size_t repeats, const String &deviceID) 
-// {
-//     Serial.print("RF signal arrived [");
-//     Serial.print(protocol);  // protocoll used to parse
-//     Serial.print("][");
-//     Serial.print(deviceID);  // value of id key in json message
-//     Serial.print("] (");
-//     Serial.print(status);  // status of message, depending on repeat, either:
-//                         // FIRST   - first message of this protocoll within the
-//                         //           last 0.5 s
-//                         // INVALID - message repeat is not equal to the
-//                         //           previous message
-//                         // VALID   - message is equal to the previous message
-//                         // KNOWN   - repeat of a already valid message
-//     Serial.print(") ");
-//     Serial.print(message);  // message in json format
-//     Serial.println();
-
-//     // check if message is valid and process it
-//     if (status == VALID) {
-//         Serial.print("Valid message: [");
-//         Serial.print(protocol);
-//         Serial.print("] ");
-//         Serial.print(message);
-//         Serial.println();
-
-//         StaticJsonDocument<200> doc;
-//         DeserializationError error = deserializeJson(doc, message);
-//         if (!error)
-//         {
-//             const char* s = doc["state"];
-//             if (strcasecmp(s, "opened") == 0)
-//             {
-//                 Serial.println("--OPENED");
-//                 g_Settings.colTime = 0x00FF00;
-//             }
-//             if (strcasecmp(s, "closed") == 0)
-//             {
-//                 Serial.println("--CLOSED");
-//                 g_Settings.colTime = 0xFF0000;
-//             }
-//         }
-        
-//     }
-// }
-
 
 //
 // Setup all hardware
@@ -170,66 +89,96 @@ void setup()
 	FastLED.addLeds<NEOPIXEL, DATA_PIN>(g_Leds, NUM_LEDS); // Init of the Fastled library
 	FastLED.setBrightness(50);    
 
-    // Load/initialize all settings
-    g_Settings.Initialize();
+
+    // Load/initialize all BLE Config settings
+    g_bleconfig.registerWifi(CONFIG_WIFI, "WiFi SSID");
+
+    BLEConfigItemOption *pconfig = g_bleconfig.registerOption(CONFIG_LAYOUT, "Clock layout", 0);
+    pconfig->addOption((uint8_t) 0, "Dutch V2");
+    pconfig->addOption((uint8_t) 1, "Dutch V1");
+    pconfig->addOption((uint8_t) 2, "English"); 
+
+    pconfig = g_bleconfig.registerOption(CONFIG_DAYLIGHTSAVING, "Daylight saving time", 0);
+    pconfig->addOption((uint8_t) 0, "Off"); 
+    pconfig->addOption((uint8_t) 1, "Central European"); 
+    pconfig->addOption((uint8_t) 2, "United Kingdom"); 
+    pconfig->addOption((uint8_t) 3, "Australia");
+    pconfig->addOption((uint8_t) 4, "US"); 
+      
+    pconfig = g_bleconfig.registerOption(CONFIG_TIMEZONE, "Timezone", 13);
+    pconfig->addOption((uint8_t) 0, "-12"); 
+    pconfig->addOption((uint8_t) 1, "-11"); 
+    pconfig->addOption((uint8_t) 2, "-10");
+    pconfig->addOption((uint8_t) 3, "-9");
+    pconfig->addOption((uint8_t) 4, "-8"); 
+    pconfig->addOption((uint8_t) 5, "-7"); 
+    pconfig->addOption((uint8_t) 6, "-6"); 
+    pconfig->addOption((uint8_t) 7, "-5"); 
+    pconfig->addOption((uint8_t) 8, "-4"); 
+    pconfig->addOption((uint8_t) 9, "-3"); 
+    pconfig->addOption((uint8_t) 10, "-2"); 
+    pconfig->addOption((uint8_t) 11, "-1"); 
+    pconfig->addOption((uint8_t) 12, "0"); 
+    pconfig->addOption((uint8_t) 13, "1"); 
+    pconfig->addOption((uint8_t) 14, "2"); 
+    pconfig->addOption((uint8_t) 15, "3"); 
+    pconfig->addOption((uint8_t) 16, "4"); 
+    pconfig->addOption((uint8_t) 17, "5"); 
+    pconfig->addOption((uint8_t) 18, "6"); 
+    pconfig->addOption((uint8_t) 19, "7"); 
+    pconfig->addOption((uint8_t) 20, "8"); 
+    pconfig->addOption((uint8_t) 21, "9"); 
+    pconfig->addOption((uint8_t) 22, "10"); 
+    pconfig->addOption((uint8_t) 23, "11"); 
+    pconfig->addOption((uint8_t) 24, "12"); 
+
+    g_bleconfig.registerRGBColor(CONFIG_COLOR_TIME, "Time color", 0x00FF00, true, "Color of the hours/minutes part");
+    g_bleconfig.registerRGBColor(CONFIG_COLOR_WEEKDAY, "Weekday Color", 0xFFA500, true, "Color of the day of the week");
+    g_bleconfig.registerRGBColor(CONFIG_COLOR_DATE, "Date color", 0xE59400, true, "Color of the date part");
+
+    g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_DAY, "Brightness Day", 80, false, "Brightness during the day");
+    g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_NIGHT, "Brightness Night", 30, false, "Brightness during the night");
+    g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_BACKGROUND, "Background Brightness", 4, false, "Brightness of the background");
+
+    pconfig = g_bleconfig.registerOption(CONFIG_OPTIONS_TIME, "Time color options", DO_STATIC);
+    pconfig->addOption((uint8_t) DO_STATIC, "Manual");
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLENORMAL, "Color cycle");
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLEHOUR, "Color cycle hourly");
+    pconfig->addOption((uint8_t) DO_COLOR_WEEK_AYURVEDA, "Ayurveda colors daily");
+    pconfig->addOption((uint8_t) DO_COLOR_WEEK_THAI, "Thai colors daily");
+
+    pconfig = g_bleconfig.registerOption(CONFIG_OPTIONS_WEEKDAY, "Weekday color options", DO_STATIC);
+    pconfig->addOption((uint8_t) DO_STATIC, "Manual");
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLENORMAL, "Color cycle");
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLEHOUR, "Color cycle hourly");
+    pconfig->addOption((uint8_t) DO_COLOR_WEEK_AYURVEDA, "Ayurveda colors daily");
+    pconfig->addOption((uint8_t) DO_COLOR_WEEK_THAI, "Thai colors daily");
+
+    pconfig = g_bleconfig.registerOption(CONFIG_OPTIONS_DATE, "Date color options", DO_STATIC);
+    pconfig->addOption((uint8_t) DO_STATIC, "Manual");
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLENORMAL, "Color cycle");
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLEHOUR, "Color cycle hourly");
+    pconfig->addOption((uint8_t) DO_COLOR_WEEK_AYURVEDA, "Ayurveda colors daily");
+    pconfig->addOption((uint8_t) DO_COLOR_WEEK_THAI, "Thai colors daily");
+
+    pconfig = g_bleconfig.registerOption(CONFIG_OPTIONS_SPECIAL, "Special day options", DO_COLOR_PARTY_QUICK);
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLENORMAL, "Color cycle");
+    pconfig->addOption((uint8_t) DO_COLOR_CYCLEHOUR, "Color cycle hourly");
+    pconfig->addOption((uint8_t) DO_COLOR_PARTY_SLOW, "Party colors slow");
+    pconfig->addOption((uint8_t) DO_COLOR_PARTY_QUICK, "Party colors quick");
+    pconfig->addOption((uint8_t) DO_COLOR_PARTY_MINUTE, "Party colors minute");
+
+    g_bleconfig.registerDate(CONFIG_BIRTHDAY_1, "Birthday 1", 1971, 12, 23, false);
+    g_bleconfig.registerDate(CONFIG_BIRTHDAY_2, "Birthday 2", 2021, 1, 31, false);
+    g_bleconfig.registerDate(CONFIG_BIRTHDAY_3, "Birthday 3", 0, 0, 0, false);
+    g_bleconfig.registerDate(CONFIG_BIRTHDAY_4, "Birthday 4", 0, 0, 0, false);
+
+    // Start the BLE Config stuff
+    // This will also load all previously stored settings
+    g_bleconfig.start(&g_stateManager);
 
     // Initialize all display related functionality
-    g_stateManager.initialize(g_Leds, &g_CE, &g_Settings);
-
-    // Get CHIP ID:
-    uint64_t chipid = ESP.getEfuseMac();//The chip ID is essentially its MAC address(length: 6 bytes).
-	//Serial.printf("ESP32 Chip ID = %04X",(uint16_t)(chipid >> 32));//print High 2 bytes
-	//Serial.printf("%08X\n",(uint32_t)chipid);//print Low 4bytes.
-
-    // Get the word codes
-    uint16_t chipNumber = (uint16_t)((chipid >> 32) & 0xFFFF) ^ (uint16_t)((chipid >> 16) & 0xFFFF) ^ (uint16_t)(chipid & 0xFFFF);
-    //Serial.printf("SerialNumber: %d\n", chipNumber);
-    
-    // Fabricate the clock name
-    char buff[128];
-   // snprintf(buff, sizeof(buff), "Myriadclock%s", s_wordCodes[chipNumber % 32].text); TODO
-
-    // Put name + serial number in settings (volatile, not store to DB)
-    g_Settings.sClockName = string(buff);
-    g_Settings.nSerialNumber = chipNumber;
-
-    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
-
-   //Sset callback function
-    //g_rf.setCallback(rfCallback);
-
-    // Initialize receiver
-    //g_rf.initReceiver(RECEIVER_PIN);
-
-    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
-
-    // Initialize/start the webhandler
-   // g_pWebHandler = new WebHandler(g_server, g_Settings);
-    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
-
-    //AutoConnectConfig config; 
-    //config.apid = g_Settings.sClockName;
-    //config.autoReconnect = true;
-    //config.retainPortal = true;
-    //config.autoSave = AC_SAVECREDENTIAL_AUTO;
-    //config.title = g_Settings.sClockName;
-    //config.hostName = g_Settings.sClockName;
-
-    //g_acPortal.config(config); 
-    //g_acPortal.begin();
-    //g_acUpdate.attach(g_acPortal);
-
-
-    // Add all config items to the MIOT library
-    g_Settings.registerConfigItems(&g_miot);
-
-    // Start the MIOT BLE stuff
-    g_miot.setup(&g_stateManager);
-
-
-
-    //Serial.println("Webserver started: " + WiFi.localIP().toString());    
-    //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
+    g_stateManager.initialize(g_Leds, &g_bleconfig);
 }
 
 
@@ -243,10 +192,6 @@ void loop()
 
     // TODO Make currentstate an ENUM
     g_stateManager.handleLoop(g_timeClient.getEpochTime());
-
-    // Allow the portal to handle stuff
-    //g_acPortal.handleClient();
-    g_miot.handleClient();
 
     //g_server.handleClient();
         
@@ -273,7 +218,6 @@ void loop()
                 g_stateManager.changeState(DS_BOOTING); // Booting
                 g_timeClient.begin();
                 g_fNTPStarted = true;
-                Serial.println("NTP starting");
             }
         }
 
@@ -285,7 +229,9 @@ void loop()
             // Let Handle-Loop return another state
             // Convert to local time
             TimeChangeRule *tcr;    
-            time_t t = g_CE.toLocal(g_timeClient.getEpochTime(), &tcr); // (Note: tcr cannot be NULL)
+            TimeChangeRule utcRule = {"UTC", Last, Sun, Mar, 1, 0};     // UTC
+            Timezone UTC(utcRule);
+            time_t t = UTC.toLocal(g_timeClient.getEpochTime(), &tcr); // (Note: tcr cannot be NULL)
             int hours = hour(t);
             int currentYear = year(t);
 

@@ -9,9 +9,9 @@
 //
 // Initialize
 //
-void DisplayStateBooting::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
+void DisplayStateBooting::Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayStateManager *pManager)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
+    DisplayStateBase::Initialize(pLEDs, pConfig, pManager);
     m_timeStamp = millis();
     m_nCounter = 0;
     m_nCycleCounter = 0;
@@ -21,7 +21,7 @@ void DisplayStateBooting::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSett
 //
 // Loop
 //
-bool DisplayStateBooting::HandleLoop(unsigned long epochTime)
+bool DisplayStateBooting::HandleLoop(unsigned long epochTime, time_t localTime)
 {
     CRGB colTop = CRGB(0, m_nCounter, 0);
    // CRGB colVersion = CRGB(0, m_nCounter/4, 0);

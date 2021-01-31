@@ -5,26 +5,23 @@
 
 #include "DisplayStatePasscode.h"
 #include "MyriadclockConfig.h"
+#include "DisplayStateManager.h"
 
 using namespace std;
 
 //
 // Initialize
 //
-void DisplayStatePasscode::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
+void DisplayStatePasscode::Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayStateManager *pManager)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
+    DisplayStateBase::Initialize(pLEDs, pConfig, pManager);
     m_timeStamp = millis();
-    if (pSettings != NULL)
+    if (pManager != NULL)
     {
         char numberAsString[32];
-        snprintf(numberAsString, 32, "%u", pSettings->bluetoothPasscode);
+        snprintf(numberAsString, 32, "%u", pManager->getBluetoothPasscode());
         m_codeAsString = string(numberAsString);
-        log("Code as string: '%s'", m_codeAsString.c_str());
     }
-    else
-        log("Invalid settings object!");
-
     m_nCounter = 0;
     m_nSubCounter = 0;
     m_nDelay = 0;
@@ -45,7 +42,7 @@ void DisplayStatePasscode::setResult(bool success)
 //
 // Loop
 //
-bool DisplayStatePasscode::HandleLoop(unsigned long epochTime)
+bool DisplayStatePasscode::HandleLoop(unsigned long epochTime, time_t localTime)
 {
     CRGB colTextFirst = CRGB(0, 0xFF, 0);
     CRGB colTextMiddle = CRGB(0x7F, 0x7F, 0);

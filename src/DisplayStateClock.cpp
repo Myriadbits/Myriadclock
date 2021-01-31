@@ -20,9 +20,9 @@
 //
 // Initialize
 //
-void DisplayStateClock::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
+void DisplayStateClock::Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayStateManager *pManager)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
+    DisplayStateBase::Initialize(pLEDs, pConfig, pManager);
     m_nPreviousBrightness = 0;
 
     Console::getInstance().add("backlight", this, "Set the intensity of the backlight");
@@ -87,23 +87,27 @@ void DisplayStateClock::UpdateBrightness(unsigned long epochTime)
     //  |    __--|       100%       |--__    |
     //  |__--                            --__|   30%
 
-    int brightness = m_pSettings->nBrightnessNight;
+    int brightnessDay = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_NIGHT);
+    int brightnessNight = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_NIGHT);
+
+
+    int brightness = brightnessNight;
     unsigned long deltaTime = 30 * 60;
-    int brightnessDiff = (m_pSettings->nBrightnessDay - m_pSettings->nBrightnessNight);
+    int brightnessDiff = (brightnessDay - brightnessNight);
     if (epochTime > sunrise - deltaTime && epochTime <= sunrise)
     {
         // Morning Twilight
-        brightness =  m_pSettings->nBrightnessNight + ((sunrise - epochTime) * brightnessDiff) / deltaTime;
+        brightness =  brightnessNight + ((sunrise - epochTime) * brightnessDiff) / deltaTime;
     }
     else if (epochTime >= sunrise && epochTime <= sunset)
     {
         // Daytime
-        brightness = m_pSettings->nBrightnessDay;
+        brightness = brightnessDay;
     }
     else if (epochTime >= sunset && epochTime < sunset + deltaTime)
     {
         // Evening Twilight
-        brightness = m_pSettings->nBrightnessDay - ((epochTime - sunset) * brightnessDiff) / deltaTime;
+        brightness = brightnessNight - ((epochTime - sunset) * brightnessDiff) / deltaTime;
     }    
     if (brightness != m_nPreviousBrightness)
     {
@@ -119,42 +123,48 @@ void DisplayStateClock::CheckSpecialDates(const int monthday, const int monthnum
 {
     // Check all birthdays
     m_fShowBirthday = false;
-    for(int n = 0; n < MAX_BIRTHDAYS; n++)
+
+    static int birthdayIndices[] {CONFIG_BIRTHDAY_1, CONFIG_BIRTHDAY_2, CONFIG_BIRTHDAY_3, CONFIG_BIRTHDAY_4};
+
+    for(int n = 0; n < 4; n++)
     {
-        if ( (((m_pSettings->dateBirthdays[n] & 0xFF000000) >> 24) == monthday) && 
-            (((m_pSettings->dateBirthdays[n] & 0x00FF0000) >> 16) == monthnum) )
+        BLEConfigItemDate* pdate = (BLEConfigItemDate*) m_pConfig->getConfigItem(birthdayIndices[n]);
+        if (pdate != NULL)
         {
-            // It is a birthday, show the birthday text
-            m_fShowBirthday = true;
-            break; // No need to check the rest
+            if (pdate->getDay() == monthday && pdate->getMonth() == monthnum)
+            {
+                // It is a birthday, show the birthday text
+                m_fShowBirthday = true;
+                break; // No need to check the rest
+            }
         }
     }       
 
-    // Check all holidays
-    m_fShowHoliday = false;
-    for(int n = 0; n < MAX_HOLIDAYS; n++)
-    {
-        if ( (((m_pSettings->dateHolidays[n] & 0xFF000000) >> 24) == monthday) && 
-            (((m_pSettings->dateHolidays[n] & 0x00FF0000) >> 16) == monthnum) )
-        {
-            m_fShowHoliday = true;
-            break; // No need to check the rest
-        }
-    }   
+    // // Check all holidays
+    // m_fShowHoliday = false;
+    // for(int n = 0; n < MAX_HOLIDAYS; n++)
+    // {
+    //     if ( (((m_pSettings->dateHolidays[n] & 0xFF000000) >> 24) == monthday) && 
+    //         (((m_pSettings->dateHolidays[n] & 0x00FF0000) >> 16) == monthnum) )
+    //     {
+    //         m_fShowHoliday = true;
+    //         break; // No need to check the rest
+    //     }
+    // }   
 }
 
 //
 // Get a seed for a specific display option
-int DisplayStateClock::GetSeed(const MyriadclockSettings::EDisplayOptions eOption)
+int DisplayStateClock::GetSeed(EDisplayOptions eOption)
 {
     switch (eOption)
     {
-    case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
+    case DO_COLOR_PARTY_QUICK:
         return m_nHours + m_nMinutes + m_nSeconds;
-    case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
+    case DO_COLOR_PARTY_MINUTE:
         return m_nHours + m_nMinutes;
         break;
-    case MyriadclockSettings::DO_COLOR_PARTY_SLOW:
+    case DO_COLOR_PARTY_SLOW:
         return m_nHours + m_nMinutes + (m_nSeconds / 10);
     default:
         break;
@@ -165,20 +175,18 @@ int DisplayStateClock::GetSeed(const MyriadclockSettings::EDisplayOptions eOptio
 //
 // Loop
 //
-bool DisplayStateClock::HandleLoop(unsigned long epochTime)
+bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
 {
-    if (!m_pSettings) return false;
+    if (!m_pConfig) return false;
 
     if (Elapsed(m_timeStamp) > 100)
     {
-        TimeChangeRule *tcr;    
-
         m_timeStamp = millis();
 
         // Convert to local time
-        time_t t = (m_pTZ != NULL) ? m_pTZ->toLocal(epochTime, &tcr) : 0; // (Note: tcr cannot be NULL)
+        time_t t = localTime;
 
-        CRGB colDefault = m_pSettings->colTime;
+        CRGB colDefault = m_pConfig->getConfigValue(CONFIG_COLOR_TIME);
 
         m_nWeekDay = weekday(t) - 1; // Weekday returns (1 - 7), Sunday = 1
         m_nSeconds = second(t);
@@ -188,10 +196,10 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime)
         int monthnum = month(t) - 1; // Januari = 1, we need it to be 0
 
         // Get the seed for a specific minute/hour/second
-        m_randomTime.seed(GetSeed(m_pSettings->eDisplayOptionsTime));
-        m_randomWeekday.seed(GetSeed(m_pSettings->eDisplayOptionsWeekday));
-        m_randomDate.seed(GetSeed(m_pSettings->eDisplayOptionsDate));
-        m_randomSpecial.seed(GetSeed(m_pSettings->eDisplayOptionsSpecial));      
+        m_randomTime.seed(GetSeed((EDisplayOptions) m_pConfig->getConfigValue(CONFIG_OPTIONS_TIME)));
+        m_randomWeekday.seed(GetSeed((EDisplayOptions) m_pConfig->getConfigValue(CONFIG_OPTIONS_WEEKDAY)));
+        m_randomDate.seed(GetSeed((EDisplayOptions) m_pConfig->getConfigValue(CONFIG_OPTIONS_DATE)));
+        m_randomSpecial.seed(GetSeed((EDisplayOptions) m_pConfig->getConfigValue(CONFIG_OPTIONS_SPECIAL)));      
 
         // Quarter past 1 => 14 minutes to half two (in Dutch this is correct, English I don't know)
         int min5 = m_nMinutes / 5;
@@ -383,27 +391,24 @@ CRGB DisplayStateClock::ColorHandler(CRGB defaultColor, int brightness, int cust
     switch ((EColorElement) customParam)
     {
         case EColorElement::CE_ITIS:        
-            colRet = GetDisplayOptionsColor(m_pSettings->colTime, m_pSettings->eDisplayOptionsTime, m_randomTime);
-            break;
-
         case EColorElement::CE_TIME:
-            colRet = GetDisplayOptionsColor(m_pSettings->colTime, m_pSettings->eDisplayOptionsTime, m_randomTime);
+            colRet = GetDisplayOptionsColor(CONFIG_COLOR_TIME, CONFIG_OPTIONS_TIME, m_randomTime);
             break;
 
         case EColorElement::CE_WEEKDAY:
-            colRet = GetDisplayOptionsColor(m_pSettings->colWeekday, m_pSettings->eDisplayOptionsWeekday, m_randomWeekday);
+            colRet = GetDisplayOptionsColor(CONFIG_COLOR_WEEKDAY, CONFIG_OPTIONS_WEEKDAY, m_randomWeekday);
             break;
 
         case EColorElement::CE_DATE: 
-            colRet = GetDisplayOptionsColor(m_pSettings->colDate, m_pSettings->eDisplayOptionsDate, m_randomDate);
+            colRet = GetDisplayOptionsColor(CONFIG_COLOR_DATE, CONFIG_OPTIONS_DATE, m_randomDate);
             break;
 
         case EColorElement::CE_PULSE:
-            colRet = CRGB(m_pSettings->colDate).fadeToBlackBy(127 * (cos(2.0 * PI * m_timeStamp / 6000.0) + 1.0));
+            colRet = CRGB(m_pConfig->getConfigValue(CONFIG_COLOR_DATE)).fadeToBlackBy(127 * (cos(2.0 * PI * m_timeStamp / 6000.0) + 1.0));
             break;
  
         case EColorElement::CE_SPECIAL:
-            colRet = GetDisplayOptionsColor(m_pSettings->colDate, m_pSettings->eDisplayOptionsSpecial, m_randomSpecial);
+            colRet = GetDisplayOptionsColor(CONFIG_COLOR_DATE, CONFIG_OPTIONS_SPECIAL, m_randomSpecial);
             break;
 
         default:
@@ -416,10 +421,13 @@ CRGB DisplayStateClock::ColorHandler(CRGB defaultColor, int brightness, int cust
 //
 // Helper to return a specific color for a display part
 //
-CRGB DisplayStateClock::GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSettings::EDisplayOptions eOption, std::minstd_rand0& generator)
-{
+CRGB DisplayStateClock::GetDisplayOptionsColor(int colorIndex, int optionIndex, std::minstd_rand0& generator)
+{    
     static CRGB colorLoop[] {CRGB::Navy, CRGB::LightBlue, CRGB::Aqua, CRGB::Teal, CRGB::Olive, CRGB::Green, CRGB::Lime, CRGB::Yellow, 
                              CRGB::Orange, CRGB::Red, CRGB::Maroon, CRGB::Fuchsia, CRGB::Purple, CRGB::Magenta, CRGB::Silver, CRGB::White};
+
+    CRGB defaultColor = m_pConfig->getConfigValue(colorIndex);
+    EDisplayOptions eOption = (EDisplayOptions) m_pConfig->getConfigValue(optionIndex);
 
     // Weekday colors (according to the Ayurveda) : https://blog.forret.com/2007/08/21/weekday-colours-ayurveda/
     // Starting monday
@@ -429,25 +437,25 @@ CRGB DisplayStateClock::GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSet
 
     switch (eOption)
     {
-        case MyriadclockSettings::DO_COLOR_WEEK_AYURVEDA:
+        case DO_COLOR_WEEK_AYURVEDA:
             return colorWeeksAyurveda[m_nWeekDay % 7];
 
-        case MyriadclockSettings::DO_COLOR_WEEK_THAI:
+        case DO_COLOR_WEEK_THAI:
             return colorWeeksThai[m_nWeekDay % 7];
 
-        case MyriadclockSettings::DO_COLOR_CYCLENORMAL:
+        case DO_COLOR_CYCLENORMAL:
             return colorLoop[m_nMinutes % 16];
         
-        case MyriadclockSettings::DO_COLOR_CYCLEHOUR:
+        case DO_COLOR_CYCLEHOUR:
             return colorLoop[m_nHours % 16];
         
-        case MyriadclockSettings::DO_COLOR_PARTY_QUICK:
-        case MyriadclockSettings::DO_COLOR_PARTY_MINUTE:
-        case MyriadclockSettings::DO_COLOR_PARTY_SLOW:
+        case DO_COLOR_PARTY_QUICK:
+        case DO_COLOR_PARTY_MINUTE:
+        case DO_COLOR_PARTY_SLOW:
             return colorLoop[generator() % 16];
 
         default:
-        case MyriadclockSettings::DO_STATIC:
+        case DO_STATIC:
             return defaultColor;
     }    
 }
@@ -460,8 +468,13 @@ void DisplayStateClock::commandHandler(std::string command, std::vector<std::str
     if (command == "backlight" && args.size() > 0)
     {
         int value = atoi(args[1].c_str());
-        m_pSettings->nBrightnessBackground = value;
-         m_pSettings->Store();
+        if (m_pConfig != NULL)
+        {
+            BLEConfigItemUInt32* pItem = (BLEConfigItemUInt32*) m_pConfig->getConfigItem(CONFIG_BRIGHTNESS_BACKGROUND);
+            if (pItem != NULL)
+                pItem->setValue(value); // Change the brightness
+            m_pConfig->store(); // And store
+        }       
     }
 }
 

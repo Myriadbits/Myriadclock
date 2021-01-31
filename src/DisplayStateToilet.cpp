@@ -28,9 +28,9 @@ uint8_t DisplayStateToilet::s_toiletSign[16*16] = {
 //
 // Initialize
 //
-void DisplayStateToilet::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
+void DisplayStateToilet::Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayStateManager *pManager)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
+    DisplayStateBase::Initialize(pLEDs, pConfig, pManager);
     m_nWordIndexTop = 0;
     m_nWordIndexBottom = 0;
 }
@@ -38,14 +38,15 @@ void DisplayStateToilet::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSetti
 //
 // Loop
 //
-bool DisplayStateToilet::HandleLoop(unsigned long epochTime)
+bool DisplayStateToilet::HandleLoop(unsigned long epochTime, time_t localTime)
 {
     //CRGB colTop = CRGB(0, 255, 0);
     //CRGB colBottom = CRGB(255, 0, 0);
-    
-    int r = CRGB(m_pSettings->colTime).r;
-    int g = CRGB(m_pSettings->colTime).g;
-    int b = CRGB(m_pSettings->colTime).b;
+
+    CRGB colTime = CRGB(m_pConfig->getConfigValue(CONFIG_COLOR_TIME));
+    int r = colTime.r;
+    int g = colTime.g;
+    int b = colTime.b;
 
     if (Elapsed(m_timeStamp) > 500)
     {

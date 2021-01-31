@@ -46,7 +46,7 @@ CRGB DisplayStateBase::ColorHandler(CRGB defaultColor, int brightness, int custo
 //
 // Add a single word to the display/leds
 // customParam can be any value, normal operation when ColorHandler is not overriden: customParam is the color
-void DisplayStateBase::AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int brightness, int customParam) 
+void DisplayStateBase::AddWordToLeds(const ledpos_t *pCurrentWord, CRGB defaultColor, int brightness, int customParam) 
 {
     if (pCurrentWord == NULL) return;
     if (m_pLEDs == NULL) return;
@@ -69,12 +69,12 @@ void DisplayStateBase::AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultC
 void DisplayStateBase::FillBackground(void)
 {
     // Set the background color
-    if (m_pSettings->nBrightnessBackground != 0)
+    if (m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND) != 0)
     {
-        //CRGB rgbBackground = m_pSettings->colBackground;
-        //rgbBackground.fadeToBlackBy( 255 - (255 * m_pSettings->nBrightnessBackground) / 100 );
+        int value = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND);
+        CRGB rgbClear = CRGB(value, value, value);
         for(int n = 0; n < NUM_LEDS; n++)
-            m_pLEDs[n] = CRGB(m_pSettings->nBrightnessBackground, m_pSettings->nBrightnessBackground, m_pSettings->nBrightnessBackground);
+            m_pLEDs[n] = rgbClear;
     }
 }
 

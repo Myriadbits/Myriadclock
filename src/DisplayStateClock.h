@@ -29,8 +29,8 @@ public:
         m_fShowHoliday = false;
     }
 
-    virtual void    Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
-    virtual bool    HandleLoop(unsigned long epochTime);      
+    virtual void    Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayStateManager *pManager);
+    virtual bool    HandleLoop(unsigned long epochTime, time_t localTime);      
     virtual void    commandHandler(std::string command, std::vector<std::string> args);
 
 protected:
@@ -38,9 +38,9 @@ protected:
 
     void    CalcSunriseSunset(unsigned long timestamp, float lat, float lon, float alt, unsigned long *sunrise, unsigned long *sunset);
     void    UpdateBrightness(unsigned long epochTime);
-    CRGB    GetDisplayOptionsColor(CRGB defaultColor, MyriadclockSettings::EDisplayOptions eOption, std::minstd_rand0& generator);
+    CRGB    GetDisplayOptionsColor(int colorIndex, int optionIndex, std::minstd_rand0& generator);
     void    CheckSpecialDates(const int monthday, const int monthnum);
-    int     GetSeed(const MyriadclockSettings::EDisplayOptions eOption);
+    int     GetSeed(const EDisplayOptions eOption);
 
 private:
     int                 m_nPreviousMinute;

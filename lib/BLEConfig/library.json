@@ -1,0 +1,27 @@
+{
+  "name": "BLEConfig",
+  "version": "1.0.0",
+  "description": "BLE Config Tool used to configure IOT settings over BLE, including WiFi credentials",
+  "keywords": "BLE, config, configuration, settings, IOT, provisioning, WiFi",
+  "repository":
+  {
+    "type": "git",
+    "url": "https://github.com/username/hello-world.git"
+  },
+  "authors":
+  [
+    {
+      "name": "Myriadbits",
+      "email": "jaleant@myriadbits.com",
+      "url": "https://www.myriadbits.com",
+	  "maintainer": true
+    }
+  ],
+  "license": "MIT",
+  "homepage": "https://www.helloworld.org/",
+  "dependencies": {
+    "ownername/print": "~1.3.0"
+  },
+  "frameworks": "*",
+  "platforms": "*"
+}

@@ -8,9 +8,9 @@
 //
 // Initialize
 //
-void DisplayStateWords::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
+void DisplayStateWords::Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayStateManager *pManager)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
+    DisplayStateBase::Initialize(pLEDs, pConfig, pManager);
     m_nWordIndexTop = 0;
     m_nWordIndexBottom = 0;
     m_nWordIndexDay = 0;
@@ -20,7 +20,7 @@ void DisplayStateWords::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettin
 //
 // Loop
 //
-bool DisplayStateWords::HandleLoop(unsigned long epochTime)
+bool DisplayStateWords::HandleLoop(unsigned long epochTime, time_t localTime)
 {    
     // List all words 
     const ledpos_t* s_wordsTop[] = {

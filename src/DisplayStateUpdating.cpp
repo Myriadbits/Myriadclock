@@ -9,16 +9,16 @@
 //
 // Initialize
 //
-void DisplayStateUpdating::Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings)
+void DisplayStateUpdating::Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayStateManager *pManager)
 {
-    DisplayStateBase::Initialize(pLEDs, pTZ, pSettings);
+    DisplayStateBase::Initialize(pLEDs, pConfig, pManager);
     m_timeStamp = millis();
 }
 
 //
 // Loop
 //
-bool DisplayStateUpdating::HandleLoop(unsigned long epochTime)
+bool DisplayStateUpdating::HandleLoop(unsigned long epochTime, time_t localTime)
 {
     FastLED.clear();
     FastLED.setBrightness(50);

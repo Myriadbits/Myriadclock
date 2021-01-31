@@ -13,8 +13,8 @@ public:
     {
     }
 
-    virtual void Initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
-    virtual bool HandleLoop(unsigned long epochTime);  
+    virtual void Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayStateManager *pManager);
+    virtual bool HandleLoop(unsigned long epochTime, time_t localTime);  
 
 private:
     uint8_t       m_nWordIndexTop;

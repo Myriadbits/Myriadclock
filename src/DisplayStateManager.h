@@ -6,13 +6,13 @@
 #include "Console.h"
 
 #include <Timezone.h>
-#include "MyriadclockSettings.h"
+#include "..\lib\BLEConfig\include\BLEConfig.h"
 #include "DisplayStateBase.h"
-#include "MIOTConfigurator.h"
 
 #define MAXCOMMANDLEN               16
 #define MAXCOMMANDDESCRIPTIONLEN    80
 #define MAXSTATES                   10      // Maximum number of LED states
+
 
 //
 // All possible display states
@@ -34,21 +34,23 @@ enum EDisplayState
 // Base class for all display states
 // Command line interpreter
 ///////////////////////////////////////////////////////////////////////////////
-class DisplayStateManager : public ConsoleCallbacks, public MIOTCallbacks
+class DisplayStateManager : public ConsoleCallbacks, public IBLEConfigCallbacks
 {
 public:
     DisplayStateManager()
         : m_eCurrentState(DS_NONE)
         , m_eDefaultState(DS_BOOTING)
+        , m_bluetoothPasscode(0)
     {    
     }
 
     void    setDefaultState(const EDisplayState estate) { m_eDefaultState = estate; };
     void    changeState(const EDisplayState estate);
 
-    void    initialize(CRGB* pLEDs, Timezone* pTZ, MyriadclockSettings* pSettings);
+    void    initialize(CRGB* pLEDs, BLEConfig* config);
     void    handleLoop(unsigned long epochTime);
 
+    uint32_t getBluetoothPasscode() { return m_bluetoothPasscode; }
 
     // Console Callbacks
     virtual void commandHandler(std::string command, std::vector<std::string> args);
@@ -56,12 +58,12 @@ public:
     // MIOT Callbacks
     virtual void onDisplayPassKey(uint32_t passkey);
     virtual void onBluetoothConnection(bool success);
-    virtual void onConfigItemWrite(MIOTConfigItem *pconfigItem);
-    virtual void onConfigItemRead(MIOTConfigItem *pconfigItem);
+    virtual void onConfigItemChanged(BLEConfigItemBase *pconfigItem);
 
 private:
     void    addState(EDisplayState eState, DisplayStateBase* pNewState);
     void    setLayout(const int nIndex);
+    void    setTimezone();
 
 protected:
     EDisplayState                               m_eCurrentState;
@@ -69,8 +71,11 @@ protected:
     EDisplayState                               m_eDefaultState;
     std::map<EDisplayState, DisplayStateBase*>  m_states;
 
+    // Volatile parameters
+    uint32_t                        m_bluetoothPasscode; 
+
     CRGB*                           m_pLEDs;
     Timezone*                       m_pTZ;
-    MyriadclockSettings*            m_pSettings;
+    BLEConfig*                      m_pConfig;
     static const ledclocklayout_t*  s_pLayout;
 };
