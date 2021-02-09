@@ -38,6 +38,7 @@
 #define MYRIADCLOCK_MANUFACTURER    "Myriadbits"
 #define MYRIADCLOCK_MODEL           "Myriadclock"
 #define MYRIADCLOCK_VERSION         "1.0.1"
+#define MYRIADCLOCK_DEFAULTNAME     "Myriadclock"
 
 
 // Pin defines
@@ -89,9 +90,10 @@ void setup()
 	FastLED.addLeds<NEOPIXEL, DATA_PIN>(g_Leds, NUM_LEDS); // Init of the Fastled library
 	FastLED.setBrightness(50);    
 
-
     // Load/initialize all BLE Config settings
     g_bleconfig.registerWifi(CONFIG_WIFI, "WiFi SSID");
+
+    g_bleconfig.registerString(CONFIG_NAME, "Name", std::string(MYRIADCLOCK_DEFAULTNAME), true, "User defined name");
 
     BLEConfigItemOption *pconfig = g_bleconfig.registerOption(CONFIG_LAYOUT, "Clock layout", 0);
     pconfig->addOption((uint8_t) 0, "Dutch V2");

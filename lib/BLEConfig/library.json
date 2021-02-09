@@ -1,7 +1,7 @@
 {
   "name": "BLEConfig",
   "version": "1.0.0",
-  "description": "BLE Config Tool used to configure IOT settings over BLE, including WiFi credentials",
+  "description": "The BLE Config library can be used to configure IOT settings over BLE, including WiFi credentials using the free BLEConfig app (iOs/android)",
   "keywords": "BLE, config, configuration, settings, IOT, provisioning, WiFi",
   "repository":
   {

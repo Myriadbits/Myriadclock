@@ -16,6 +16,7 @@
 //
 // All configuration items
 #define CONFIG_WIFI                     1
+#define CONFIG_NAME                     2
 #define CONFIG_LAYOUT                   3
 #define CONFIG_TIMEZONE                 5
 #define CONFIG_DAYLIGHTSAVING           6
@@ -32,9 +33,9 @@
 #define CONFIG_OPTIONS_SPECIAL          23
 
 #define CONFIG_BIRTHDAY_1               30
-#define CONFIG_BIRTHDAY_2               30
-#define CONFIG_BIRTHDAY_3               30
-#define CONFIG_BIRTHDAY_4               30
+#define CONFIG_BIRTHDAY_2               31
+#define CONFIG_BIRTHDAY_3               32
+#define CONFIG_BIRTHDAY_4               33
 
 
 enum EDisplayOptions
