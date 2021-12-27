@@ -148,7 +148,7 @@ public:
     // Start the BLE Config services
     void start(IBLEConfigCallbacks* pCallBacks);    
 
-    // Store all settings (call when )
+    // Store all settings (call this method when a config item is changed in code)
     void store();
 
     // Setters
@@ -179,7 +179,7 @@ private:
     uint8_t setConfigValueForCharacteristic(BLECharacteristic *pChar, BLEConfigItemBase* pitem);
     void    addWiFiSSIDOptions(BLEConfigItemBase* pitem);
 
-protected:
+private:
     IBLEConfigCallbacks*    m_pCallBacks; // Pointer to the callback interface
     BLEServer*              m_pBLEServer; // The BLE server
     Preferences             m_preferences; // Preference is used for storing the Config items

@@ -245,14 +245,9 @@ void BLEConfig::start(IBLEConfigCallbacks* pCallBacks)
     
     // Create + start the advertising
     BLEAdvertising *pAdvertising = BLEDevice::getAdvertising();
-    BLEAdvertisementData* padvdata = new BLEAdvertisementData();
-    padvdata->setName(std::string("Jochem"));
-    padvdata->setAppearance(m_appearance);
-    pAdvertising->setAdvertisementData(*padvdata);
-
-    //pAdvertising->setAppearance(m_appearance);
     pAdvertising->addServiceUUID(uuidDeviceInfo);
     pAdvertising->addServiceUUID(uuidBLEConfigService);
+    pAdvertising->setAppearance(m_appearance);
     pAdvertising->setScanResponse(true);
     pAdvertising->setMinPreferred(0x06);  // functions that help with iPhone connections issue
     pAdvertising->setMinPreferred(0x12);
