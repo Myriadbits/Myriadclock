@@ -1,7 +1,7 @@
 #include <string.h>
 #include <sys/param.h>
 
-#include "..\include\bleconfig.h"
+#include "../include/BLEConfig.h"
 
 #include "esp_system.h"
 #include "esp_wifi.h"
@@ -198,6 +198,7 @@ void BLEConfig::start(IBLEConfigCallbacks* pCallBacks)
     //
     BLEDevice::init(m_deviceName.c_str());
     m_pBLEServer = BLEDevice::createServer();
+    m_pBLEServer->setCallbacks(this);
 
     // For BLE number, see: https://btprodspecificationrefs.blob.core.windows.net/assigned-values/16-bit%20UUID%20Numbers%20Document.pdf
     // For the different standard services, see: https://www.bluetooth.com/specifications/gatt/
@@ -274,7 +275,8 @@ void BLEConfig::addConfigCharacteristic(BLEService *pBLEConfigService, BLEConfig
 
     
     BLECharacteristic *pChar = pBLEConfigService->createCharacteristic(uuidConfig, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
-    pChar->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED);
+    //pChar->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED); // TODO CHANGE BACK WHEN WE WANT SECURITY
+    pChar->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
     pChar->setCallbacks(this);
 
     // Value consist
@@ -347,6 +349,19 @@ void BLEConfig::onWrite(BLECharacteristic* pCharacteristic)
         if (!found)
             BLECONFIG_LOG("Error. Data received for unknown config item %d", uid);
     }
+}
+
+// BLEServer callbacks
+
+void BLEConfig::onConnect(BLEServer* pServer)
+{
+    BLECONFIG_LOG("onConnect");
+}
+
+void BLEConfig::onDisconnect(BLEServer* pServer)
+{
+    BLECONFIG_LOG("OnDisconnect");
+    BLEDevice::startAdvertising();
 }
 
 uint32_t BLEConfig::onPassKeyRequest()

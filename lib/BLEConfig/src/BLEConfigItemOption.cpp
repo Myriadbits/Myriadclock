@@ -3,7 +3,7 @@
 // Class for storing app wide settings
 ///////////////////////////////////////////////////////////////////////////////
 
-#include "..\include\BLEConfigItemOption.h"
+#include "../include/BLEConfigItemOption.h"
 #include <stdio.h> 
 #include <algorithm>
 #include <time.h> // time_t, struct tm, time, mktime

@@ -121,7 +121,7 @@ public:
 // BLEConfig
 // Automatic SmartConfig/Wifi connection
 ///////////////////////////////////////////////////////////////////////////////
-class BLEConfig : public BLESecurityCallbacks, public BLECharacteristicCallbacks
+class BLEConfig : public BLESecurityCallbacks, public BLECharacteristicCallbacks, public BLEServerCallbacks
 {
 public:
     BLEConfig(const std::string model = BLECONFIG_DEFAULT_MODELNAME, const std::string manufacturer = BLECONFIG_DEFAULT_MANUFACTURERNAME, const std::string version = BLECONFIG_DEFAULT_VERSION, int appearance = BLECONFIG_DEFAULT_APPEARANCE);
@@ -173,6 +173,10 @@ protected:
 	virtual bool onConfirmPIN(uint32_t pin);
 
 	virtual void onWrite(BLECharacteristic* pCharacteristic);
+
+    // BLEServer callbacks
+    virtual void onConnect(BLEServer* pServer);
+    virtual void onDisconnect(BLEServer* pServer);
 
 private:
     void    addConfigCharacteristic(BLEService *pBLEConfigService, BLEConfigItemBase* pitem);

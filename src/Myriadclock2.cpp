@@ -13,9 +13,6 @@
     TimeZone: https://github.com/JChristensen/Timezone
     Esp32FOTA: https://github.com/chrisjoyce911/esp32FOTA
 
-    TODO:
-    HOMEKIT: https://github.com/maximkulkin/esp-homekit
-
     Colors:
     https://sashat.me/2017/01/11/list-of-20-simple-distinct-colors/
 */
@@ -25,7 +22,7 @@
 #include <time.h>
 #include <Timezone.h>
 
-#include "..\lib\BLEConfig\include\BLEConfig.h"
+#include "../lib/BLEConfig/include/BLEConfig.h"
 
 #include "Console.h"
 #define FASTLED_INTERNAL
@@ -169,11 +166,6 @@ void setup()
     pconfig->addOption((uint8_t) DO_COLOR_PARTY_SLOW, "Party colors slow");
     pconfig->addOption((uint8_t) DO_COLOR_PARTY_QUICK, "Party colors quick");
     pconfig->addOption((uint8_t) DO_COLOR_PARTY_MINUTE, "Party colors minute");
-
-    g_bleconfig.registerDate(CONFIG_BIRTHDAY_1, "Birthday 1", 1971, 12, 23, false);
-    g_bleconfig.registerDate(CONFIG_BIRTHDAY_2, "Birthday 2", 2021, 1, 31, false);
-    g_bleconfig.registerDate(CONFIG_BIRTHDAY_3, "Birthday 3", 0, 0, 0, false);
-    g_bleconfig.registerDate(CONFIG_BIRTHDAY_4, "Birthday 4", 0, 0, 0, false);
 
     // Start the BLE Config stuff
     // This will also load all previously stored settings

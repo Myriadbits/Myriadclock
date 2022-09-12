@@ -6,7 +6,7 @@
 #include "Console.h"
 
 #include <Timezone.h>
-#include "..\lib\BLEConfig\include\BLEConfig.h"
+#include "../lib/BLEConfig/include/BLEConfig.h"
 #include "DisplayStateBase.h"
 
 #define MAXCOMMANDLEN               16
