@@ -20,22 +20,18 @@
 #define CONFIG_LAYOUT                   3
 #define CONFIG_TIMEZONE                 5
 #define CONFIG_DAYLIGHTSAVING           6
+
 #define CONFIG_COLOR_TIME               10
 #define CONFIG_COLOR_WEEKDAY            11
 #define CONFIG_COLOR_DATE               12
-#define CONFIG_BRIGHTNESS_DAY           13
-#define CONFIG_BRIGHTNESS_NIGHT         14
-#define CONFIG_BRIGHTNESS_BACKGROUND    15
+#define CONFIG_COLOR_BACKGROUND         13
+#define CONFIG_BRIGHTNESS_DAY           14
+#define CONFIG_BRIGHTNESS_NIGHT         15
+#define CONFIG_BRIGHTNESS_BACKGROUND    16
 
 #define CONFIG_OPTIONS_TIME             20
 #define CONFIG_OPTIONS_WEEKDAY          21
 #define CONFIG_OPTIONS_DATE             22
-#define CONFIG_OPTIONS_SPECIAL          23
-
-#define CONFIG_BIRTHDAY_1               30
-#define CONFIG_BIRTHDAY_2               31
-#define CONFIG_BIRTHDAY_3               32
-#define CONFIG_BIRTHDAY_4               33
 
 
 enum EDisplayOptions

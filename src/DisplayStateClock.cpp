@@ -118,42 +118,6 @@ void DisplayStateClock::UpdateBrightness(unsigned long epochTime)
 }
 
 //
-// Check all special dates
-void DisplayStateClock::CheckSpecialDates(const int monthday, const int monthnum)
-{
-    // Check all birthdays
-    m_fShowBirthday = false;
-
-    static int birthdayIndices[] {CONFIG_BIRTHDAY_1, CONFIG_BIRTHDAY_2, CONFIG_BIRTHDAY_3, CONFIG_BIRTHDAY_4};
-
-    for(int n = 0; n < 4; n++)
-    {
-        BLEConfigItemDate* pdate = (BLEConfigItemDate*) m_pConfig->getConfigItem(birthdayIndices[n]);
-        if (pdate != NULL)
-        {
-            if (pdate->getDay() == monthday && pdate->getMonth() == monthnum)
-            {
-                // It is a birthday, show the birthday text
-                m_fShowBirthday = true;
-                break; // No need to check the rest
-            }
-        }
-    }       
-
-    // // Check all holidays
-    // m_fShowHoliday = false;
-    // for(int n = 0; n < MAX_HOLIDAYS; n++)
-    // {
-    //     if ( (((m_pSettings->dateHolidays[n] & 0xFF000000) >> 24) == monthday) && 
-    //         (((m_pSettings->dateHolidays[n] & 0x00FF0000) >> 16) == monthnum) )
-    //     {
-    //         m_fShowHoliday = true;
-    //         break; // No need to check the rest
-    //     }
-    // }   
-}
-
-//
 // Get a seed for a specific display option
 int DisplayStateClock::GetSeed(EDisplayOptions eOption)
 {
@@ -199,7 +163,6 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
         m_randomTime.seed(GetSeed((EDisplayOptions) m_pConfig->getConfigValue(CONFIG_OPTIONS_TIME)));
         m_randomWeekday.seed(GetSeed((EDisplayOptions) m_pConfig->getConfigValue(CONFIG_OPTIONS_WEEKDAY)));
         m_randomDate.seed(GetSeed((EDisplayOptions) m_pConfig->getConfigValue(CONFIG_OPTIONS_DATE)));
-        m_randomSpecial.seed(GetSeed((EDisplayOptions) m_pConfig->getConfigValue(CONFIG_OPTIONS_SPECIAL)));      
 
         // Quarter past 1 => 14 minutes to half two (in Dutch this is correct, English I don't know)
         int min5 = m_nMinutes / 5;
@@ -216,7 +179,7 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
         // Once every minute, check birthdays
         if (m_nPreviousMinute != m_nMinutes)
         {
-            CheckSpecialDates(monthday, monthnum + 1);
+            // Can be used to check for special dates (not implemented anymore)
             m_nPreviousMinute = m_nMinutes;
         }
 
@@ -407,10 +370,6 @@ CRGB DisplayStateClock::ColorHandler(CRGB defaultColor, int brightness, int cust
             colRet = CRGB(m_pConfig->getConfigValue(CONFIG_COLOR_DATE)).fadeToBlackBy(127 * (cos(2.0 * PI * m_timeStamp / 6000.0) + 1.0));
             break;
  
-        case EColorElement::CE_SPECIAL:
-            colRet = GetDisplayOptionsColor(CONFIG_COLOR_DATE, CONFIG_OPTIONS_SPECIAL, m_randomSpecial);
-            break;
-
         default:
             colRet = defaultColor;
             break;

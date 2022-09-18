@@ -17,6 +17,8 @@
 #include "ClockLayoutNL_V2.h"
 #include "ClockLayoutEN_V1.h"
 
+#define STARTUP_TIME                10000 // X milliseconds startup time (before switching to no-wifi)
+
 // Australia 
 TimeChangeRule aEDT = {"AEDT", First, Sun, Oct, 2, 660};    // UTC + 11 hours
 TimeChangeRule aEST = {"AEST", First, Sun, Apr, 3, 600};    // UTC + 10 hours
@@ -204,6 +206,16 @@ void DisplayStateManager::handleLoop(unsigned long epochTime)
             m_eCurrentState = m_eNewState;
         }        
     }
+    
+    // If there is a WiFi config item: update the WIFi config item
+    if (m_pConfig != NULL)
+    {
+        BLEConfigItemWiFi* pciWiFi = reinterpret_cast<BLEConfigItemWiFi*>(m_pConfig->getConfigItem(CONFIG_WIFI));
+        if (pciWiFi != NULL)
+        {
+            pciWiFi->setConnected(WiFi.status() == WL_CONNECTED);
+        }
+    }
 
     auto it = m_states.find(m_eCurrentState);
     if (it != m_states.end())
@@ -214,6 +226,21 @@ void DisplayStateManager::handleLoop(unsigned long epochTime)
             changeState(m_eDefaultState);
         }
     }
+
+    // When there is no wifi show the NoWiFi (when we have been up and running for a small timespan)
+    if ((millis() > STARTUP_TIME) && (m_eCurrentState != DS_NOWIFI) && (WiFi.status() != WL_CONNECTED))
+    {
+        // Fallback to the no-wifi state
+        changeState(DS_NOWIFI);
+        BLECONFIG_LOG("Switching to NOWIFI");
+    }
+    else if ((m_eCurrentState == DS_NOWIFI) && (WiFi.status() == WL_CONNECTED))
+    {
+        // When we were showing the no-wifi and the WiFi is connected, jump back to booting
+        changeState(DS_BOOTING);
+        BLECONFIG_LOG("Switching to BOOTING");
+    }
+
 }
 
 //

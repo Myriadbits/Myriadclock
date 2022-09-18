@@ -71,8 +71,10 @@ void DisplayStateBase::FillBackground(void)
     // Set the background color
     if (m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND) != 0)
     {
-        int value = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND);
-        CRGB rgbClear = CRGB(value, value, value);
+        int brightness = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND);
+        CRGB colDefault = m_pConfig->getConfigValue(CONFIG_COLOR_BACKGROUND);
+
+        CRGB rgbClear =  ColorHandler(colDefault, brightness, 0);
         for(int n = 0; n < NUM_LEDS; n++)
             m_pLEDs[n] = rgbClear;
     }

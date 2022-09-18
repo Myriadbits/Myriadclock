@@ -131,14 +131,14 @@ public:
     // Please note that after adding/removing a configuration item, you have to 'forget' the bluetooth connection on your smartphone to the device and
     // reconnect/pair the device or the changes will NOT be visible!!
     //----------------------------------------------------------------
-    BLEConfigItemWiFi*    registerWifi(uint8_t id, const std::string name, bool secure = true, const std::string synopsis = "");    
-    BLEConfigItemString*  registerString(uint8_t id, const std::string name, const std::string defaultValue,bool secure = true, const std::string synopsis = "");    
-    BLEConfigItemUInt32*  registerValue(uint8_t id, const std::string name, uint32_t defaultValue, bool secure = true, const std::string synopsis = "");    
-    BLEConfigItemUInt32*  registerRGBColor(uint8_t id, const std::string name, uint32_t defaultColor, bool secure = true, const std::string synopsis = "");    
-    BLEConfigItemUInt8*   registerSlider(uint8_t id, const std::string name, uint8_t defaultValue, bool secure = true, const std::string synopsis = "");    
-    BLEConfigItemOption*  registerOption(uint8_t id, const std::string name, uint8_t defaultValue, bool secure = true, const std::string synopsis = "");    
-    BLEConfigItemDate*    registerDate(uint8_t id, const std::string name, uint16_t defaultYear = 0, uint8_t defaultMonth = 0, uint8_t defaultDay = 0, bool secure = true, const std::string synopsis = "");    
-    BLEConfigItemTime*    registerTime(uint8_t id, const std::string name, uint8_t defaultHour = 0, uint8_t defaultMinute = 0, uint8_t defaultSecond = 0, bool secure = true, const std::string synopsis = "");    
+    BLEConfigItemWiFi*    registerWifi(uint8_t id, const std::string name, bool secure = true);    
+    BLEConfigItemString*  registerString(uint8_t id, const std::string name, const std::string defaultValue,bool secure = true);    
+    BLEConfigItemUInt32*  registerValue(uint8_t id, const std::string name, uint32_t defaultValue, bool secure = true);    
+    BLEConfigItemUInt32*  registerRGBColor(uint8_t id, const std::string name, uint32_t defaultColor, bool secure = true);    
+    BLEConfigItemUInt8*   registerSlider(uint8_t id, const std::string name, uint8_t defaultValue, bool secure = true);    
+    BLEConfigItemOption*  registerOption(uint8_t id, const std::string name, uint8_t defaultValue, bool secure = true);    
+    BLEConfigItemDate*    registerDate(uint8_t id, const std::string name, uint16_t defaultYear = 0, uint8_t defaultMonth = 0, uint8_t defaultDay = 0, bool secure = true);    
+    BLEConfigItemTime*    registerTime(uint8_t id, const std::string name, uint8_t defaultHour = 0, uint8_t defaultMinute = 0, uint8_t defaultSecond = 0, bool secure = true);    
     
     BLEConfigItemBase*    getConfigItem(const uint8_t id);
 
@@ -164,6 +164,7 @@ public:
     std::string getDeviceId() { return m_deviceId; }
     std::string getVersion() { return m_version; }
     int getAppearance() { return m_appearance; }
+    bool isDeviceConnected() { return m_isDeviceConnected; }
 
 protected:
 	virtual uint32_t onPassKeyRequest();
@@ -180,7 +181,6 @@ protected:
 
 private:
     void    addConfigCharacteristic(BLEService *pBLEConfigService, BLEConfigItemBase* pitem);
-    uint8_t setConfigValueForCharacteristic(BLECharacteristic *pChar, BLEConfigItemBase* pitem);
     void    addWiFiSSIDOptions(BLEConfigItemBase* pitem);
 
 private:
@@ -198,4 +198,5 @@ private:
     std::string             m_deviceName;
     std::string             m_version;
     int                     m_appearance;
+    bool                    m_isDeviceConnected;
 };

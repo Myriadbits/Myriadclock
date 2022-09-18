@@ -18,4 +18,5 @@ public:
 private:
     int             m_nCounter;
     int             m_nDir;
+    uint32_t        m_updateSSIDTimeStamp;
 };

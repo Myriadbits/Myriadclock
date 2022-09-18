@@ -29,62 +29,63 @@ BLEConfig::BLEConfig(const std::string model, const std::string manufacturer, co
     , m_manufacturer(manufacturer)
     , m_version(version)
     , m_appearance(appearance)
+    , m_isDeviceConnected(false)
 {    
 }
 
 
-BLEConfigItemWiFi* BLEConfig::registerWifi(uint8_t id, const std::string name, bool secure, const std::string synopsis)
+BLEConfigItemWiFi* BLEConfig::registerWifi(uint8_t id, const std::string name, bool secure)
 {
-    BLEConfigItemWiFi *pitem = new BLEConfigItemWiFi(id, name, secure, synopsis);
+    BLEConfigItemWiFi *pitem = new BLEConfigItemWiFi(id, name, secure);
     m_vecConfigItems.push_back(pitem);
     return pitem;
 }
 
-BLEConfigItemString* BLEConfig::registerString(uint8_t id, const std::string name, const std::string defaultValue,bool secure, const std::string synopsis)
+BLEConfigItemString* BLEConfig::registerString(uint8_t id, const std::string name, const std::string defaultValue,bool secure)
 {
-    BLEConfigItemString *pitem = new BLEConfigItemString(id, name, defaultValue, secure, synopsis);
+    BLEConfigItemString *pitem = new BLEConfigItemString(id, name, defaultValue, secure);
     m_vecConfigItems.push_back(pitem);
     return pitem;
 }
 
-BLEConfigItemUInt32* BLEConfig::registerValue(uint8_t id, const std::string name, uint32_t defaultValue, bool secure, const std::string synopsis)
+BLEConfigItemUInt32* BLEConfig::registerValue(uint8_t id, const std::string name, uint32_t defaultValue, bool secure)
 {
-    BLEConfigItemUInt32 *pitem = new BLEConfigItemUInt32(id, name, defaultValue, secure, synopsis);
+    BLEConfigItemUInt32 *pitem = new BLEConfigItemUInt32(id, name, defaultValue, secure);
     m_vecConfigItems.push_back(pitem);
     return pitem;
 }
 
-BLEConfigItemUInt32* BLEConfig::registerRGBColor(uint8_t id, const std::string name, uint32_t defaultColor, bool secure, const std::string synopsis)
+BLEConfigItemUInt32* BLEConfig::registerRGBColor(uint8_t id, const std::string name, uint32_t defaultColor, bool secure)
 {
-    BLEConfigItemUInt32 *pitem = new BLEConfigItemUInt32(id, CT_RGBCOLOR, name, defaultColor, secure, synopsis);
+    BLEConfigItemUInt32 *pitem = new BLEConfigItemUInt32(id, CT_RGBCOLOR, name, defaultColor, secure);
     m_vecConfigItems.push_back(pitem);
     return pitem;
 }
 
-BLEConfigItemUInt8* BLEConfig::registerSlider(uint8_t id, const std::string name, uint8_t defaultValue, bool secure, const std::string synopsis)
+BLEConfigItemUInt8* BLEConfig::registerSlider(uint8_t id, const std::string name, uint8_t defaultValue, bool secure)
 {
-    BLEConfigItemUInt8 *pitem = new BLEConfigItemUInt8(id, CT_SLIDER, name, defaultValue, secure, synopsis);
+    BLEConfigItemUInt8 *pitem = new BLEConfigItemUInt8(id, CT_SLIDER, name, defaultValue, secure);
     m_vecConfigItems.push_back(pitem);
     return pitem;
 }
 
-BLEConfigItemOption* BLEConfig::registerOption(uint8_t id, const std::string name, uint8_t defaultValue, bool secure, const std::string synopsis)
+BLEConfigItemOption* BLEConfig::registerOption(uint8_t id, const std::string name, uint8_t defaultValue, bool secure)
 {
-    BLEConfigItemOption *pitem = new BLEConfigItemOption(id, name, defaultValue, secure, synopsis);
+    BLEConfigItemOption *pitem = new BLEConfigItemOption(id, name, defaultValue, secure);
     m_vecConfigItems.push_back(pitem);
     return pitem;
 }
 
-BLEConfigItemDate* BLEConfig::registerDate(uint8_t id, const std::string name, uint16_t defaultYear, uint8_t defaultMonth, uint8_t defaultDay, bool secure, const std::string synopsis)
+BLEConfigItemDate* BLEConfig::registerDate(uint8_t id, const std::string name, uint16_t defaultYear, uint8_t defaultMonth, uint8_t defaultDay, bool secure)
 {
-    BLEConfigItemDate *pitem = new BLEConfigItemDate(id, name, defaultYear, defaultMonth, defaultDay, secure, synopsis);
+    BLEConfigItemDate *pitem = new BLEConfigItemDate(id, name, defaultYear, defaultMonth, defaultDay, secure);
     m_vecConfigItems.push_back(pitem);
     return pitem;
 }
 
-BLEConfigItemTime* BLEConfig::registerTime(uint8_t id, const std::string name, uint8_t defaultHour, uint8_t defaultMinute, uint8_t defaultSecond, bool secure, const std::string synopsis)
+BLEConfigItemTime* BLEConfig::registerTime(uint8_t id, const std::string name, uint8_t defaultHour, uint8_t defaultMinute, uint8_t defaultSecond, bool secure)
 {
-    BLEConfigItemTime *pitem = new BLEConfigItemTime(id, name, defaultHour, defaultMinute, defaultSecond, secure, synopsis);
+    BLEConfigItemTime *pitem = new BLEConfigItemTime(id, name, defaultHour, defaultMinute, defaultSecond, secure);
     m_vecConfigItems.push_back(pitem);
     return pitem;
 }
@@ -233,7 +234,7 @@ void BLEConfig::start(IBLEConfigCallbacks* pCallBacks)
         it->load(m_preferences);
 
     // BLEConfig service
-    BLECONFIG_LOG("Starting BLU service with %d config items", m_vecConfigItems.size());
+    BLECONFIG_LOG("Starting BLE service with %d config items", m_vecConfigItems.size());
     BLEUUID uuidBLEConfigService(BLECONFIG_SERVICE_UUID);
     BLEService *pBLEConfigService = m_pBLEServer->createService(uuidBLEConfigService, m_vecConfigItems.size() * 4, 2);
     for (auto it : m_vecConfigItems)
@@ -272,15 +273,17 @@ void BLEConfig::addConfigCharacteristic(BLEService *pBLEConfigService, BLEConfig
     char uuid[64];
     snprintf(uuid, 64, BLECONFIG_CHAR_CONFIG, pitem->getId());
     BLEUUID uuidConfig(uuid);
-
     
-    BLECharacteristic *pChar = pBLEConfigService->createCharacteristic(uuidConfig, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE);
+    BLECharacteristic *pChar = pBLEConfigService->createCharacteristic(uuidConfig, BLECharacteristic::PROPERTY_READ | BLECharacteristic::PROPERTY_WRITE | BLECharacteristic::PROPERTY_NOTIFY);
     //pChar->setAccessPermissions(ESP_GATT_PERM_READ_ENCRYPTED | ESP_GATT_PERM_WRITE_ENCRYPTED); // TODO CHANGE BACK WHEN WE WANT SECURITY
     pChar->setAccessPermissions(ESP_GATT_PERM_READ | ESP_GATT_PERM_WRITE);
     pChar->setCallbacks(this);
 
+    // Let the config item know the characteristic it is linked too
+    pitem->setCharacteristic(pChar);
+
     // Value consist
-    uint8_t byteCount = setConfigValueForCharacteristic(pChar, pitem);
+    uint8_t byteCount = pitem->updateCharacteristicValue();
     BLECONFIG_LOG("- Adding characteristic for '%s' [%d bytes]", pitem->getName().c_str(), byteCount);
 
     // snprintf(charName, 64, BLECONFIG_CHAR_CONFIG, n + 0x0101); // Do NOT start at 0!
@@ -289,20 +292,6 @@ void BLEConfig::addConfigCharacteristic(BLEService *pBLEConfigService, BLEConfig
     // snprintf(text, 64, "Description [%d]", n + 1);
     // pdesc->setValue(text);
     // pChar->addDescriptor(pdesc);
-}
-
-//
-// Set the config value of a characteristics to the config item value + desciption etc.
-uint8_t BLEConfig::setConfigValueForCharacteristic(BLECharacteristic *pChar, BLEConfigItemBase* pitem)
-{
-    uint8_t numBytes = 0;
-    uint8_t buffer[256];
-    if (pitem != NULL)
-    {
-        numBytes = pitem->encode(buffer, 256);
-        pChar->setValue(buffer, numBytes);        
-    }   
-    return numBytes; 
 }
 
 //
@@ -341,7 +330,7 @@ void BLEConfig::onWrite(BLECharacteristic* pCharacteristic)
                     m_pCallBacks->onConfigItemChanged(it);
 
                 // Now set the value back to the full-descriptive text
-                setConfigValueForCharacteristic(pCharacteristic, it);
+                it->updateCharacteristicValue();
                 found = true;
                 break;
             }
@@ -356,12 +345,14 @@ void BLEConfig::onWrite(BLECharacteristic* pCharacteristic)
 void BLEConfig::onConnect(BLEServer* pServer)
 {
     BLECONFIG_LOG("onConnect");
+    m_isDeviceConnected = true;
 }
 
 void BLEConfig::onDisconnect(BLEServer* pServer)
 {
     BLECONFIG_LOG("OnDisconnect");
     BLEDevice::startAdvertising();
+    m_isDeviceConnected = false;
 }
 
 uint32_t BLEConfig::onPassKeyRequest()

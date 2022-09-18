@@ -49,7 +49,7 @@ void BLEConfigItemWiFi::onLoad(Preferences &preferences, char* pkey)
         }
     }
 
-     BLECONFIG_LOG("Loading WiFi settings: '%s' (index %d) with passphrase: %s", m_sSSID.c_str(), m_value, m_sPassphrase.c_str());
+    BLECONFIG_LOG("Loading WiFi settings: '%s' (index %d) with passphrase: %s", m_sSSID.c_str(), m_value, m_sPassphrase.c_str());
 }
 
 //
@@ -66,7 +66,10 @@ void BLEConfigItemWiFi::onStore(Preferences &preferences, char* pkey)
     {
         BLECONFIG_LOG("Switching to network: '%s' with passphrase '%s'", poption->m_sName.c_str(), m_sPassphrase.c_str());
         m_sSSID = poption->m_sName;
-        
+
+        // Disconnect
+        WiFi.disconnect();
+
         // Select the new WiFi network
         WiFi.begin(m_sSSID.c_str(), m_sPassphrase.c_str());
     }
@@ -117,7 +120,42 @@ void BLEConfigItemWiFi::addWiFiSSIDOptions()
 // Return the value as a hex string (for debugging)
 std::string BLEConfigItemWiFi::valueToString()
 {
-    //char stemp[32];
-    //snprintf(stemp, 32, "%08X", m_value);
     return m_sSSID;
 }
+
+//
+// Change the connection state 
+void BLEConfigItemWiFi::setConnected(bool isConnected)
+{
+    if (isConnected != m_isConnected)
+    {
+        // Only change/update and notify the value when it is changed
+        m_isConnected = isConnected;
+        updateCharacteristicValue(true);
+        BLECONFIG_LOG("WiFi connection state changed to: %s", m_isConnected ? "CONNECTED" : "DISCONNECTED");
+    }
+}
+
+//
+// Refresh the SSID list
+void BLEConfigItemWiFi::refreshSSIDList()
+{
+    BLECONFIG_LOG("Refreshing SSID list");
+    addWiFiSSIDOptions();
+    updateCharacteristicValue(true);
+}
+
+//
+// Encode this WiFi data into a byte array/buffer
+// pdata: pointer to the buffer
+// idx: index where the data should be stored
+// returns the index of the last item of this string
+int BLEConfigItemWiFi::onEncodeData(uint8_t *pdata, int dataLen, int idx)
+{
+    // Start by adding the option data
+    idx = addOptionData(pdata, dataLen, idx);
+    pdata[idx++] = (uint8_t)(m_isConnected);
+    return idx;
+}
+
+//

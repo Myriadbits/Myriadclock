@@ -11,8 +11,8 @@
 class BLEConfigItemString : public BLEConfigItemBase
 {
 public:
-    BLEConfigItemString(uint16_t id, const std::string name, const std::string defaultValue, bool secure = true, const std::string synopsis = std::string())
-        : BLEConfigItemBase(id, EConfigType::CT_STRING, name, secure, synopsis)
+    BLEConfigItemString(uint16_t id, const std::string name, const std::string defaultValue, bool secure = true)
+        : BLEConfigItemBase(id, EConfigType::CT_STRING, name, secure)
         , m_valueStringDefault(defaultValue)
     {        
     }

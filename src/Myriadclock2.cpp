@@ -85,19 +85,19 @@ void setup()
     //Serial.printf("Type: %d\n", digitalRead(TYPE_PIN)); 
 
 	FastLED.addLeds<NEOPIXEL, DATA_PIN>(g_Leds, NUM_LEDS); // Init of the Fastled library
-	FastLED.setBrightness(50);    
+	FastLED.setBrightness(100);  // Don't set it too bright our clock can't handle that power
 
     // Load/initialize all BLE Config settings
     g_bleconfig.registerWifi(CONFIG_WIFI, "WiFi SSID");
 
-    g_bleconfig.registerString(CONFIG_NAME, "Name", std::string(MYRIADCLOCK_DEFAULTNAME), true, "User defined name");
+    //g_bleconfig.registerString(CONFIG_NAME, "Name", std::string(MYRIADCLOCK_DEFAULTNAME), true);
 
     BLEConfigItemOption *pconfig = g_bleconfig.registerOption(CONFIG_LAYOUT, "Clock layout", 0);
     pconfig->addOption((uint8_t) 0, "Dutch V2");
     pconfig->addOption((uint8_t) 1, "Dutch V1");
     pconfig->addOption((uint8_t) 2, "English"); 
 
-    pconfig = g_bleconfig.registerOption(CONFIG_DAYLIGHTSAVING, "Daylight saving time", 0);
+    pconfig = g_bleconfig.registerOption(CONFIG_DAYLIGHTSAVING, "Daylight saving zone", 0);
     pconfig->addOption((uint8_t) 0, "Off"); 
     pconfig->addOption((uint8_t) 1, "Central European"); 
     pconfig->addOption((uint8_t) 2, "United Kingdom"); 
@@ -131,13 +131,14 @@ void setup()
     pconfig->addOption((uint8_t) 23, "11"); 
     pconfig->addOption((uint8_t) 24, "12"); 
 
-    g_bleconfig.registerRGBColor(CONFIG_COLOR_TIME, "Time color", 0x00FF00, true, "Color of the hours/minutes part");
-    g_bleconfig.registerRGBColor(CONFIG_COLOR_WEEKDAY, "Weekday Color", 0xFFA500, true, "Color of the day of the week");
-    g_bleconfig.registerRGBColor(CONFIG_COLOR_DATE, "Date color", 0xE59400, true, "Color of the date part");
+    g_bleconfig.registerRGBColor(CONFIG_COLOR_TIME, "Time color", 0x00FF00, true);
+    g_bleconfig.registerRGBColor(CONFIG_COLOR_WEEKDAY, "Weekday Color", 0xFFA500, true);
+    g_bleconfig.registerRGBColor(CONFIG_COLOR_DATE, "Date color", 0xE59400, true);
+    g_bleconfig.registerRGBColor(CONFIG_COLOR_BACKGROUND, "Background color", 0xFFFFFF, true);
 
-    g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_DAY, "Brightness Day", 80, false, "Brightness during the day");
-    g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_NIGHT, "Brightness Night", 30, false, "Brightness during the night");
-    g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_BACKGROUND, "Background Brightness", 4, false, "Brightness of the background");
+    g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_DAY, "Brightness Day", 80, false);
+    g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_NIGHT, "Brightness Night", 30, false);
+    g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_BACKGROUND, "Background Brightness", 4, false);
 
     pconfig = g_bleconfig.registerOption(CONFIG_OPTIONS_TIME, "Time color options", DO_STATIC);
     pconfig->addOption((uint8_t) DO_STATIC, "Manual");
@@ -159,13 +160,6 @@ void setup()
     pconfig->addOption((uint8_t) DO_COLOR_CYCLEHOUR, "Color cycle hourly");
     pconfig->addOption((uint8_t) DO_COLOR_WEEK_AYURVEDA, "Ayurveda colors daily");
     pconfig->addOption((uint8_t) DO_COLOR_WEEK_THAI, "Thai colors daily");
-
-    pconfig = g_bleconfig.registerOption(CONFIG_OPTIONS_SPECIAL, "Special day options", DO_COLOR_PARTY_QUICK);
-    pconfig->addOption((uint8_t) DO_COLOR_CYCLENORMAL, "Color cycle");
-    pconfig->addOption((uint8_t) DO_COLOR_CYCLEHOUR, "Color cycle hourly");
-    pconfig->addOption((uint8_t) DO_COLOR_PARTY_SLOW, "Party colors slow");
-    pconfig->addOption((uint8_t) DO_COLOR_PARTY_QUICK, "Party colors quick");
-    pconfig->addOption((uint8_t) DO_COLOR_PARTY_MINUTE, "Party colors minute");
 
     // Start the BLE Config stuff
     // This will also load all previously stored settings
@@ -192,29 +186,28 @@ void loop()
     // And the console
     Console::getInstance().tick();    
 
-    // Show no-wifi while there is still no Wifi  
-    if (WiFi.status() != WL_CONNECTED)
-    {
-        // When no other state is active, fallback to the no-wifi state
-        g_stateManager.setDefaultState(DS_NOWIFI);
-    }
-
     // Once every x seconds, check the NTP stuff
     if (Elapsed(g_timestamp) > 1000)
     {                
         g_timestamp = xTaskGetTickCount();
 
-        //Serial.println(WiFi.status());
         if (WiFi.status() == WL_CONNECTED)
         {
             if (!g_fNTPStarted)
             {
-                g_stateManager.changeState(DS_BOOTING); // Booting
                 g_timeClient.begin();
                 g_fNTPStarted = true;
             }
         }
-
+        else
+        {
+            if (g_fNTPStarted)
+            {
+                g_timeClient.end();
+                g_fNTPStarted = false;
+            }
+        }
+        
         if (g_fNTPStarted)
         {
             g_timeClient.update();

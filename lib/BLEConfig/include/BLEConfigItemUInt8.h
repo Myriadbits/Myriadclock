@@ -11,14 +11,14 @@
 class BLEConfigItemUInt8 : public BLEConfigItemBase
 {
 public:
-    BLEConfigItemUInt8(uint16_t id, EConfigType type, const std::string name, uint8_t defaultValue, bool secure = true, const std::string synopsis = std::string())
-        : BLEConfigItemBase(id, type, name, secure, synopsis)
+    BLEConfigItemUInt8(uint16_t id, EConfigType type, const std::string name, uint8_t defaultValue, bool secure = true)
+        : BLEConfigItemBase(id, type, name, secure)
         , m_valueDefault(defaultValue)
     {        
     }
 
-    BLEConfigItemUInt8(uint16_t id, const std::string name, uint8_t defaultValue, bool secure = true, const std::string synopsis = std::string())
-        : BLEConfigItemBase(id, EConfigType::CT_UINT8, name, secure, synopsis)
+    BLEConfigItemUInt8(uint16_t id, const std::string name, uint8_t defaultValue, bool secure = true)
+        : BLEConfigItemBase(id, EConfigType::CT_UINT8, name, secure)
         , m_valueDefault(defaultValue)
     {        
     }

@@ -39,7 +39,6 @@ protected:
     void    CalcSunriseSunset(unsigned long timestamp, float lat, float lon, float alt, unsigned long *sunrise, unsigned long *sunset);
     void    UpdateBrightness(unsigned long epochTime);
     CRGB    GetDisplayOptionsColor(int colorIndex, int optionIndex, std::minstd_rand0& generator);
-    void    CheckSpecialDates(const int monthday, const int monthnum);
     int     GetSeed(const EDisplayOptions eOption);
 
 private:
@@ -55,5 +54,4 @@ private:
     std::minstd_rand0   m_randomTime;
     std::minstd_rand0   m_randomWeekday;
     std::minstd_rand0   m_randomDate;
-    std::minstd_rand0   m_randomSpecial;
 };

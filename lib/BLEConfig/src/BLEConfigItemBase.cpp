@@ -10,11 +10,10 @@
 
 //
 // Constructor, create/fill this config item
-BLEConfigItemBase::BLEConfigItemBase(uint16_t id, const EConfigType type, const std::string name, bool secure, const std::string synopsis)        
+BLEConfigItemBase::BLEConfigItemBase(uint16_t id, const EConfigType type, const std::string name, bool secure)        
     : m_id(id)
     , m_eType(type)
     , m_sName(name)
-    , m_sSynopsis(synopsis)
     , m_fSecure(secure)
 {        
 }
@@ -45,12 +44,6 @@ int BLEConfigItemBase::encode(uint8_t *pdata, int dataLen)
     pdata[idx++] = slen;
     for(int n = 0; n < slen; n++)
         pdata[idx++] = (uint8_t) m_sName.c_str()[n];
-
-    // Add the synopsis (=description)
-    slen = (uint8_t) std::min((int) m_sSynopsis.length(), 0xF0);
-    pdata[idx++] = slen;
-    for(int n = 0; n < slen; n++)
-        pdata[idx++] = m_sSynopsis.c_str()[n];
 
     // Add the data
     return onEncodeData(pdata, dataLen, idx);
@@ -85,6 +78,24 @@ void BLEConfigItemBase::store(Preferences &preferences)
     char sprefKey[16];
     snprintf(sprefKey, 16, "key_%d", m_id);
     onStore(preferences, sprefKey);
+}
+
+//
+// Store the current value of this config item into the characteristic
+uint8_t BLEConfigItemBase::updateCharacteristicValue(bool shouldNotify)
+{
+    uint8_t numBytes = 0;
+    if (m_pChar != NULL)
+    {
+        uint8_t buffer[256];
+        numBytes = encode(buffer, 256);
+        m_pChar->setValue(buffer, numBytes);
+        if (shouldNotify)
+        {
+            m_pChar->notify(); // Notify that the value has changed
+        }
+    }
+    return numBytes; 
 }
 
 

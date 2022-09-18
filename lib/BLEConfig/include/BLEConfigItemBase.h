@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <Preferences.h> // We are dependent upon the preferences
+#include "BLECharacteristic.h"
 
 enum EConfigType
 {
@@ -39,7 +40,7 @@ enum EConfigType
 class BLEConfigItemBase
 {
 public:
-    BLEConfigItemBase(uint16_t id, const EConfigType type, const std::string name, bool secure = true, const std::string synopsis = std::string());
+    BLEConfigItemBase(uint16_t id, const EConfigType type, const std::string name, bool secure = true);
 
     // Properties
     uint16_t getId() { return m_id;}
@@ -50,8 +51,9 @@ public:
     
     std::string getName() { return m_sName;}    
     void setName(std::string name) { m_sName = name;}    
-    std::string getSynopsis() { return m_sSynopsis;}    
-    void setSynopsis(std::string synopsis) { m_sSynopsis = synopsis; }    
+
+    void setCharacteristic(BLECharacteristic* pChar) { m_pChar = pChar; }
+    uint8_t updateCharacteristicValue(bool shouldNotify = false);
 
 private:
     int encode(uint8_t *pdata, int dataLen);
@@ -68,10 +70,12 @@ protected:
     virtual void onStore(Preferences &preferences, char* pkey) = 0;
     virtual std::string valueToString() { return std::string(""); };
    
+   
 private:
-    uint16_t        m_id; // Unique ID 
-    EConfigType     m_eType; // The configuratio item type
-    std::string     m_sName; // Short name of this config item
-    std::string     m_sSynopsis; // Short description
-    bool            m_fSecure; // This config item requires a secure connection
+    uint16_t            m_id; // Unique ID 
+    EConfigType         m_eType; // The configuratio item type
+    std::string         m_sName; // Short name of this config item
+    std::string         m_sSynopsis; // Short description
+    bool                m_fSecure; // This config item requires a secure connection
+    BLECharacteristic*  m_pChar; // Pointer to the characteristic
 };
