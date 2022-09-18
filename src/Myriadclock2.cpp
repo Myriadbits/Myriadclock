@@ -34,7 +34,7 @@
 
 #define MYRIADCLOCK_MANUFACTURER    "Myriadbits"
 #define MYRIADCLOCK_MODEL           "Myriadclock"
-#define MYRIADCLOCK_VERSION         "1.0.1"
+#define MYRIADCLOCK_VERSION         "2.0.0"
 #define MYRIADCLOCK_DEFAULTNAME     "Myriadclock"
 
 

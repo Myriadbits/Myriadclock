@@ -2,6 +2,7 @@
 
 #include <map>
 
+#define FASTLED_INTERNAL
 #include "FastLED.h"            // Fastled library to control the LEDs
 #include "Console.h"
 

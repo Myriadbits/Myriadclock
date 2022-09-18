@@ -87,7 +87,7 @@ void DisplayStateClock::UpdateBrightness(unsigned long epochTime)
     //  |    __--|       100%       |--__    |
     //  |__--                            --__|   30%
 
-    int brightnessDay = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_NIGHT);
+    int brightnessDay = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_DAY);
     int brightnessNight = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_NIGHT);
 
 
@@ -111,7 +111,7 @@ void DisplayStateClock::UpdateBrightness(unsigned long epochTime)
     }    
     if (brightness != m_nPreviousBrightness)
     {
-        log("Brightness changed to: %d", brightness);
+        log("Brightness changed to: %d (epochTime: %ld, sunrise: %ld, sunset: %ld)", brightness, epochTime, sunrise, sunset);
         m_nPreviousBrightness = brightness;
         m_nBrightness = brightness;
     }    
