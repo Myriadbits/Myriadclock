@@ -40,7 +40,6 @@ MIOTConfigOption_t* BLEConfigItemOption::getOption(const uint8_t optionValue)
     return NULL;
 }
 
-
 //
 // Encode this config string item into a byte array/buffer
 // pdata: pointer to the buffer

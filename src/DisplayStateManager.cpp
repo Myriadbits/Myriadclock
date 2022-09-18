@@ -11,7 +11,7 @@
 #include "DisplayStateClock.h"
 #include "DisplayStateUpdating.h"
 #include "DisplayStatePasscode.h"
-#include "DisplayStateToilet.h"
+#include "DisplayStateMatrix.h"
 
 #include "ClockLayoutNL_V1.h"
 #include "ClockLayoutNL_V2.h"
@@ -49,7 +49,7 @@ void DisplayStateManager::initialize(CRGB* pLEDs, BLEConfig* pConfig)
     addState(DS_WORDS, new DisplayStateWords());
     addState(DS_UPDATING, new DisplayStateUpdating());
     addState(DS_PASSCODE, new DisplayStatePasscode());
-    addState(DS_TOILET, new DisplayStateToilet());
+    addState(DS_MATRIX, new DisplayStateMatrix());
 
     Console::getInstance().add("state", this, "Switch the display state");
     Console::getInstance().add("layout", this, "Switch the layout");
@@ -241,6 +241,14 @@ void DisplayStateManager::handleLoop(unsigned long epochTime)
         BLECONFIG_LOG("Switching to BOOTING");
     }
 
+    // Some specials:
+    int nHours = hour(tLocal);
+    int nMinutes = minute(tLocal);
+    if (nHours == 0 && nMinutes == 0) 
+    {
+        // Show matrix (for max 1 minute)
+        changeState(DS_MATRIX);
+    }
 }
 
 //
@@ -287,6 +295,28 @@ void DisplayStateManager::onConfigItemChanged(BLEConfigItemBase *pconfigItem)
             case CONFIG_DAYLIGHTSAVING:
                 setTimezone();
                 break;
+
+            case CONFIG_COMMAND:
+                {
+                    BLEConfigItemCommand* pconfig = (BLEConfigItemCommand*) pconfigItem;
+                    BLECONFIG_LOG("Executing User Command: %d", pconfig->getLastCommandID());
+                    switch (pconfig->getLastCommandID())
+                    {
+                        case UC_MATRIX:
+                            changeState(DS_MATRIX);
+                            break;
+
+                        case UC_ALLWORDS:
+                            changeState(DS_WORDS);
+                            break;
+
+                        case UC_NORMAL:
+                            changeState(DS_CLOCK);
+                            break;
+                    }
+                }
+                break;
+
         }
     }
 }

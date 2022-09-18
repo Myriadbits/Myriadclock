@@ -161,6 +161,12 @@ void setup()
     pconfig->addOption((uint8_t) DO_COLOR_WEEK_AYURVEDA, "Ayurveda colors daily");
     pconfig->addOption((uint8_t) DO_COLOR_WEEK_THAI, "Thai colors daily");
 
+    pconfig = g_bleconfig.registerCommandOption(CONFIG_COMMAND, "Custom commands");
+    pconfig->addOption((uint8_t) UC_NORMAL, "Normal");
+    pconfig->addOption((uint8_t) UC_MATRIX, "Matrix");
+    pconfig->addOption((uint8_t) UC_ALLWORDS, "All words");
+
+
     // Start the BLE Config stuff
     // This will also load all previously stored settings
     g_bleconfig.start(&g_stateManager);

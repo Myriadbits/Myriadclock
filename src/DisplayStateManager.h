@@ -27,7 +27,8 @@ enum EDisplayState
     DS_WORDS,
     DS_UPDATING,
     DS_PASSCODE,
-    DS_TOILET
+    DS_TOILET,
+    DS_MATRIX, // New as of 1.0.2?
 };
 
 

@@ -12,6 +12,7 @@ class DisplayStateClock : public DisplayStateBase
 {
     enum EColorElement
     {
+        CE_UNKNOWN,
         CE_ITIS,
         CE_TIME,
         CE_WEEKDAY,
@@ -36,8 +37,6 @@ public:
 protected:
     CRGB    ColorHandler(CRGB defaultColor, int brightness, int customParam = 0);
 
-    void    CalcSunriseSunset(unsigned long timestamp, float lat, float lon, float alt, unsigned long *sunrise, unsigned long *sunset);
-    void    UpdateBrightness(unsigned long epochTime);
     CRGB    GetDisplayOptionsColor(int colorIndex, int optionIndex, std::minstd_rand0& generator);
     int     GetSeed(const EDisplayOptions eOption);
 

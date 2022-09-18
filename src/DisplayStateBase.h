@@ -34,6 +34,8 @@
 #define CONFIG_OPTIONS_WEEKDAY          21
 #define CONFIG_OPTIONS_DATE             22
 
+#define CONFIG_COMMAND                  42
+
 
 enum EDisplayOptions
 {
@@ -46,6 +48,13 @@ enum EDisplayOptions
     DO_COLOR_PARTY_MINUTE,  // Random colors every minute for a few seconds
     DO_COLOR_WEEK_AYURVEDA, // Different color for each weekday according to the Ayurveda
     DO_COLOR_WEEK_THAI,     // Different color for each weekday according to the Thai
+};
+
+enum EUserCommands
+{
+    UC_NORMAL,              // Show normal clock
+    UC_MATRIX,              // Show the matrix (fixed time)
+    UC_ALLWORDS,            // Show all words (fixed time)
 };
 
 // Forward class definition
@@ -83,13 +92,15 @@ public:
 protected:
     virtual CRGB ColorHandler(CRGB defaultColor, int brightness, int customParam = 0);
 
-    void AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int brightness, int customParam = 0);
-    void FillBackground(void);
+    void    AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int brightness, int customParam = 0);
+    void    FillBackground(void);
     int16_t CalcLedPos(int8_t x, int8_t y);
     uint32_t Elapsed(uint32_t ts);
 
-    void  log(const char* format, ...);
+    void    log(const char* format, ...);
 
+    void    CalcSunriseSunset(unsigned long timestamp, float lat, float lon, float alt, unsigned long *sunrise, unsigned long *sunset);
+    int     GetBrightness(unsigned long epochTime);
 
 protected:
     std::string                     m_name;

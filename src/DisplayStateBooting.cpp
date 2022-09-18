@@ -42,9 +42,7 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime, time_t localTime)
             m_nCycleCounter++;
         }
         
-        int brightnessDay = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_DAY);
-        if (brightnessDay < 3) // Make sure there is a minimum
-            brightnessDay = 3;
+        int brightness = GetBrightness(epochTime);
 
         FastLED.clear();
 
@@ -52,7 +50,7 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime, time_t localTime)
         FillBackground();
 
         // Show the myriadclock text
-        AddWordToLeds(s_layout.extra.myriadclock, colTop, brightnessDay);   
+        AddWordToLeds(s_layout.extra.myriadclock, colTop, brightness);   
 
         // Show the codes
    //     AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colVersion); TODO

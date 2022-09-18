@@ -17,6 +17,7 @@ enum EConfigType
     CT_TIME,             // Time
     CT_WIFI,             // List of all WiFi SSIDS in range (CT_OPTION with SSIDs filled in), when switching, we expect the passphrase as well
     CT_UINT8,            // Slider (0-100) 
+    CT_COMMAND,          // List of commands. When written, executes a single command
 };
 
 

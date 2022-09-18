@@ -60,6 +60,7 @@
 #include "BLEConfigItemWiFi.h"
 #include "BLEConfigItemDate.h"
 #include "BLEConfigItemTime.h"
+#include "BLEConfigItemCommand.h"
 
 // TODO Remove
 #define  BLECONFIG_DEBUG
@@ -139,6 +140,7 @@ public:
     BLEConfigItemOption*  registerOption(uint8_t id, const std::string name, uint8_t defaultValue, bool secure = true);    
     BLEConfigItemDate*    registerDate(uint8_t id, const std::string name, uint16_t defaultYear = 0, uint8_t defaultMonth = 0, uint8_t defaultDay = 0, bool secure = true);    
     BLEConfigItemTime*    registerTime(uint8_t id, const std::string name, uint8_t defaultHour = 0, uint8_t defaultMinute = 0, uint8_t defaultSecond = 0, bool secure = true);    
+    BLEConfigItemCommand* registerCommandOption(uint8_t id, const std::string name, bool secure = true);
     
     BLEConfigItemBase*    getConfigItem(const uint8_t id);
 

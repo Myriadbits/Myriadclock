@@ -28,95 +28,6 @@ void DisplayStateClock::Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayState
     Console::getInstance().add("backlight", this, "Set the intensity of the backlight");
 }
 
-
-//
-// Calculate the sunrise or the sunset times for a specific date
-// This is a first calculation with a aberration of max 3 minutes - for now it is OK. Otherwise, calcalution
-// must be re-done with the last new time and put this value again in centuries_t value. 
-// See documentation:  http://www.stargazing.net/kepler/sunrise.html
-//
-void DisplayStateClock::CalcSunriseSunset(unsigned long timestamp, float lat, float lon, float alt, unsigned long *sunrise, unsigned long *sunset)
-{
-    unsigned long today = (unsigned long) (timestamp / SECONDS_PER_DAY) * SECONDS_PER_DAY;
-    double t = (unsigned long)((timestamp - YEAR_2000_TIMESTAMP ) / SECONDS_PER_DAY) - 0.5;
-    double centuries = t / 36525;
-
-    double l = (280.460 + (36000.770 * centuries)) + 360; // Mean longitude including aberration
-    double g = (357.528 + (35999.050 * centuries)) + 360; // Mean anomaly
-
-    double ec = (1.915 * sin(DEG_TO_RAD * g)) + (0.02 * sin(DEG_TO_RAD * g));  // ec centre correction
-    double lambda = l + ec;                                                        // ecliptic longitude of Sun
-    double e = -ec + (2.466 * sin(DEG_TO_RAD * 2 * lambda)) - (0.053 * sin(DEG_TO_RAD * 4 * lambda));
-
-    //
-    //  gha = UTo - 180 + e
-    //  where UTo is the current estimate of the time of sunrise expressed in degrees. For this first iteration, this gives:
-    //
-    double gha = 180-180 + e;
-    
-    //
-    //  We also need the Sun's declination(delta), for which we need the obliquity of the ecliptic (tilt of the Earth's axis)
-    //
-    double obl = 23.4393 - (0.0130 * centuries);
-    double delta = asin((sin(DEG_TO_RAD * obl) * sin(DEG_TO_RAD * lambda))) * 180 / PI;     /* Sun's declination */
-    
-    //
-    //  Correction term and new estimate of time
-    //
-    double cosc = (sin(DEG_TO_RAD * alt) - (sin(DEG_TO_RAD * lat) * sin(DEG_TO_RAD * delta))) / (cos(DEG_TO_RAD * lat) * cos(DEG_TO_RAD * delta));
-
-    double correction = 0;
-    if      (cosc >  1.0) { correction = 0;     }
-    else if (cosc < -1.0) { correction = 180;   }
-    else                  { correction = acos(cosc) * 180 / PI; }
-
-    if (sunrise) *sunrise = today + (180.0 - (gha + lon + correction)) * 12 * SECONDS_PER_HOUR / 180.0 ;
-    if (sunset ) *sunset  = today + (180.0 - (gha + lon - correction)) * 12 * SECONDS_PER_HOUR / 180.0 ;
-}
-
-//
-// Auto adjust brightness depending upon sunrise/sunset
-//
-void DisplayStateClock::UpdateBrightness(unsigned long epochTime)
-{
-    unsigned long sunrise, sunset;
-    CalcSunriseSunset(epochTime, CLOCK_LATITUDE, CLOCK_LONGITUDE, CLOCK_ALTITUDE, &sunrise, &sunset);
-
-    //           sunrise            sunset        
-    //  |        |                  |        |
-    //  |    __--|       100%       |--__    |
-    //  |__--                            --__|   30%
-
-    int brightnessDay = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_DAY);
-    int brightnessNight = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_NIGHT);
-
-
-    int brightness = brightnessNight;
-    unsigned long deltaTime = 30 * 60;
-    int brightnessDiff = (brightnessDay - brightnessNight);
-    if (epochTime > sunrise - deltaTime && epochTime <= sunrise)
-    {
-        // Morning Twilight
-        brightness =  brightnessNight + ((sunrise - epochTime) * brightnessDiff) / deltaTime;
-    }
-    else if (epochTime >= sunrise && epochTime <= sunset)
-    {
-        // Daytime
-        brightness = brightnessDay;
-    }
-    else if (epochTime >= sunset && epochTime < sunset + deltaTime)
-    {
-        // Evening Twilight
-        brightness = brightnessNight - ((epochTime - sunset) * brightnessDiff) / deltaTime;
-    }    
-    if (brightness != m_nPreviousBrightness)
-    {
-        log("Brightness changed to: %d (epochTime: %ld, sunrise: %ld, sunset: %ld)", brightness, epochTime, sunrise, sunset);
-        m_nPreviousBrightness = brightness;
-        m_nBrightness = brightness;
-    }    
-}
-
 //
 // Get a seed for a specific display option
 int DisplayStateClock::GetSeed(EDisplayOptions eOption)
@@ -307,43 +218,44 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
         // And now for the LEDS
         FastLED.clear();
 
-        // Back to full brightness
-        FastLED.setBrightness(255);
-
         // Set the background color (if required)
         FillBackground();
 
-        // Update the brightness
-        UpdateBrightness(epochTime);        
-
+        // Determine the brightness
+        int brightness = GetBrightness(epochTime);
+        if (brightness != m_nPreviousBrightness)
+        {
+            log("Brightness changed to: %d", brightness);
+            m_nPreviousBrightness = brightness;
+        }    
+  
         // Show birthdays / holidays
         if (m_fShowBirthday)
-            AddWordToLeds(s_layout.extra.birthday, colDefault, m_nBrightness, EColorElement::CE_SPECIAL);
+            AddWordToLeds(s_layout.extra.birthday, colDefault, brightness, EColorElement::CE_SPECIAL);
         if (m_fShowHoliday)
-            AddWordToLeds(s_layout.extra.holiday, colDefault, m_nBrightness, EColorElement::CE_SPECIAL);
+            AddWordToLeds(s_layout.extra.holiday, colDefault, brightness, EColorElement::CE_SPECIAL);
 
         // Always show it-is
-        AddWordToLeds(pToPastWord, colDefault, m_nBrightness, EColorElement::CE_TIME); // (AddWordToLeds can handle NULL pointers!)
-        AddWordToLeds(pMinutesMainWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
-        AddWordToLeds(pMinutesRestWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
-        AddWordToLeds(pHalfWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
-        AddWordToLeds(pHourWord, colDefault, m_nBrightness, EColorElement::CE_TIME);
+        AddWordToLeds(pToPastWord, colDefault, brightness, EColorElement::CE_TIME); // (AddWordToLeds can handle NULL pointers!)
+        AddWordToLeds(pMinutesMainWord, colDefault, brightness, EColorElement::CE_TIME);
+        AddWordToLeds(pMinutesRestWord, colDefault, brightness, EColorElement::CE_TIME);
+        AddWordToLeds(pHalfWord, colDefault, brightness, EColorElement::CE_TIME);
+        AddWordToLeds(pHourWord, colDefault, brightness, EColorElement::CE_TIME);
 
         // Display day of the week
-        AddWordToLeds(pDayWord, colDefault, m_nBrightness, EColorElement::CE_WEEKDAY);
+        AddWordToLeds(pDayWord, colDefault, brightness, EColorElement::CE_WEEKDAY);
 
         // Ad the date
-        AddWordToLeds(pDayOfMonthWord, colDefault, m_nBrightness, EColorElement::CE_DATE);        
-        AddWordToLeds(pMonthWord, colDefault, m_nBrightness, EColorElement::CE_DATE); 
+        AddWordToLeds(pDayOfMonthWord, colDefault, brightness, EColorElement::CE_DATE);        
+        AddWordToLeds(pMonthWord, colDefault, brightness, EColorElement::CE_DATE); 
         
         // Second heartbeat fading led
-        AddWordToLeds(pTime->second, colDefault, m_nBrightness, EColorElement::CE_PULSE);
+        AddWordToLeds(pTime->second, colDefault, brightness, EColorElement::CE_PULSE);
         
         FastLED.show();   
     }
     return true;
 }
-
 
 //
 // Overridden from DisplayStateBase to provide the color for a word or character
@@ -370,6 +282,7 @@ CRGB DisplayStateClock::ColorHandler(CRGB defaultColor, int brightness, int cust
             colRet = CRGB(m_pConfig->getConfigValue(CONFIG_COLOR_DATE)).fadeToBlackBy(127 * (cos(2.0 * PI * m_timeStamp / 6000.0) + 1.0));
             break;
  
+        case EColorElement::CE_UNKNOWN:
         default:
             colRet = defaultColor;
             break;

@@ -6,10 +6,10 @@
 // Base class for all display states
 // Command line interpreter
 ///////////////////////////////////////////////////////////////////////////////
-class DisplayStateToilet : public DisplayStateBase
+class DisplayStateMatrix : public DisplayStateBase
 {
 public:
-    DisplayStateToilet() : DisplayStateBase("toilet") 
+    DisplayStateMatrix() : DisplayStateBase("matrix") 
     {
     }
 
@@ -17,7 +17,13 @@ public:
     virtual bool HandleLoop(unsigned long epochTime, time_t localTime);  
 
 private:
-    static uint8_t     s_toiletSign[16 * 16];
-    uint8_t     m_nWordIndexTop;
-    uint8_t     m_nWordIndexBottom;
+    uint8_t     m_introPos[NUM_COLS];
+    uint8_t     m_introLen[NUM_COLS];
+    uint8_t     m_animationStep = 100; // 1 step = x ms
+    uint32_t    m_maxTotalTime = 0;
+    uint32_t    m_totalTime = 0;
+
+    uint8_t       m_nWordIndexTop;
+    uint8_t       m_nWordIndexBottom;
+    uint8_t       m_nWordIndexDay;
 };

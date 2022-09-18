@@ -90,6 +90,13 @@ BLEConfigItemTime* BLEConfig::registerTime(uint8_t id, const std::string name, u
     return pitem;
 }
 
+BLEConfigItemCommand* BLEConfig::registerCommandOption(uint8_t id, const std::string name, bool secure)
+{
+    BLEConfigItemCommand *pitem = new BLEConfigItemCommand(id, name, secure);
+    m_vecConfigItems.push_back(pitem);
+    return pitem;
+}
+
 //
 // Return a config item with a specific id
 BLEConfigItemBase* BLEConfig::getConfigItem(const uint8_t id)
