@@ -18,6 +18,7 @@
 #include "ClockLayoutEN_V1.h"
 
 #define STARTUP_TIME                10000 // X milliseconds startup time (before switching to no-wifi)
+#define TIMEZONE_CHANGED_TIME        5000 // X milliseconds time after switching timezones
 
 // Australia 
 TimeChangeRule aEDT = {"AEDT", First, Sun, Oct, 2, 660};    // UTC + 11 hours
@@ -41,6 +42,7 @@ void DisplayStateManager::initialize(CRGB* pLEDs, BLEConfig* pConfig)
     m_pLEDs = pLEDs;
     m_pTZ = NULL;
     m_pConfig = pConfig;
+    m_timezoneChangedCountdown = 0;
 
     // Add all states to our statemachine
     addState(DS_NOWIFI, new DisplayStateNoWiFi());
@@ -141,6 +143,7 @@ void DisplayStateManager::setLayout(const int nIndex)
 void DisplayStateManager::setTimezone() 
 {   
     // Get the timezone
+    m_timezoneChangedCountdown = millis() + TIMEZONE_CHANGED_TIME;
     int timezone = m_pConfig->getConfigValue(CONFIG_TIMEZONE);
     timezone -= 12;
 
@@ -244,7 +247,7 @@ void DisplayStateManager::handleLoop(unsigned long epochTime)
     // Some specials:
     int nHours = hour(tLocal);
     int nMinutes = minute(tLocal);
-    if (nHours == 0 && nMinutes == 0) 
+    if (nHours == 0 && nMinutes == 0 && millis() > m_timezoneChangedCountdown) 
     {
         // Show matrix (for max 1 minute)
         changeState(DS_MATRIX);

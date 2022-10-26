@@ -79,5 +79,6 @@ protected:
     CRGB*                           m_pLEDs;
     Timezone*                       m_pTZ;
     BLEConfig*                      m_pConfig;
+    uint32_t                        m_timezoneChangedCountdown;
     static const ledclocklayout_t*  s_pLayout;
 };
