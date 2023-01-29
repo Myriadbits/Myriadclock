@@ -1,6 +1,8 @@
 # Myriadclock
-16x16 LED word clock with calender
+16x16 LED word clock with weekday and calender
+Multilanguage and fully color customizable.
 
+![Screenshot](Myriadclock Eng1.jpg)
 
 ## Printing directives
 ### Grid
