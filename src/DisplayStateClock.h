@@ -2,6 +2,7 @@
 
 #include "DisplayStateBase.h"
 #include <random>
+#include "ClockTimeWordConvertor.h"
 
 ///////////////////////////////////////////////////////////////////////////////
 //
@@ -24,6 +25,21 @@ class DisplayStateClock : public DisplayStateBase
 public:
     DisplayStateClock() 
         : DisplayStateBase("clock") 
+        , m_nPreviousMinute{ 0 }
+        , m_nBrightness{ 0 }
+        , m_nPreviousBrightness{ 0 }
+        , m_nSeconds{ 0 }
+        , m_nMinutes{ 0 }
+        , m_nHours{ 0 }
+        , m_nWeekDay{ 0 }
+        , m_nTransitionStep{ 0 }
+        , m_fShowBirthday{ false }
+        , m_fShowHoliday{ false }
+        , m_fMinutesMainInTrans{ false }
+        , m_fMinutesRestInTrans{ false }
+        , m_fToPastInTrans{ false }
+        , m_fHalfWordInTrans{ false }
+        , m_fHourWordInTrans{ false }
     {
         m_nPreviousMinute = -1;
         m_fShowBirthday = false;
@@ -48,9 +64,17 @@ private:
     int                 m_nMinutes;
     int                 m_nHours;
     int                 m_nWeekDay;
+    int                 m_nTransitionStep;
     bool                m_fShowBirthday;
     bool                m_fShowHoliday;
     std::minstd_rand0   m_randomTime;
     std::minstd_rand0   m_randomWeekday;
     std::minstd_rand0   m_randomDate;
+    ClockWords_t        m_sClockWordsNow;
+    ClockWords_t        m_sClockWordsNext;
+    bool                m_fMinutesMainInTrans;
+    bool                m_fMinutesRestInTrans;
+    bool                m_fToPastInTrans;
+    bool                m_fHalfWordInTrans;
+    bool                m_fHourWordInTrans;
 };

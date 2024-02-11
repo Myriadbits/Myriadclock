@@ -37,8 +37,8 @@ void BLEConfigItemWiFi::onLoad(Preferences &preferences, char* pkey)
     addWiFiSSIDOptions();
 
     // Select the new WiFi network
-    WiFi.begin(m_sSSID.c_str(), m_sPassphrase.c_str());
-
+    connectToWiFi();
+    
     // Now select the sSSID if found
     for (auto it : m_vecOptions)
     {
@@ -49,7 +49,7 @@ void BLEConfigItemWiFi::onLoad(Preferences &preferences, char* pkey)
         }
     }
 
-    BLECONFIG_LOG("Loading WiFi settings: '%s' (index %d) with passphrase: %s", m_sSSID.c_str(), m_value, m_sPassphrase.c_str());
+    BLECONFIG_LOG("Loaded WiFi settings: '%s' (index %d) with passphrase: %s", m_sSSID.c_str(), m_value, m_sPassphrase.c_str());
 }
 
 //
@@ -70,9 +70,24 @@ void BLEConfigItemWiFi::onStore(Preferences &preferences, char* pkey)
         // Disconnect
         WiFi.disconnect();
 
-        // Select the new WiFi network
-        WiFi.begin(m_sSSID.c_str(), m_sPassphrase.c_str());
+        // Connect to the new WiFi network
+        connectToWiFi();
     }
+}
+
+//
+// Connect to the WiFi network
+void BLEConfigItemWiFi::connectToWiFi()
+{
+    // Select the new WiFi network
+    int status = WiFi.begin(m_sSSID.c_str(), m_sPassphrase.c_str());
+    if (status == WL_CONNECTED)
+    {
+        BLECONFIG_LOG("Connected to %s", WiFi.SSID().c_str());
+        BLECONFIG_LOG(" - IP address: %s", WiFi.localIP().toString().c_str());
+        BLECONFIG_LOG(" - Gateway: %s", WiFi.gatewayIP().toString().c_str());
+        BLECONFIG_LOG(" - Mask: %s", WiFi.subnetMask().toString().c_str());
+    }     
 }
 
 //
@@ -80,11 +95,22 @@ void BLEConfigItemWiFi::onStore(Preferences &preferences, char* pkey)
 void BLEConfigItemWiFi::addWiFiSSIDOptions()
 {
     BLECONFIG_LOG("Scanning for WiFi networks...");
-    int numSsid = WiFi.scanNetworks();
+    int numSsid = WiFi.scanNetworks(false, true);
     if (numSsid == -1) 
     {
-        BLECONFIG_LOG("Couldn't get a wifi connection!");
+        BLECONFIG_LOG("Error: Couldn't get a wifi connection! [-1]");
         return;        
+    }
+    else if (numSsid == -2) 
+    {
+        BLECONFIG_LOG("Error: WiFi Scan failed! [-2]");
+        return;
+    }
+    else if (numSsid < 0)
+    {
+        // Is not in the spec, but just to be sure
+        BLECONFIG_LOG("Error: WiFi.scanNetworks unknown error!");
+        return;
     }
 
     uint8_t indices[numSsid];
@@ -110,7 +136,8 @@ void BLEConfigItemWiFi::addWiFiSSIDOptions()
     {
         if (WiFi.SSID(indices[i]) == WiFi.SSID())
             selected = i; // Remember the active SSID
-        BLECONFIG_LOG("- Adding WiFi SSID '%s' [%d]", WiFi.SSID(indices[i]).c_str(), WiFi.RSSI(indices[i]));
+        uint8_t* pbsidd = WiFi.BSSID(indices[i]);
+        BLECONFIG_LOG("- Adding WiFi SSID '%s' [%d] (%02x.%02x.%02x.%02x.%02x.%02x)", WiFi.SSID(indices[i]).c_str(), WiFi.RSSI(indices[i]), pbsidd[0], pbsidd[1], pbsidd[2], pbsidd[3], pbsidd[4], pbsidd[5]);
         addOption(indices[i], WiFi.SSID(indices[i]).c_str());
     }
     setValue(selected);

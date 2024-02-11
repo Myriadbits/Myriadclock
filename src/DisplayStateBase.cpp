@@ -75,12 +75,11 @@ void DisplayStateBase::AddWordToLeds(const ledpos_t *pCurrentWord, CRGB defaultC
 
 //
 // Fill the entire background with a color
-void DisplayStateBase::FillBackground(void)
+void DisplayStateBase::FillBackground(const int brightness)
 {
     // Set the background color
-    if (m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND) != 0)
+    if (brightness != 0)
     {
-        int brightness = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND);
         CRGB colDefault = m_pConfig->getConfigValue(CONFIG_COLOR_BACKGROUND);
 
         CRGB rgbClear = ColorHandler(colDefault, brightness, 0);

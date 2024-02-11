@@ -47,7 +47,8 @@ bool DisplayStateNoWiFi::HandleLoop(unsigned long epochTime, time_t localTime)
         FastLED.clear();
 
         // Set the background color (if required)
-        FillBackground();
+        int brightnessBackground = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND);
+        FillBackground(brightnessBackground);
                 
         int brightnessDay = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_DAY);
         if (brightnessDay < 3) // Make sure there is a minimum
