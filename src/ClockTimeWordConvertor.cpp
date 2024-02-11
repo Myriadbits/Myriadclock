@@ -91,10 +91,10 @@ void ClockTimeWordConvertor::convert(time_t localTime, ledclocklayout_t* pLayout
                 }
                 if (nMinutes > 15 && nMinutes < 45)
                 {
-                    pOutput->pHalfWord =pTime-> half_to;
+                    pOutput->pHalfWord = pTime->half_to;
                 }
                 const ledpos_t* pMinuteWords[15] {NULL,pTime->minute_1, pTime->minute_2, pTime->minute_3, pTime->minute_4, 
-                    pTime->minute_5, pTime->minute_6, pTime->minute_7, pTime->minute_8, pTime->minute_10, 
+                    pTime->minute_5, pTime->minute_6, pTime->minute_7, pTime->minute_8, pTime->minute_9, pTime->minute_10, 
                     pTime->minute_11, pTime->minute_12, pTime->minute_13, pTime->minute_14};
                 pOutput->pMinutesRestWord = pMinuteWords[min1 % 15];
             }               
