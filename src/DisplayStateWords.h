@@ -20,4 +20,5 @@ private:
     uint8_t       m_nWordIndexTop;
     uint8_t       m_nWordIndexBottom;
     uint8_t       m_nWordIndexDay;
+    uint8_t       m_nLoopCounter;
 };

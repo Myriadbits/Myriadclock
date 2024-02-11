@@ -58,7 +58,8 @@ bool DisplayStatePasscode::HandleLoop(unsigned long epochTime, time_t localTime)
         FastLED.clear();
 
         // Set the background color (if required)
-        FillBackground();
+        int brightnessBackground = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND);        
+        FillBackground(brightnessBackground);
 
         if (m_fShowResult)
         {

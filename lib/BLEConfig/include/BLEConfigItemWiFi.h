@@ -30,6 +30,7 @@ protected:
     virtual std::string valueToString();
 
 private:
+    void connectToWiFi();
     void addWiFiSSIDOptions();
    
 private:

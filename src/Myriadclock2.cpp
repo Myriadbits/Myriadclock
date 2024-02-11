@@ -36,6 +36,7 @@
 #define MYRIADCLOCK_MODEL           "Myriadclock"
 #define MYRIADCLOCK_VERSION         "2.0.0"
 #define MYRIADCLOCK_DEFAULTNAME     "Myriadclock"
+#define MYRIADCLOCK_DEFAULTLOCATION "Default room"
 
 
 // Pin defines
@@ -48,6 +49,7 @@ using namespace std;
 
 static CRGB         g_Leds[NUM_LEDS]; // Define the array of leds
 static uint32_t     g_timestamp  = 0;
+static uint32_t     g_timeCounter = 0;
 static bool         g_fNTPStarted = false;
 static int          g_nPreviousHour = 0;
 
@@ -61,16 +63,6 @@ NTPClient           g_timeClient(g_ntpUDP, "pool.ntp.org");
 
 // The BLE Config library
 BLEConfig           g_bleconfig(MYRIADCLOCK_MODEL, MYRIADCLOCK_MANUFACTURER, MYRIADCLOCK_VERSION, 256); // 256 = Clock TODO VERSION
-
-//
-// Time elapsed??
-//
-uint32_t Elapsed(uint32_t ts)
-{
-    uint32_t now = xTaskGetTickCount();
-    if (ts < now) return (now - ts);
-    return(now + (0xffffffff - ts));
-}
 
 //
 // Setup all hardware
@@ -90,7 +82,7 @@ void setup()
     // Load/initialize all BLE Config settings
     g_bleconfig.registerWifi(CONFIG_WIFI, "WiFi SSID");
 
-    //g_bleconfig.registerString(CONFIG_NAME, "Name", std::string(MYRIADCLOCK_DEFAULTNAME), true);
+    //g_bleconfig.registerString(CONFIG_LOCATION, "Location", std::string(MYRIADCLOCK_DEFAULTLOCATION), true);
 
     BLEConfigItemOption *pconfig = g_bleconfig.registerOption(CONFIG_LAYOUT, "Clock layout", 0);
     pconfig->addOption((uint8_t) 0, "Dutch V2");
@@ -193,20 +185,35 @@ void loop()
     Console::getInstance().tick();    
 
     // Once every x seconds, check the NTP stuff
-    if (Elapsed(g_timestamp) > 1000)
+    uint32_t now = millis();
+    if ((now - g_timestamp) > 1000)
     {                
-        g_timestamp = xTaskGetTickCount();
+        g_timestamp = now;
 
         if (WiFi.status() == WL_CONNECTED)
         {
             if (!g_fNTPStarted)
             {
+                Serial.printf("Connected to: %s\n", WiFi.SSID().c_str());
+                Serial.printf(" - IP address: %s\n", WiFi.localIP().toString().c_str());
+                Serial.printf(" - Gateway: %s\n", WiFi.gatewayIP().toString().c_str());
+                Serial.printf(" - Mask: %s\n", WiFi.subnetMask().toString().c_str());
+
                 g_timeClient.begin();
                 g_fNTPStarted = true;
             }
         }
         else
         {
+            g_timeCounter++;
+            if ((g_timeCounter % 30) == 0)
+            {
+                // Not connected anymore, try to reconnect
+                Serial.printf("WiFi connection lost. Restarting WiFi\n");
+                WiFi.disconnect();
+                WiFi.reconnect();
+            }
+            
             if (g_fNTPStarted)
             {
                 g_timeClient.end();
@@ -216,29 +223,30 @@ void loop()
         
         if (g_fNTPStarted)
         {
-            g_timeClient.update();
-            
-            // Check for 3->4 hour switch
-            // Let Handle-Loop return another state
-            // Convert to local time
-            TimeChangeRule *tcr;    
-            TimeChangeRule utcRule = {"UTC", Last, Sun, Mar, 1, 0};     // UTC
-            Timezone UTC(utcRule);
-            time_t t = UTC.toLocal(g_timeClient.getEpochTime(), &tcr); // (Note: tcr cannot be NULL)
-            int hours = hour(t);
-            int currentYear = year(t);
+            if (g_timeClient.update())
+            {            
+                // Check for 3->4 hour switch
+                // Let Handle-Loop return another state
+                // Convert to local time
+                TimeChangeRule *tcr;    
+                TimeChangeRule utcRule = {"UTC", Last, Sun, Mar, 1, 0};     // UTC
+                Timezone UTC(utcRule);
+                time_t t = UTC.toLocal(g_timeClient.getEpochTime(), &tcr); // (Note: tcr cannot be NULL)
+                int hours = hour(t);
+                int currentYear = year(t);
 
-            if (currentYear > 1970 && g_nPreviousHour != hours)
-            {
-                g_stateManager.setDefaultState(DS_CLOCK);
-            }
+                if (currentYear > 1970 && g_nPreviousHour != hours)
+                {
+                    g_stateManager.setDefaultState(DS_CLOCK);
+                }
 
-            if (hours == 4 && g_nPreviousHour != 4)
-            {
-                // Switch to updating
-                g_stateManager.changeState(DS_UPDATING);
+                if (hours == 4 && g_nPreviousHour != 4)
+                {
+                    // Switch to updating
+                    g_stateManager.changeState(DS_UPDATING);
+                }
+                g_nPreviousHour = hours;
             }
-            g_nPreviousHour = hours;
         }
     }   
 }

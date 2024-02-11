@@ -14,8 +14,8 @@ void DisplayStateWords::Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplayState
     m_nWordIndexTop = 0;
     m_nWordIndexBottom = 0;
     m_nWordIndexDay = 0;
+    m_nLoopCounter = 0;
 }
-
 
 //
 // Loop
@@ -68,6 +68,7 @@ bool DisplayStateWords::HandleLoop(unsigned long epochTime, time_t localTime)
             if (pCurrentWord == NULL)
             {
                 m_nWordIndexTop = 0;
+                m_nLoopCounter++;
                 break;
             }
         } while (pCurrentWord == EMPTY);
@@ -95,5 +96,7 @@ bool DisplayStateWords::HandleLoop(unsigned long epochTime, time_t localTime)
 
         FastLED.show();   
     }
-    return true; // State has no end
+    if (m_nLoopCounter >= 2)
+        return false; // Quit after 2 loops
+    return true;
 }

@@ -17,7 +17,7 @@
 //
 // All configuration items
 #define CONFIG_WIFI                     1
-#define CONFIG_NAME                     2
+#define CONFIG_LOCATION                 2
 #define CONFIG_LAYOUT                   3
 #define CONFIG_TIMEZONE                 5
 #define CONFIG_DAYLIGHTSAVING           6
@@ -93,7 +93,7 @@ protected:
     virtual CRGB ColorHandler(CRGB defaultColor, int brightness, int customParam = 0);
 
     void    AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int brightness, int customParam = 0);
-    void    FillBackground(void);
+    void    FillBackground(const int brightness);
     int16_t CalcLedPos(int8_t x, int8_t y);
     uint32_t Elapsed(uint32_t ts);
 
