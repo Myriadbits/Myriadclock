@@ -206,6 +206,7 @@ static const ledclocklayout_t s_layoutNL_V2 =
         NLV2_holiday,
         NLV2_party,
         NLV2_wakeup,
+        EMPTY,
     },
 
     // 10x number

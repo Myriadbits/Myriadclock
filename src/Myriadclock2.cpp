@@ -34,7 +34,7 @@
 
 #define MYRIADCLOCK_MANUFACTURER    "Myriadbits"
 #define MYRIADCLOCK_MODEL           "Myriadclock"
-#define MYRIADCLOCK_VERSION         "2.0.0"
+#define MYRIADCLOCK_VERSION         "2.1.0"
 #define MYRIADCLOCK_DEFAULTNAME     "Myriadclock"
 #define MYRIADCLOCK_DEFAULTLOCATION "Default room"
 
@@ -157,6 +157,7 @@ void setup()
     pconfig->addOption((uint8_t) UC_NORMAL, "Normal");
     pconfig->addOption((uint8_t) UC_MATRIX, "Matrix");
     pconfig->addOption((uint8_t) UC_ALLWORDS, "All words");
+    pconfig->addOption((uint8_t) UC_ANALOG, "Analog");
 
 
     // Start the BLE Config stuff

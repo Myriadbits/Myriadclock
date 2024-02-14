@@ -12,6 +12,7 @@
 #include "DisplayStateUpdating.h"
 #include "DisplayStatePasscode.h"
 #include "DisplayStateMatrix.h"
+#include "DisplayStateAnalog.h"
 
 #include "ClockLayoutNL_V1.h"
 #include "ClockLayoutNL_V2.h"
@@ -52,6 +53,7 @@ void DisplayStateManager::initialize(CRGB* pLEDs, BLEConfig* pConfig)
     addState(DS_UPDATING, new DisplayStateUpdating());
     addState(DS_PASSCODE, new DisplayStatePasscode());
     addState(DS_MATRIX, new DisplayStateMatrix());
+    addState(DS_ANALOG, new DisplayStateAnalog());
 
     Console::getInstance().add("state", this, "Switch the display state");
     Console::getInstance().add("layout", this, "Switch the layout");
@@ -311,6 +313,10 @@ void DisplayStateManager::onConfigItemChanged(BLEConfigItemBase *pconfigItem)
 
                         case UC_ALLWORDS:
                             changeState(DS_WORDS);
+                            break;
+
+                        case UC_ANALOG:
+                            changeState(DS_ANALOG);
                             break;
 
                         case UC_NORMAL:

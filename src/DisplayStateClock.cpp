@@ -89,14 +89,15 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
         if (m_nPreviousMinute != m_nMinutes)
         {
             // Can be used to check for special dates (not implemented anymore)
-            m_nPreviousMinute = m_nMinutes;
+            m_nPreviousMinute = m_nMinutes;            
         }
+        bool fShowHeart = (monthnum == 1 && monthday == 14);
 
         // TRANSITIONS
 
         // Get the clock words from the convertor
         // The return struct can contain nullptr, those words do not need to be drawn/lit
-        ClockTimeWordConvertor::convert(localTime, &s_layout, &m_sClockWordsNow);
+        ClockTimeWordConvertor::convert(t, &s_layout, &m_sClockWordsNow);
 
         // And now for the LEDS
         FastLED.clear();
@@ -166,6 +167,8 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
             AddWordToLeds(s_layout.extra.birthday, colDefault, brightness, EColorElement::CE_SPECIAL);
         if (m_fShowHoliday)
             AddWordToLeds(s_layout.extra.holiday, colDefault, brightness, EColorElement::CE_SPECIAL);
+        if (fShowHeart)
+            AddWordToLeds(s_layout.extra.heart, CRGB::Red, brightness, EColorElement::CE_UNKNOWN);
 
         // Show/draw all Time related stuff
         AddWordToLeds(m_sClockWordsNow.pToPastWord, colDefault, (m_fToPastInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME); // Note that AddWordToLeds can handle NULL pointers!
