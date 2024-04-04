@@ -17,6 +17,7 @@
 #include "ClockLayoutNL_V1.h"
 #include "ClockLayoutNL_V2.h"
 #include "ClockLayoutEN_V1.h"
+#include "ClockLayoutNL_V3.h"
 
 #define STARTUP_TIME                10000 // X milliseconds startup time (before switching to no-wifi)
 #define TIMEZONE_CHANGED_TIME        5000 // X milliseconds time after switching timezones
@@ -134,6 +135,7 @@ void DisplayStateManager::setLayout(const int nIndex)
     // Get the correct layout
     if (nIndex == 1) playout = const_cast<ledclocklayout_t*>(&s_layoutNL_V1);
     if (nIndex == 2) playout = const_cast<ledclocklayout_t*>(&s_layoutEN_V1);
+    if (nIndex == 3) playout = const_cast<ledclocklayout_t*>(&s_layoutNL_V3);
     
     // Inform all display states of the new layout
     DisplayStateBase::setLayout(playout);    
