@@ -132,6 +132,7 @@ void DisplayStateManager::setLayout(const int nIndex)
     // Get the correct layout
     if (nIndex == 1) playout = const_cast<ledclocklayout_t*>(&s_layoutNL_V1);
     if (nIndex == 2) playout = const_cast<ledclocklayout_t*>(&s_layoutEN_V1);
+    m_isCloxel = (nIndex == 3);
     
     // Inform all display states of the new layout
     DisplayStateBase::setLayout(playout);    

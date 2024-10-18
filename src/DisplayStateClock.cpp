@@ -7,6 +7,8 @@
 #include <time.h>
 #include <Timezone.h>  
 #include "Console.h"
+#include "DisplayStateManager.h"
+#include "FontDrawer.h"
 
 // For now assume home
 #define CLOCK_LATITUDE      52.306772
@@ -98,12 +100,6 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
         // The return struct can contain nullptr, those words do not need to be drawn/lit
         ClockTimeWordConvertor::convert(localTime, &s_layout, &m_sClockWordsNow);
 
-        // And now for the LEDS
-        FastLED.clear();
-
-        // Set the background color (if required)
-        FillBackground(brightnessBackground);
-
         // Determine the brightness
         int brightness = GetBrightness(epochTime);
         if (brightness != m_nPreviousBrightness)
@@ -160,31 +156,57 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
         }
 
         // DRAWING
-  
-        // Show birthdays / holidays
-        if (m_fShowBirthday)
-            AddWordToLeds(s_layout.extra.birthday, colDefault, brightness, EColorElement::CE_SPECIAL);
-        if (m_fShowHoliday)
-            AddWordToLeds(s_layout.extra.holiday, colDefault, brightness, EColorElement::CE_SPECIAL);
 
-        // Show/draw all Time related stuff
-        AddWordToLeds(m_sClockWordsNow.pToPastWord, colDefault, (m_fToPastInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME); // Note that AddWordToLeds can handle NULL pointers!
+        // And now for the LEDS
+        FastLED.clear();
 
-        AddWordToLeds(m_sClockWordsNow.pMinutesMainWord, colDefault, (m_fMinutesMainInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME);
-        AddWordToLeds(m_sClockWordsNow.pMinutesRestWord, colDefault, (m_fMinutesRestInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME);
-        AddWordToLeds(m_sClockWordsNow.pHalfWord, colDefault, (m_fHalfWordInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME);
-        AddWordToLeds(m_sClockWordsNow.pHourWord, colDefault, (m_fHourWordInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME);
+        // Set the background color (if required)
+        FillBackground(brightnessBackground);
 
-        // Display day of the week
-        AddWordToLeds(m_sClockWordsNow.pDayWord, colDefault, brightness, EColorElement::CE_WEEKDAY);
+        if (m_pManager != nullptr && m_pManager->getIsCloxel())
+        {
+            int option = 0;
+            char buff[16];
 
-        // Add the date
-        AddWordToLeds(m_sClockWordsNow.pDayOfMonthWord, colDefault, brightness, EColorElement::CE_DATE);        
-        AddWordToLeds(m_sClockWordsNow.pMonthWord, colDefault, brightness, EColorElement::CE_DATE); 
-        
-        // Second heartbeat fading led
-        AddWordToLeds(m_sClockWordsNow.pSecondLeds, colDefault, brightness, EColorElement::CE_PULSE);
-        
+            if (option == 0)
+            {
+                snprintf(buff, sizeof(buff), "%02d:%02d:%02d", m_nHours, m_nMinutes, m_nSeconds);
+                std::string text = buff;
+                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_48, ETextAlign::TA_MIDTEXT, 0, 0, text, colDefault, brightness);
+            }
+            else
+            {
+                snprintf(buff, sizeof(buff), "%02d:%02d", m_nHours, m_nMinutes);
+                std::string text = buff;
+                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_582, ETextAlign::TA_MIDTEXT, 0, 0, text, colDefault, brightness);
+            }
+        }
+        else
+        {  
+            // Show birthdays / holidays
+            if (m_fShowBirthday)
+                AddWordToLeds(s_layout.extra.birthday, colDefault, brightness, EColorElement::CE_SPECIAL);
+            if (m_fShowHoliday)
+                AddWordToLeds(s_layout.extra.holiday, colDefault, brightness, EColorElement::CE_SPECIAL);
+
+            // Show/draw all Time related stuff
+            AddWordToLeds(m_sClockWordsNow.pToPastWord, colDefault, (m_fToPastInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME); // Note that AddWordToLeds can handle NULL pointers!
+
+            AddWordToLeds(m_sClockWordsNow.pMinutesMainWord, colDefault, (m_fMinutesMainInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME);
+            AddWordToLeds(m_sClockWordsNow.pMinutesRestWord, colDefault, (m_fMinutesRestInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME);
+            AddWordToLeds(m_sClockWordsNow.pHalfWord, colDefault, (m_fHalfWordInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME);
+            AddWordToLeds(m_sClockWordsNow.pHourWord, colDefault, (m_fHourWordInTrans) ? brightnessTransition : brightness, EColorElement::CE_TIME);
+
+            // Display day of the week
+            AddWordToLeds(m_sClockWordsNow.pDayWord, colDefault, brightness, EColorElement::CE_WEEKDAY);
+
+            // Add the date
+            AddWordToLeds(m_sClockWordsNow.pDayOfMonthWord, colDefault, brightness, EColorElement::CE_DATE);        
+            AddWordToLeds(m_sClockWordsNow.pMonthWord, colDefault, brightness, EColorElement::CE_DATE); 
+            
+            // Second heartbeat fading led
+            AddWordToLeds(m_sClockWordsNow.pSecondLeds, colDefault, brightness, EColorElement::CE_PULSE);
+        }            
         FastLED.show();   
     }
     return true;

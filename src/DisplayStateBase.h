@@ -72,6 +72,7 @@ public:
         , m_timeStamp(0)
         , m_pLEDs(NULL)
         , m_pConfig(NULL)
+        , m_pManager(NULL)
     {
     }
 
@@ -80,6 +81,7 @@ public:
         m_pLEDs = pLEDs;
         m_pConfig = pConfig;
         m_timeStamp = millis();
+        m_pManager = pManager;
         log("Initialize");
     };    
 
@@ -108,4 +110,5 @@ protected:
     CRGB*                           m_pLEDs;
     BLEConfig*                      m_pConfig;
     static ledclocklayout_t         s_layout;
+    DisplayStateManager*            m_pManager;
 };

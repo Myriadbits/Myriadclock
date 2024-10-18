@@ -43,6 +43,7 @@ public:
         : m_eCurrentState(DS_NONE)
         , m_eDefaultState(DS_BOOTING)
         , m_bluetoothPasscode(0)
+        , m_isCloxel(false)
     {    
     }
 
@@ -53,6 +54,7 @@ public:
     void    handleLoop(unsigned long epochTime);
 
     uint32_t getBluetoothPasscode() { return m_bluetoothPasscode; }
+    bool    getIsCloxel() { return m_isCloxel; }
 
     // Console Callbacks
     virtual void commandHandler(std::string command, std::vector<std::string> args);
@@ -81,4 +83,5 @@ protected:
     BLEConfig*                      m_pConfig;
     uint32_t                        m_timezoneChangedCountdown;
     static const ledclocklayout_t*  s_pLayout;
+    bool                            m_isCloxel;
 };

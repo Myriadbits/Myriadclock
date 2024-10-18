@@ -88,6 +88,7 @@ void setup()
     pconfig->addOption((uint8_t) 0, "Dutch V2");
     pconfig->addOption((uint8_t) 1, "Dutch V1");
     pconfig->addOption((uint8_t) 2, "English"); 
+    pconfig->addOption((uint8_t) 3, "Cloxel"); 
 
     pconfig = g_bleconfig.registerOption(CONFIG_DAYLIGHTSAVING, "Daylight saving zone", 0);
     pconfig->addOption((uint8_t) 0, "Off"); 

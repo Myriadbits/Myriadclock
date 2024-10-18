@@ -5,6 +5,8 @@
 
 #include "DisplayStateNoWiFi.h"
 #include "MyriadclockConfig.h"
+#include "DisplayStateManager.h"
+#include "FontDrawer.h"
 
 #define UPDATE_SSID_TIME     120000 // Update the SSID list once every x milliseconds
 
@@ -54,25 +56,34 @@ bool DisplayStateNoWiFi::HandleLoop(unsigned long epochTime, time_t localTime)
         if (brightnessDay < 3) // Make sure there is a minimum
             brightnessDay = 3;
 
-        // Show the NoWiFi
-        AddWordToLeds((ledpos_t*) s_layout.extra.no, colNoWiFi, brightnessDay);
-        AddWordToLeds((ledpos_t*) s_layout.extra.wifi, colNoWiFi, brightnessDay);         
-
-        // Show the myriadclock text
-        AddWordToLeds((ledpos_t*) s_layout.extra.myriadclock, colMyriadclock, brightnessDay);   
-
-        // Show the myriadclock text
-        if (m_pConfig->isDeviceConnected())
+        if (m_pManager != nullptr && m_pManager->getIsCloxel())
         {
-            AddWordToLeds((ledpos_t*) s_layout.extra.bluetooth, colBluetooth, brightnessDay);
+            std::string text = "No WiFi";
+            //FontDrawer::getInstance().Draw(m_pLEDs, 0, 0, text, colDefault, brightness);
+            FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_56, ETextAlign::TA_HCENTER, 0, 0, text, colNoWiFi, brightnessDay);
         }
+        else
+        {  
+            // Show the NoWiFi
+            AddWordToLeds((ledpos_t*) s_layout.extra.no, colNoWiFi, brightnessDay);
+            AddWordToLeds((ledpos_t*) s_layout.extra.wifi, colNoWiFi, brightnessDay);         
 
-        // Show the codes
-        //AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colMyriadclock);
-        
-        // Show the version
-        //const ledpos_t* pNumber = s_wordsMonthDays[(FIRMWARE_VERSION - 1) % 31]; 
-        //AddWordToLeds((ledpos_t*) pNumber, colVersion);    
+            // Show the myriadclock text
+            AddWordToLeds((ledpos_t*) s_layout.extra.myriadclock, colMyriadclock, brightnessDay);   
+
+            // Show the myriadclock text
+            if (m_pConfig->isDeviceConnected())
+            {
+                AddWordToLeds((ledpos_t*) s_layout.extra.bluetooth, colBluetooth, brightnessDay);
+            }
+
+            // Show the codes
+            //AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colMyriadclock);
+            
+            // Show the version
+            //const ledpos_t* pNumber = s_wordsMonthDays[(FIRMWARE_VERSION - 1) % 31]; 
+            //AddWordToLeds((ledpos_t*) pNumber, colVersion);    
+        }
 
         FastLED.show();   
     }

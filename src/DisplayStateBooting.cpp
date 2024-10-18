@@ -5,6 +5,8 @@
 
 #include "DisplayStateBooting.h"
 #include "MyriadclockConfig.h"
+#include "DisplayStateManager.h"
+#include "FontDrawer.h"
 
 //
 // Initialize
@@ -29,6 +31,36 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime, time_t localTime)
     if (Elapsed(m_timeStamp) > 25)
     {
         m_timeStamp = millis();
+        
+        
+        int brightness = GetBrightness(epochTime);
+
+        FastLED.clear();
+
+        // Set the background color (if required)
+        int brightnessBackground = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND);
+        FillBackground(brightnessBackground);
+
+        if (m_pManager != nullptr && m_pManager->getIsCloxel())
+        {
+            std::string str = "cloxel";
+            //FontDrawer::getInstance().Draw(m_pLEDs, 0, 0, str, colTop, brightness);
+            FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_56, ETextAlign::TA_HCENTER, 0, 0, str, colTop, brightness);
+        }   
+        else
+        {
+            // Show the myriadclock text
+            AddWordToLeds(s_layout.extra.myriadclock, colTop, brightness);   
+        }
+
+        // Show the codes
+   //     AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colVersion); TODO
+        // Show the version
+        //const ledpos_t* pNumber = s_wordsMonthDays[(FIRMWARE_VERSION - 1) % 31]; 
+        //AddWordToLeds((ledpos_t*) pNumber, colVersion);    
+
+        FastLED.show();   
+
         m_nCounter += m_nDir * 8;
         if (m_nCounter > 255) 
         {
@@ -41,25 +73,6 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime, time_t localTime)
             m_nDir *= -1;
             m_nCycleCounter++;
         }
-        
-        int brightness = GetBrightness(epochTime);
-
-        FastLED.clear();
-
-        // Set the background color (if required)
-        int brightnessBackground = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND);
-        FillBackground(brightnessBackground);
-
-        // Show the myriadclock text
-        AddWordToLeds(s_layout.extra.myriadclock, colTop, brightness);   
-
-        // Show the codes
-   //     AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colVersion); TODO
-        // Show the version
-        //const ledpos_t* pNumber = s_wordsMonthDays[(FIRMWARE_VERSION - 1) % 31]; 
-        //AddWordToLeds((ledpos_t*) pNumber, colVersion);    
-
-        FastLED.show();   
     }
 
     return (m_nCycleCounter < 4);
