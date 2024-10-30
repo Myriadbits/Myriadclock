@@ -36,6 +36,8 @@
 
 #define CONFIG_COMMAND                  42
 
+//#define CONFIG_CLOXELOPTIONS            50
+
 
 enum EDisplayOptions
 {
@@ -97,6 +99,7 @@ protected:
     void    AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int brightness, int customParam = 0);
     void    FillBackground(const int brightness);
     int16_t CalcLedPos(int8_t x, int8_t y);
+    int16_t CloxelLedPos(int8_t x, int8_t y);
     uint32_t Elapsed(uint32_t ts);
 
     void    log(const char* format, ...);

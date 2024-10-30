@@ -6,97 +6,16 @@
 #include "FontDrawer.h"
 #include "MyriadclockConfig.h"
 #include "esp.h"
-#include "Fonts.h"
 #include <FastLED.h>
 #include "Myriadbitsfont5x6_3.h"
 #include "Myriadbitsfont5x8_3.h"
-#include "GFXHighFont4x8.h"
+#include "HighFont4x8.h"
+#include "HighFont4x6.h"
 
 using namespace std;
 
 #define NUM_COLS 32
 #define NUM_ROWS 8
-
-#include "Fonts.cpp"
-
-//
-// @brief  Draw a character on the LED panel
-//
-void FontDrawer::Draw(CRGB *pLEDs, int x, int y, std::string text, CRGB color, int brightness)
-{
-    int offset = x;
-    uint8_t* pFont = CrystalFontz5x8;
-    uint8_t fontWidth = pFont[2];
-    uint8_t fontHeight = pFont[3];
-    uint8_t firstChar = pFont[4];
-    uint8_t charCount = pFont[5];
-
-    CRGB colorBrightness = color.fadeLightBy(255 - brightness);
-
-    int sizeX = CalculateWidth(pFont, text);
-    int posX = (NUM_COLS - sizeX) / 2;
-    for(char ch: text)
-    {
-        if (ch >= firstChar && ch < firstChar + charCount)
-        {
-            int dataIndex = ((int)(ch - firstChar) * fontWidth) + 6;
-            for(int offsetX = 0; offsetX < fontWidth; offsetX++)
-            {
-                uint8_t fontColData = pFont[dataIndex + offsetX];
-                uint8_t mask = 0x01;
-                if (fontColData == 0x00 && ch != 32)
-                    continue;
-
-                for(int offsetY = fontHeight - 1; offsetY >= 0; offsetY--)
-                {                    
-                    if ((fontColData & mask) == mask)
-                    {
-                        pLEDs[LedPos(posX, offsetY)] = colorBrightness;
-                    }
-                    else
-                    {
-                        //pLEDs[LedPos(x, offsetY)] = 0x000030;
-                    }
-                    mask = mask << 0x01;
-                }
-                posX++;
-            }
-            posX++;
-        }
-    }
-}
-
-/// @brief Calculate the length of a piece of text in pixels
-/// @param pFont 
-/// @param text 
-/// @return 
-int FontDrawer::CalculateWidth(uint8_t* pFont, std::string text)
-{
-    int offset = 0;
-    uint8_t fontWidth = pFont[2];
-    uint8_t fontHeight = pFont[3];
-    uint8_t firstChar = pFont[4];
-    uint8_t charCount = pFont[5];
-
-    int x = 0;
-    for(char ch: text)
-    {
-        if (ch >= firstChar && ch < firstChar + charCount)
-        {
-            int dataIndex = ((int)(ch - firstChar) * fontWidth) + 6;
-            for(int offsetX = 0; offsetX < fontWidth; offsetX++)
-            {
-                uint8_t fontColData = pFont[dataIndex + offsetX];
-                uint8_t mask = 0x01;
-                if (fontColData == 0x00 && ch != 32)
-                    continue;                
-                x++;
-            }
-            x++;
-        }
-    }
-    return x - 1;
-}
 
 //
 // @brief  Draw a character on the LED panel
@@ -107,23 +26,35 @@ void FontDrawer::DrawGFX(CRGB *pLEDs, EFontType fontType, ETextAlign align, int 
     switch (fontType)
     {
         case EFontType::FT_56: pFont = &JochemFont56; break;
-        case EFontType::FT_48: pFont = &Highfont4x8; break;
+        case EFontType::FT_HIGHFONT48: pFont = &Highfont4x8; break;
+        case EFontType::FT_HIGHFONT46: pFont = &Highfont4x6; break;
         case EFontType::FT_582: pFont = &JochemFont58; break;
     }
     if (pFont == NULL)
         return;
 
     int posX = 0;
+    int posY = 0;
 
-    if (align == ETextAlign::TA_HCENTER)
+    if ((align & ETextAlign::TA_HCENTER) != 0)
     {
         int sizeX = CalculateGFXWidth(pFont, text);
         posX = (NUM_COLS - sizeX) / 2;
     }
-    if (align == ETextAlign::TA_MIDTEXT)
+    if ((align & ETextAlign::TA_VCENTER) != 0)
+    {
+        int sizeY = pFont->glyph->height;
+        posY = (NUM_ROWS - sizeY) / 2;
+    }
+    if ((align & ETextAlign::TA_MIDTEXT) != 0)
     {
         int len = text.length();
         int sizeX = CalculateGFXWidth(pFont, text.substr(0, len/2));
+        if ((len % 2) != 0)
+        {
+            // Uneven characters, so add half of the width of the center character
+            sizeX += CalculateGFXWidth(pFont, text.substr(len/2 + 1, 1)) / 2;
+        }
         posX = (NUM_COLS / 2) - sizeX;
     }
 
@@ -154,7 +85,7 @@ void FontDrawer::DrawGFX(CRGB *pLEDs, EFontType fontType, ETextAlign align, int 
                     }
                     if (bits & bit)
                     {
-                        pLEDs[LedPos(posX + xx, y + yy)] = colorBrightness;
+                        pLEDs[LedPos(posX + xx, posY + y + yy)] = colorBrightness;
                     }
                     bit = bit >> 1;
                 }

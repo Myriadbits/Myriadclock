@@ -37,6 +37,16 @@ int16_t DisplayStateBase::CalcLedPos(int8_t x, int8_t y)
         return x + (y * NUM_COLS); 
 }
 
+int16_t DisplayStateBase::CloxelLedPos(int8_t x, int8_t y)
+{
+    int pos = 0;
+    if ((x % 2) == 0)
+        pos = y + (x * 8); 
+    else
+        pos = (8 - y - 1) + (x * 8); 
+    return (pos % (32 * 8));
+}
+
 //
 // Set the clock layout
 void DisplayStateBase::setLayout(const ledclocklayout_t *layout) 
@@ -184,7 +194,7 @@ int DisplayStateBase::GetBrightness(unsigned long epochTime)
     else if (epochTime >= sunset && epochTime < sunset + deltaTime)
     {
         // Evening Twilight
-        brightness = brightnessNight - ((epochTime - sunset) * brightnessDiff) / deltaTime;
+        brightness = brightnessDay - ((epochTime - sunset) * brightnessDiff) / deltaTime;
     }    
     return brightness;
 }

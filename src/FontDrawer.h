@@ -15,17 +15,23 @@ enum EFontType
 {
     FT_UNKNOWN,
     FT_56,
-    FT_48,
+    FT_HIGHFONT48, // High font
+    FT_HIGHFONT46, // High font small
     FT_582
 };
 
-
 enum ETextAlign
 {
-    TA_UNKNOWN,
-    TA_HCENTER,
-    TA_MIDTEXT,
+    TA_UNKNOWN = 0x00,
+    TA_HCENTER = 0x01,
+    TA_VCENTER = 0x02,
+    TA_MIDTEXT = 0x04,
 };
+
+inline ETextAlign operator|(ETextAlign a, ETextAlign b)
+{
+    return static_cast<ETextAlign>(static_cast<int>(a) | static_cast<int>(b));
+}
 
 ///////////////////////////////////////////////////////////////////////////////
 // Console class
@@ -47,12 +53,10 @@ class FontDrawer
             return instance;
         }
 
-        void Draw(CRGB *pLEDs, int x, int y, std::string text, CRGB color, int brightness);
         void DrawGFX(CRGB *pLEDs, EFontType fontType, ETextAlign align, int x, int y, std::string text, CRGB color, int brightness);
         void log(const char* format, ...);
 
     private:
-        int CalculateWidth(uint8_t* pFont, std::string text);
         int CalculateGFXWidth(const GFXfont* font, std::string text);
         int16_t LedPos(int8_t x, int8_t y);        
 };

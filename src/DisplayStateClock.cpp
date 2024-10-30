@@ -10,6 +10,8 @@
 #include "DisplayStateManager.h"
 #include "FontDrawer.h"
 
+using namespace std;
+
 // For now assume home
 #define CLOCK_LATITUDE      52.306772
 #define CLOCK_LONGITUDE     5.618550
@@ -168,17 +170,50 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
             int option = 0;
             char buff[16];
 
-            if (option == 0)
+            int cloxelOptions = 0;
+            if (m_pConfig != NULL) 
+            {
+                cloxelOptions = 3;//m_pConfig->getConfigValue(CONFIG_CLOXELOPTIONS);
+            }
+
+            const char* daysOfWeek[] = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
+            string weekdayText = string(daysOfWeek[m_nWeekDay % 7]);
+
+            if (cloxelOptions == 0)
+            {
+                snprintf(buff, sizeof(buff), "%s %02d:%02d", weekdayText.c_str(), m_nHours, m_nMinutes);
+                std::string text = buff;
+                // TODO use the colorhandlers in drawing the text!
+                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_HIGHFONT48, ETextAlign::TA_MIDTEXT | ETextAlign::TA_VCENTER, 0, 0, text, colDefault, brightness);
+            }
+            else if (cloxelOptions == 1)
+            {
+                snprintf(buff, sizeof(buff), "%s %02d:%02d", weekdayText.c_str(), m_nHours, m_nMinutes);
+                std::string text = buff;
+                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_HIGHFONT46, ETextAlign::TA_MIDTEXT | ETextAlign::TA_VCENTER, 0, 0, text, colDefault, brightness);
+            }
+            else if (cloxelOptions == 2)
             {
                 snprintf(buff, sizeof(buff), "%02d:%02d:%02d", m_nHours, m_nMinutes, m_nSeconds);
                 std::string text = buff;
-                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_48, ETextAlign::TA_MIDTEXT, 0, 0, text, colDefault, brightness);
+                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_HIGHFONT46, ETextAlign::TA_MIDTEXT | ETextAlign::TA_VCENTER, 0, 0, text, colDefault, brightness);
             }
-            else
+            else if (cloxelOptions == 3)
             {
                 snprintf(buff, sizeof(buff), "%02d:%02d", m_nHours, m_nMinutes);
                 std::string text = buff;
-                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_582, ETextAlign::TA_MIDTEXT, 0, 0, text, colDefault, brightness);
+                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_HIGHFONT46, ETextAlign::TA_MIDTEXT | ETextAlign::TA_VCENTER, 0, 0, text, colDefault, brightness);
+                CRGB colSeconds = ColorHandler(colDefault, brightness, EColorElement::CE_PULSE);
+                if (m_nSeconds >= 0 && m_nSeconds <= 12)
+                    m_pLEDs[CloxelLedPos(16 + m_nSeconds - 1, 0)] = colSeconds;
+                else if (m_nSeconds > 12 && m_nSeconds <= 19)
+                    m_pLEDs[CloxelLedPos(16 + 11, 1 + (m_nSeconds - 13))] = colSeconds;
+                else if (m_nSeconds > 19 && m_nSeconds <= 42)
+                    m_pLEDs[CloxelLedPos(16 + 10 - (m_nSeconds - 20), 7)] = colSeconds;
+                else if (m_nSeconds > 42 && m_nSeconds <= 49)
+                    m_pLEDs[CloxelLedPos(16 - 12, 6 - (m_nSeconds - 43))] = colSeconds;
+                else if (m_nSeconds > 49 && m_nSeconds < 60)
+                    m_pLEDs[CloxelLedPos(16 - 12 + (m_nSeconds - 49), 0)] = colSeconds;
             }
         }
         else
