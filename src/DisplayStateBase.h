@@ -57,6 +57,7 @@ enum EUserCommands
     UC_NORMAL,              // Show normal clock
     UC_MATRIX,              // Show the matrix (fixed time)
     UC_ALLWORDS,            // Show all words (fixed time)
+    UC_ANALOG,              // Show analog clock
 };
 
 // Forward class definition

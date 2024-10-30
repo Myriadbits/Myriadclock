@@ -12,10 +12,12 @@
 #include "DisplayStateUpdating.h"
 #include "DisplayStatePasscode.h"
 #include "DisplayStateMatrix.h"
+#include "DisplayStateAnalog.h"
 
 #include "ClockLayoutNL_V1.h"
 #include "ClockLayoutNL_V2.h"
 #include "ClockLayoutEN_V1.h"
+#include "ClockLayoutNL_V3.h"
 
 #define STARTUP_TIME                10000 // X milliseconds startup time (before switching to no-wifi)
 #define TIMEZONE_CHANGED_TIME        5000 // X milliseconds time after switching timezones
@@ -52,6 +54,7 @@ void DisplayStateManager::initialize(CRGB* pLEDs, BLEConfig* pConfig)
     addState(DS_UPDATING, new DisplayStateUpdating());
     addState(DS_PASSCODE, new DisplayStatePasscode());
     addState(DS_MATRIX, new DisplayStateMatrix());
+    addState(DS_ANALOG, new DisplayStateAnalog());
 
     Console::getInstance().add("state", this, "Switch the display state");
     Console::getInstance().add("layout", this, "Switch the layout");
@@ -132,7 +135,8 @@ void DisplayStateManager::setLayout(const int nIndex)
     // Get the correct layout
     if (nIndex == 1) playout = const_cast<ledclocklayout_t*>(&s_layoutNL_V1);
     if (nIndex == 2) playout = const_cast<ledclocklayout_t*>(&s_layoutEN_V1);
-    m_isCloxel = (nIndex == 3);
+    if (nIndex == 3) playout = const_cast<ledclocklayout_t*>(&s_layoutNL_V3);
+    m_isCloxel = (nIndex == 4);
     
     // Inform all display states of the new layout
     DisplayStateBase::setLayout(playout);    
@@ -312,6 +316,10 @@ void DisplayStateManager::onConfigItemChanged(BLEConfigItemBase *pconfigItem)
 
                         case UC_ALLWORDS:
                             changeState(DS_WORDS);
+                            break;
+
+                        case UC_ANALOG:
+                            changeState(DS_ANALOG);
                             break;
 
                         case UC_NORMAL:

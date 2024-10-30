@@ -96,7 +96,8 @@ typedef struct {
     const ledpos_t *birthday;
     const ledpos_t *holiday;
     const ledpos_t *party;
-    const ledpos_t *wakeup;    
+    const ledpos_t *wakeup;
+    const ledpos_t *heart;
 } ledextra_t;
 
 // empty led position

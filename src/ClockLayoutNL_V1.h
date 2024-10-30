@@ -210,6 +210,7 @@ static const ledclocklayout_t s_layoutNL_V1 =
         NLV1_flag,
         NLV1_flag,
         EMPTY,
+        NLV1_heart,
     },
 
     // 10x number

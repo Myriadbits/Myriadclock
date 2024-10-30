@@ -3,12 +3,12 @@
 #include "DisplayStateBase.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Show the matrix animation
+// Show analog clock :)
 ///////////////////////////////////////////////////////////////////////////////
-class DisplayStateMatrix : public DisplayStateBase
+class DisplayStateAnalog : public DisplayStateBase
 {
 public:
-    DisplayStateMatrix() : DisplayStateBase("matrix") 
+    DisplayStateAnalog() : DisplayStateBase("analog") 
     {
     }
 
@@ -16,13 +16,8 @@ public:
     virtual bool HandleLoop(unsigned long epochTime, time_t localTime);  
 
 private:
-    uint8_t     m_introPos[NUM_COLS];
-    uint8_t     m_introLen[NUM_COLS];
-    uint8_t     m_animationStep = 100; // 1 step = x ms
-    uint32_t    m_maxTotalTime = 0;
-    uint32_t    m_totalTime = 0;
-
     uint8_t       m_nWordIndexTop;
     uint8_t       m_nWordIndexBottom;
     uint8_t       m_nWordIndexDay;
+    uint8_t       m_nLoopCounter;
 };

@@ -34,7 +34,7 @@
 
 #define MYRIADCLOCK_MANUFACTURER    "Myriadbits"
 #define MYRIADCLOCK_MODEL           "Myriadclock"
-#define MYRIADCLOCK_VERSION         "2.0.0"
+#define MYRIADCLOCK_VERSION         "2.1.0"
 #define MYRIADCLOCK_DEFAULTNAME     "Myriadclock"
 #define MYRIADCLOCK_DEFAULTLOCATION "Default room"
 
@@ -88,7 +88,8 @@ void setup()
     pconfig->addOption((uint8_t) 0, "Dutch V2");
     pconfig->addOption((uint8_t) 1, "Dutch V1");
     pconfig->addOption((uint8_t) 2, "English"); 
-    pconfig->addOption((uint8_t) 3, "Cloxel"); 
+    pconfig->addOption((uint8_t) 3, "Dutch full weekdays & months");
+    pconfig->addOption((uint8_t) 4, "Cloxel"); 
 
     pconfig = g_bleconfig.registerOption(CONFIG_DAYLIGHTSAVING, "Daylight saving zone", 0);
     pconfig->addOption((uint8_t) 0, "Off"); 
@@ -158,6 +159,7 @@ void setup()
     pconfig->addOption((uint8_t) UC_NORMAL, "Normal");
     pconfig->addOption((uint8_t) UC_MATRIX, "Matrix");
     pconfig->addOption((uint8_t) UC_ALLWORDS, "All words");
+    pconfig->addOption((uint8_t) UC_ANALOG, "Analog");
 
     // pconfig = g_bleconfig.registerOption(CONFIG_CLOXELOPTIONS, "Cloxel options", 0);
     // pconfig->addOption((uint8_t) 0, "Date & time highfont"); 
