@@ -483,7 +483,7 @@
                 ]
             },
             "defines": [
-                "PLATFORMIO=60114",
+                "PLATFORMIO=60116",
                 "ARDUINO_LOLIN_D32",
                 "CONFIG_LWIP_TCP_OVERSIZE_QUARTER_MSS",
                 "HAVE_CONFIG_H",
