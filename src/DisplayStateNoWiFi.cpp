@@ -6,7 +6,6 @@
 #include "DisplayStateNoWiFi.h"
 #include "MyriadclockConfig.h"
 #include "DisplayStateManager.h"
-#include "FontDrawer.h"
 
 #define UPDATE_SSID_TIME     120000 // Update the SSID list once every x milliseconds
 
@@ -60,7 +59,8 @@ bool DisplayStateNoWiFi::HandleLoop(unsigned long epochTime, time_t localTime)
         {
             std::string text = "No WiFi";
             //FontDrawer::getInstance().Draw(m_pLEDs, 0, 0, text, colDefault, brightness);
-            FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_56, ETextAlign::TA_HCENTER, 0, 0, text, colNoWiFi, brightnessDay);
+            CRGB colCloxel = colNoWiFi.fadeLightBy(255 - brightnessDay);
+            DrawGFX(m_pLEDs, EFontType::FT_56, ETextAlign::TA_HCENTER, 0, 0, text, colCloxel);
         }
         else
         {  

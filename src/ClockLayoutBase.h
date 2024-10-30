@@ -33,7 +33,6 @@ typedef struct {
     int8_t   y; // Y-Pos or Row
 } ledpos_t;
 
-
 typedef struct {
     const ledpos_t  *leds; // Indices of leds to light up
     const char      *text; // Description
@@ -44,6 +43,12 @@ enum ETimeFormat
     TF_NL_5MIN,      // Dutch, 5, 10, quarter, to, past + 4 separate minute dots. i.e. "vijf voor half tien" with 2 dots indicating actual "3 voor half 10"
     TF_NL_EVERYMIN,  // Dutch, Every minute a single word, one, two, three, etc. i.e. "dertien voor half tien"
     TF_EN_5MIN       // English, 5, 10, quarter, 20, 25 to/past "twenty-five past ten"
+};
+
+enum EOrientation
+{
+    O_NORMAL,        // Normal orientation
+    O_ROTATED,       // Rotated display (90 degrees)
 };
 
 // Definitions for times text
@@ -106,6 +111,11 @@ static const ledpos_t EMPTY[] = { WEND};
 // Definitions for extra words
 typedef struct 
 {
+    const int           columns;
+    const int           rows;
+    const int           numLeds;
+    const EOrientation  orientation;
+    const bool          pixelDisplay;
     const ETimeFormat   timeFormat;
     const ledtime_t     time;
     const ledpos_t*     hours[12];

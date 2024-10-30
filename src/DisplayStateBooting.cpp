@@ -6,7 +6,6 @@
 #include "DisplayStateBooting.h"
 #include "MyriadclockConfig.h"
 #include "DisplayStateManager.h"
-#include "FontDrawer.h"
 
 //
 // Initialize
@@ -44,8 +43,8 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime, time_t localTime)
         if (m_pManager != nullptr && m_pManager->getIsCloxel())
         {
             std::string str = "CLOXEL";
-            //FontDrawer::getInstance().Draw(m_pLEDs, 0, 0, str, colTop, brightness);
-            FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_56, ETextAlign::TA_HCENTER | ETextAlign::TA_VCENTER, 0, 0, str, colTop, brightness);
+            CRGB colCloxel = colTop.fadeLightBy(255 - brightness);
+            DrawGFX(m_pLEDs, EFontType::FT_56, ETextAlign::TA_HCENTER | ETextAlign::TA_VCENTER, 0, 0, str, colCloxel);
         }   
         else
         {

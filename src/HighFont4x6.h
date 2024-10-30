@@ -34,6 +34,7 @@ const uint8_t Highfont4x6Bitmaps[] PROGMEM = {
 	0x00};
 
 const GFXglyph Highfont4x6Glyphs[] PROGMEM = {
+    { 0, 0, 6, 3, 0, -4 },  // 0x20 ' '
 	{ 0, 1, 6, 2, 0, -4 },  // 0x21 '!'
 	{ 1, 3, 6, 4, 0, -4 },  // 0x22 '"'
 	{ 4, 4, 6, 5, 0, -4 },  // 0x23 '#'
@@ -132,5 +133,5 @@ const GFXglyph Highfont4x6Glyphs[] PROGMEM = {
 const GFXfont Highfont4x6 PROGMEM = {
 	(uint8_t*)Highfont4x6Bitmaps,
 	(GFXglyph*)Highfont4x6Glyphs,
-	0x21, 0x7E, 6 };
+	0x20, 0x7E, 6 };
 

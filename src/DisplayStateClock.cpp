@@ -8,7 +8,6 @@
 #include <Timezone.h>  
 #include "Console.h"
 #include "DisplayStateManager.h"
-#include "FontDrawer.h"
 
 using namespace std;
 
@@ -180,41 +179,47 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
             const char* daysOfWeek[] = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };
             string weekdayText = string(daysOfWeek[m_nWeekDay % 7]);
 
-            if (cloxelOptions == 0)
+            CRGB rgbTime = ColorHandler(colDefault, brightness, EColorElement::CE_TIME);
+            if (cloxelOptions == 0 || cloxelOptions == 1)
             {
-                snprintf(buff, sizeof(buff), "%s %02d:%02d", weekdayText.c_str(), m_nHours, m_nMinutes);
+                EFontType ft = (cloxelOptions == 1) ? EFontType::FT_HIGHFONT46 : EFontType::FT_HIGHFONT48;
+
+                string displayWeekDay = weekdayText;
+                if (((m_nSeconds / 5) % 2) == 0)
+                {
+                    snprintf(buff, sizeof(buff), "%d", monthday);
+                    displayWeekDay = buff;
+                }
+
+                CRGB rgbWeekDay = ColorHandler(colDefault, brightness, EColorElement::CE_WEEKDAY);
+                DrawGFX(m_pLEDs, ft, ETextAlign::TA_VCENTER, 1, 0, displayWeekDay.c_str(), rgbWeekDay);
+
+                snprintf(buff, sizeof(buff), "%02d:%02d", m_nHours, m_nMinutes);
                 std::string text = buff;
-                // TODO use the colorhandlers in drawing the text!
-                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_HIGHFONT48, ETextAlign::TA_MIDTEXT | ETextAlign::TA_VCENTER, 0, 0, text, colDefault, brightness);
-            }
-            else if (cloxelOptions == 1)
-            {
-                snprintf(buff, sizeof(buff), "%s %02d:%02d", weekdayText.c_str(), m_nHours, m_nMinutes);
-                std::string text = buff;
-                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_HIGHFONT46, ETextAlign::TA_MIDTEXT | ETextAlign::TA_VCENTER, 0, 0, text, colDefault, brightness);
+                DrawGFX(m_pLEDs, ft, ETextAlign::TA_VCENTER | ETextAlign::TA_END, 1, 0, text, rgbTime);
             }
             else if (cloxelOptions == 2)
             {
                 snprintf(buff, sizeof(buff), "%02d:%02d:%02d", m_nHours, m_nMinutes, m_nSeconds);
                 std::string text = buff;
-                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_HIGHFONT46, ETextAlign::TA_MIDTEXT | ETextAlign::TA_VCENTER, 0, 0, text, colDefault, brightness);
+                DrawGFX(m_pLEDs, EFontType::FT_HIGHFONT46, ETextAlign::TA_MIDTEXT | ETextAlign::TA_VCENTER, 0, 0, text, rgbTime);
             }
             else if (cloxelOptions == 3)
             {
                 snprintf(buff, sizeof(buff), "%02d:%02d", m_nHours, m_nMinutes);
                 std::string text = buff;
-                FontDrawer::getInstance().DrawGFX(m_pLEDs, EFontType::FT_HIGHFONT46, ETextAlign::TA_MIDTEXT | ETextAlign::TA_VCENTER, 0, 0, text, colDefault, brightness);
+                DrawGFX(m_pLEDs, EFontType::FT_HIGHFONT46, ETextAlign::TA_MIDTEXT | ETextAlign::TA_VCENTER, 0, 0, text, rgbTime);
                 CRGB colSeconds = ColorHandler(colDefault, brightness, EColorElement::CE_PULSE);
                 if (m_nSeconds >= 0 && m_nSeconds <= 12)
-                    m_pLEDs[CloxelLedPos(16 + m_nSeconds - 1, 0)] = colSeconds;
+                    m_pLEDs[CalcLedPos(16 + m_nSeconds - 1, 0)] = colSeconds;
                 else if (m_nSeconds > 12 && m_nSeconds <= 19)
-                    m_pLEDs[CloxelLedPos(16 + 11, 1 + (m_nSeconds - 13))] = colSeconds;
+                    m_pLEDs[CalcLedPos(16 + 11, 1 + (m_nSeconds - 13))] = colSeconds;
                 else if (m_nSeconds > 19 && m_nSeconds <= 42)
-                    m_pLEDs[CloxelLedPos(16 + 10 - (m_nSeconds - 20), 7)] = colSeconds;
+                    m_pLEDs[CalcLedPos(16 + 10 - (m_nSeconds - 20), 7)] = colSeconds;
                 else if (m_nSeconds > 42 && m_nSeconds <= 49)
-                    m_pLEDs[CloxelLedPos(16 - 12, 6 - (m_nSeconds - 43))] = colSeconds;
+                    m_pLEDs[CalcLedPos(16 - 12, 6 - (m_nSeconds - 43))] = colSeconds;
                 else if (m_nSeconds > 49 && m_nSeconds < 60)
-                    m_pLEDs[CloxelLedPos(16 - 12 + (m_nSeconds - 49), 0)] = colSeconds;
+                    m_pLEDs[CalcLedPos(16 - 12 + (m_nSeconds - 49), 0)] = colSeconds;
             }
         }
         else

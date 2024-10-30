@@ -43,6 +43,7 @@
 #define DATA_PIN                13      // Connected to the data pin of the first LED strip
 #define RECEIVER_PIN            22      // RXB6 input pin
 #define TYPE_PIN                17      // Pin for determining the type of the board
+#define NUM_LEDS                256
 
 using namespace std;
 

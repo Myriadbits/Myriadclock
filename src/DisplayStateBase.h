@@ -3,10 +3,10 @@
 #define FASTLED_INTERNAL
 #include "FastLED.h"            // Fastled library to control the LEDs
 #include "Console.h"
-#include "ClockLayoutNL_V1.h"
-#include "ClockLayoutNL_V2.h"
+#include "ClockLayoutBase.h"
 #include <Timezone.h>
 #include "../lib/BLEConfig/include/BLEConfig.h"
+#include "FontsBase.h"
 
 #define MAXCOMMANDLEN               16
 #define MAXCOMMANDDESCRIPTIONLEN    80
@@ -60,6 +60,29 @@ enum EUserCommands
     UC_ANALOG,              // Show analog clock
 };
 
+enum EFontType
+{
+    FT_UNKNOWN,
+    FT_56,
+    FT_HIGHFONT48, // High font
+    FT_HIGHFONT46, // High font small
+    FT_582
+};
+
+enum ETextAlign
+{
+    TA_UNKNOWN = 0x00,
+    TA_HCENTER = 0x01,
+    TA_VCENTER = 0x02,
+    TA_MIDTEXT = 0x04,
+    TA_END = 0x08, // Align to the right/end side
+};
+
+inline ETextAlign operator|(ETextAlign a, ETextAlign b)
+{
+    return static_cast<ETextAlign>(static_cast<int>(a) | static_cast<int>(b));
+}
+
 // Forward class definition
 class DisplayStateManager;
 
@@ -97,10 +120,11 @@ public:
 protected:
     virtual CRGB ColorHandler(CRGB defaultColor, int brightness, int customParam = 0);
 
-    void    AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int brightness, int customParam = 0);
+    void    AddWordToLeds(const ledpos_t* pCurrentWord, CRGB defaultColor, int brightness, int customParam = 0);    
     void    FillBackground(const int brightness);
+    void    DrawGFX(CRGB *pLEDs, EFontType fontType, ETextAlign align, int x, int y, std::string text, CRGB color);
+    int     CalculateGFXWidth(const GFXfont* font, std::string text);
     int16_t CalcLedPos(int8_t x, int8_t y);
-    int16_t CloxelLedPos(int8_t x, int8_t y);
     uint32_t Elapsed(uint32_t ts);
 
     void    log(const char* format, ...);

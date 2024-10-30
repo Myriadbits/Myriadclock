@@ -24,11 +24,6 @@
 
 #include "ClockLayoutBase.h"
 
-// How many leds are connected?
-#define NUM_LEDS    256
-#define NUM_ROWS    16
-#define NUM_COLS    16
-
 //
 // Clocklayout 3 includes full weekdays + month-names
 //
@@ -159,6 +154,12 @@ static const ledpos_t NLV3_goodmorning [] = { WEND};
 //
 static const ledclocklayout_t s_layoutNL_V3 = 
 {
+    16,
+    16,
+    256,
+    O_NORMAL,
+    false,
+
     // Time display method
     TF_NL_5MIN,
 
