@@ -161,11 +161,11 @@ void setup()
     pconfig->addOption((uint8_t) UC_ALLWORDS, "All words");
     pconfig->addOption((uint8_t) UC_ANALOG, "Analog");
 
-    // pconfig = g_bleconfig.registerOption(CONFIG_CLOXELOPTIONS, "Cloxel options", 0);
-    // pconfig->addOption((uint8_t) 0, "Date & time highfont"); 
-    // pconfig->addOption((uint8_t) 1, "Date & time"); 
-    // pconfig->addOption((uint8_t) 2, "Time & seconds"); 
-    // pconfig->addOption((uint8_t) 3, "Date & time & second block"); 
+    pconfig = g_bleconfig.registerOption(CONFIG_OPTIONS_CLOXEL, "Cloxel options", 0);
+    pconfig->addOption((uint8_t) 0, "Date & time highfont"); 
+    pconfig->addOption((uint8_t) 1, "Date & time"); 
+    pconfig->addOption((uint8_t) 2, "Time & seconds"); 
+    pconfig->addOption((uint8_t) 3, "Date & time & second block"); 
 
     // Start the BLE Config stuff
     // This will also load all previously stored settings

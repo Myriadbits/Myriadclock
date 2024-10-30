@@ -174,7 +174,7 @@ bool DisplayStateClock::HandleLoop(unsigned long epochTime, time_t localTime)
             int cloxelOptions = 0;
             if (m_pConfig != NULL) 
             {
-                cloxelOptions = 3;//m_pConfig->getConfigValue(CONFIG_CLOXELOPTIONS);
+                cloxelOptions = m_pConfig->getConfigValue(CONFIG_OPTIONS_CLOXEL);
             }
 
             const char* daysOfWeek[] = { "Su", "Mo", "Tu", "We", "Th", "Fr", "Sa" };

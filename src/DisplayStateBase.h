@@ -33,10 +33,10 @@
 #define CONFIG_OPTIONS_TIME             20
 #define CONFIG_OPTIONS_WEEKDAY          21
 #define CONFIG_OPTIONS_DATE             22
+#define CONFIG_OPTIONS_CLOXEL           23
 
 #define CONFIG_COMMAND                  42
 
-//#define CONFIG_CLOXELOPTIONS            50
 
 
 enum EDisplayOptions
