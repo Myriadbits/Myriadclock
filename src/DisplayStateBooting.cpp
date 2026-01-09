@@ -5,6 +5,7 @@
 
 #include "DisplayStateBooting.h"
 #include "MyriadclockConfig.h"
+#include "DisplayStateManager.h"
 
 //
 // Initialize
@@ -52,8 +53,17 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime, time_t localTime)
         int brightnessBackground = m_pConfig->getConfigValue(CONFIG_BRIGHTNESS_BACKGROUND);
         FillBackground(brightnessBackground);
 
-        // Show the myriadclock text
-        AddWordToLeds(s_layout.extra.myriadclock, colTop, brightness);   
+        if (m_pManager != nullptr && m_pManager->getIsCloxel())
+        {
+            std::string str = "CLOXEL";
+            CRGB colCloxel = colTop.fadeLightBy(255 - brightness);
+            DrawGFX(m_pLEDs, EFontType::FT_56, ETextAlign::TA_HCENTER | ETextAlign::TA_VCENTER, 0, 0, str, colCloxel);
+        }   
+        else
+        {
+            // Show the myriadclock text
+            AddWordToLeds(s_layout.extra.myriadclock, colTop, brightness);   
+        }
         AddWordToLeds(s_layout.extra.word, colWord, brightness);   
 
         // Show the codes
@@ -63,6 +73,19 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime, time_t localTime)
         //AddWordToLeds((ledpos_t*) pNumber, colVersion);    
 
         FastLED.show();   
+
+        m_nCounter += m_nDir * 8;
+        if (m_nCounter > 255) 
+        {
+            m_nCounter = 255;
+            m_nDir *= -1;
+        }
+        if (m_nCounter < 0)
+        {
+            m_nCounter = 0;
+            m_nDir *= -1;
+            m_nCycleCounter++;
+        }
     }
 
     return (m_nCycleCounter < 4);

@@ -2,9 +2,10 @@
 
 #include "DisplayStateBase.h"
 
+#define MAX_COLS     32
+
 ///////////////////////////////////////////////////////////////////////////////
-// Base class for all display states
-// Command line interpreter
+// Show the matrix animation
 ///////////////////////////////////////////////////////////////////////////////
 class DisplayStateMatrix : public DisplayStateBase
 {
@@ -17,8 +18,8 @@ public:
     virtual bool HandleLoop(unsigned long epochTime, time_t localTime);  
 
 private:
-    uint8_t     m_introPos[NUM_COLS];
-    uint8_t     m_introLen[NUM_COLS];
+    uint8_t     m_introPos[MAX_COLS];
+    uint8_t     m_introLen[MAX_COLS];
     uint8_t     m_animationStep = 100; // 1 step = x ms
     uint32_t    m_maxTotalTime = 0;
     uint32_t    m_totalTime = 0;

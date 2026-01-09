@@ -47,7 +47,7 @@ bool DisplayStateMatrix::HandleLoop(unsigned long epochTime, time_t localTime)
 
         if (random(3) == 0)
         {
-            uint8_t col = random(NUM_COLS);
+            uint8_t col = random(s_layout.columns);
             if (m_introPos[col] == 0 && (m_totalTime < m_maxTotalTime)) // Only allow new beam when not reaching the end of the steps
             {
                 m_introPos[col] = 1;
@@ -59,21 +59,21 @@ bool DisplayStateMatrix::HandleLoop(unsigned long epochTime, time_t localTime)
         FastLED.clear();
 
         int beamCount = 0;
-        for(uint8_t n = 0; n < NUM_COLS; n++)
+        for(uint8_t n = 0; n < s_layout.columns; n++)
         {
             uint8_t pos = m_introPos[n];
             if (pos != 0)
             {
                 beamCount++;
                 uint8_t len = m_introLen[n];                
-                if (pos < NUM_ROWS)
+                if (pos < s_layout.rows)
                 { 
                     // Leading char
                     m_pLEDs[CalcLedPos(n, pos)] = colLeading;
                 }
                 for(uint8_t i = 1; i < len; i++)
                 {
-                    if (pos - i >= 0 && pos - i < NUM_ROWS)
+                    if (pos - i >= 0 && pos - i < s_layout.rows)
                     {
                         uint8_t fac = (80 / len);
                         m_pLEDs[CalcLedPos(n, pos - i)] = CRGB(0, ((80 - (i * fac)) * brightness) >> 8, 0);
@@ -81,7 +81,7 @@ bool DisplayStateMatrix::HandleLoop(unsigned long epochTime, time_t localTime)
                 }
 
                 m_introPos[n]++;
-                if (m_introPos[n] - m_introLen[n] > NUM_ROWS)
+                if (m_introPos[n] - m_introLen[n] > s_layout.rows)
                 {
                     m_introPos[n] = 0;
                 }

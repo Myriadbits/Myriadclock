@@ -3,12 +3,12 @@
 #include "DisplayStateBase.h"
 
 ///////////////////////////////////////////////////////////////////////////////
-// Show all words (test state)
+// Show analog clock :)
 ///////////////////////////////////////////////////////////////////////////////
-class DisplayStateWords : public DisplayStateBase
+class DisplayStateAnalog : public DisplayStateBase
 {
 public:
-    DisplayStateWords() : DisplayStateBase("words") 
+    DisplayStateAnalog() : DisplayStateBase("analog") 
     {
     }
 

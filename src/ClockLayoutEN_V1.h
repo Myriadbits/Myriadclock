@@ -24,10 +24,6 @@
 
 #include "ClockLayoutBase.h"
 
-// How many leds are connected?
-#define NUM_LEDS    256
-#define NUM_ROWS    16
-#define NUM_COLS    16
 
 //
 // Latest characters:
@@ -161,6 +157,12 @@ static const ledpos_t ENV1_goodmorning [] = { {0,3}, {1,3}, {2,3}, {3,3}, {0,8},
 //
 static const ledclocklayout_t s_layoutEN_V1 = 
 {
+    16,
+    16,
+    256,
+    O_NORMAL,
+    false,
+
     // Time display method
     TF_EN_5MIN,
 
@@ -210,6 +212,7 @@ static const ledclocklayout_t s_layoutEN_V1 =
         ENV1_holiday,
         ENV1_party,
         ENV1_wakeup,
+        EMPTY,
         EMPTY,
         EMPTY,
         EMPTY,

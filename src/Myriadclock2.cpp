@@ -43,6 +43,7 @@
 #define DATA_PIN                13      // Connected to the data pin of the first LED strip
 #define RECEIVER_PIN            22      // RXB6 input pin
 #define TYPE_PIN                17      // Pin for determining the type of the board
+#define NUM_LEDS                256
 
 using namespace std;
 
@@ -90,7 +91,9 @@ void setup()
     pconfig->addOption((uint8_t) 2, "English"); 
     pconfig->addOption((uint8_t) 3, "English V2");
     pconfig->addOption((uint8_t) 4, "Dutch V3");
-    
+    pconfig->addOption((uint8_t) 5, "Dutch full weekdays & months");
+    pconfig->addOption((uint8_t) 6, "Cloxel"); 
+
     pconfig = g_bleconfig.registerOption(CONFIG_DAYLIGHTSAVING, "Daylight saving zone", 0);
     pconfig->addOption((uint8_t) 0, "Off"); 
     pconfig->addOption((uint8_t) 1, "Central European"); 
@@ -128,7 +131,7 @@ void setup()
     g_bleconfig.registerRGBColor(CONFIG_COLOR_TIME, "Time color", 0x00FF00, true);
     g_bleconfig.registerRGBColor(CONFIG_COLOR_WEEKDAY, "Weekday Color", 0xFFA500, true);
     g_bleconfig.registerRGBColor(CONFIG_COLOR_DATE, "Date color", 0xE59400, true);
-    g_bleconfig.registerRGBColor(CONFIG_COLOR_BACKGROUND, "Background color", 0xFFFFFF, true);
+    g_bleconfig.registerRGBColor(CONFIG_COLOR_BACKGROUND, "Background color", 0xFFFFFF, true);   
 
     g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_DAY, "Brightness Day", 80, false);
     g_bleconfig.registerSlider(CONFIG_BRIGHTNESS_NIGHT, "Brightness Night", 30, false);
@@ -159,7 +162,13 @@ void setup()
     pconfig->addOption((uint8_t) UC_NORMAL, "Normal");
     pconfig->addOption((uint8_t) UC_MATRIX, "Matrix");
     pconfig->addOption((uint8_t) UC_ALLWORDS, "All words");
+    pconfig->addOption((uint8_t) UC_ANALOG, "Analog");
 
+    pconfig = g_bleconfig.registerOption(CONFIG_OPTIONS_CLOXEL, "Cloxel options", 0);
+    pconfig->addOption((uint8_t) 0, "Date & time highfont"); 
+    pconfig->addOption((uint8_t) 1, "Date & time"); 
+    pconfig->addOption((uint8_t) 2, "Time & seconds"); 
+    pconfig->addOption((uint8_t) 3, "Date & time & second block"); 
     //g_bleconfig.registerString(CONFIG_NAME, "Name", "enteryourname", false);
 
 

@@ -4,6 +4,11 @@
 ///////////////////////////////////////////////////////////////////////////////
 
 #include "DisplayStateBase.h"
+#include "ClockLayoutNL_V1.h"
+#include "Myriadbitsfont5x6_3.h"
+#include "Myriadbitsfont5x8_3.h"
+#include "HighFont4x8.h"
+#include "HighFont4x6.h"
 
 // For now assume the (0,0) of the dutch coordinate system 
 #define CLOCK_LATITUDE      52.155194
@@ -31,10 +36,22 @@ uint32_t DisplayStateBase::Elapsed(uint32_t ts)
 //
 int16_t DisplayStateBase::CalcLedPos(int8_t x, int8_t y)
 {
-    if ((y % 2) == 0)
-        return (NUM_COLS - x - 1) + (y * NUM_COLS); 
+    int pos = 0;
+    if (s_layout.orientation == EOrientation::O_NORMAL)
+    {
+        if ((y % 2) == 0)
+            pos = (s_layout.columns - x - 1) + (y * s_layout.columns); 
+        else
+            pos = x + (y * s_layout.columns); 
+    }
     else
-        return x + (y * NUM_COLS); 
+    {
+        if ((x % 2) == 0)
+            pos = y + (x * s_layout.rows); 
+        else
+            pos = (s_layout.rows - y - 1) + (x * s_layout.rows); 
+    }
+    return (pos % s_layout.numLeds);
 }
 
 //
@@ -83,10 +100,114 @@ void DisplayStateBase::FillBackground(const int brightness)
         CRGB colDefault = m_pConfig->getConfigValue(CONFIG_COLOR_BACKGROUND);
 
         CRGB rgbClear = ColorHandler(colDefault, brightness, 0);
-        for(int n = 0; n < NUM_LEDS; n++)
+        for(int n = 0; n < s_layout.numLeds; n++)
             m_pLEDs[n] = rgbClear;
     }
 }
+
+
+//
+// @brief  Draw a character on the LED panel
+//
+void DisplayStateBase::DrawGFX(CRGB *pLEDs, EFontType fontType, ETextAlign align, int x, int y, std::string text, CRGB color)
+{
+    const GFXfont* pFont = NULL;
+    switch (fontType)
+    {
+        case EFontType::FT_56: pFont = &JochemFont56; break;
+        case EFontType::FT_HIGHFONT48: pFont = &Highfont4x8; break;
+        case EFontType::FT_HIGHFONT46: pFont = &Highfont4x6; break;
+        case EFontType::FT_582: pFont = &JochemFont58; break;
+    }
+    if (pFont == NULL)
+        return;
+
+    int posX = x;
+    int posY = y;
+
+    if ((align & ETextAlign::TA_HCENTER) != 0)
+    {
+        int sizeX = CalculateGFXWidth(pFont, text);
+        posX = (s_layout.columns - sizeX) / 2;
+    }
+    if ((align & ETextAlign::TA_VCENTER) != 0)
+    {
+        int sizeY = pFont->glyph->height;
+        posY = (s_layout.rows - sizeY) / 2;
+    }
+    if ((align & ETextAlign::TA_MIDTEXT) != 0)
+    {
+        int len = text.length();
+        int sizeX = CalculateGFXWidth(pFont, text.substr(0, len/2));
+        if ((len % 2) != 0)
+        {
+            // Uneven characters, so add half of the width of the center character
+            int extra = (CalculateGFXWidth(pFont, text.substr(len/2, 1)) / 2);
+            sizeX += extra;
+        }
+        posX = (s_layout.columns / 2) - sizeX;
+    }
+    if ((align & ETextAlign::TA_END) != 0)
+    {
+        int sizeX = CalculateGFXWidth(pFont, text);
+        posX = (s_layout.columns - sizeX) - x + 1;
+    }
+
+    for(char ch: text)
+    {
+        if (ch >= pFont->first && ch < pFont->last)
+        {
+            char c = (ch - pFont->first);
+
+            GFXglyph *glyph = &(pFont->glyph[c]);
+            uint8_t *bitmap = pFont->bitmap;
+
+            uint16_t bo = glyph->bitmapOffset;
+            uint8_t w = glyph->width;
+            uint8_t h = glyph->height;
+
+            uint8_t bits = 0;
+            uint8_t bit = 0;
+            for (int yy = h - 1; yy >= 0; yy--)
+            {
+                for (int xx = 0; xx < w; xx++)
+                {
+                    if (bit == 0x00)
+                    {
+                        bits = bitmap[bo++];
+                        bit = 0x80;
+                    }
+                    if (bits & bit)
+                    {
+                        pLEDs[CalcLedPos(posX + xx, posY + y + (h - 1 - yy))] = color;
+                    }
+                    bit = bit >> 1;
+                }
+            }
+            posX += glyph->xAdvance;
+        }
+    }
+}
+
+
+/// @brief Calculate the width of an text
+/// @param font 
+/// @param text 
+int DisplayStateBase::CalculateGFXWidth(const GFXfont* font, std::string text)
+{
+    int16_t xo16 = 0;
+    for(char ch: text)
+    {
+        if (ch >= font->first && ch < font->last)
+        {
+            char c = (ch - font->first);
+            GFXglyph *glyph = &(font->glyph[c]);
+            xo16 += glyph->xAdvance;
+        }
+    }
+    return xo16;
+}
+
 
 //
 // Simple log function
@@ -184,7 +305,7 @@ int DisplayStateBase::GetBrightness(unsigned long epochTime)
     else if (epochTime >= sunset && epochTime < sunset + deltaTime)
     {
         // Evening Twilight
-        brightness = brightnessNight - ((epochTime - sunset) * brightnessDiff) / deltaTime;
+        brightness = brightnessDay - ((epochTime - sunset) * brightnessDiff) / deltaTime;
     }    
     return brightness;
 }

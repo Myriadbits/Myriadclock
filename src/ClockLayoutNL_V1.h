@@ -24,11 +24,6 @@
 
 #include "ClockLayoutBase.h"
 
-// How many leds are connected?
-#define NUM_LEDS    256
-#define NUM_ROWS    16
-#define NUM_COLS    16
-
 //
 // Latest characters:
 //
@@ -163,6 +158,12 @@ static const ledpos_t NLV1_flag [] = { {1,7}, WEND};
 //
 static const ledclocklayout_t s_layoutNL_V1 = 
 {
+    16,
+    16,
+    256,
+    O_NORMAL,
+    false,
+
     // Time display method
     TF_NL_EVERYMIN,
 
@@ -214,6 +215,7 @@ static const ledclocklayout_t s_layoutNL_V1 =
         EMPTY,
         EMPTY,
         EMPTY,
+        NLV1_heart,
     },
 
     // 10x number

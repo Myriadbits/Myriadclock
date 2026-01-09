@@ -47,13 +47,9 @@ void ClockTimeWordConvertor::convert(time_t localTime, ledclocklayout_t* pLayout
         {
             pOutput->pMinutesMainWord = pTime->leadtext;
 
-            if (min5 > 3) hours++; // Increase the hour, but do NOT increase when we are at exactly a quarter past
-            hours %= 12; // Limit hours to 12
-
             // Quarter past 1 => 14 minutes to half two (in Dutch this is correct, English I don't know)
             int quarterNum = nMinutes / 15;
-            int min1 = nMinutes % 15;        
-            int hours = nHours;
+            min1 = nMinutes % 15;     
             if (quarterNum > 0 && !(quarterNum == 1 && min1 == 0)) hours++; // Increase the hour, but do NOT increase when we are at exactly a quarter past
             hours %= 12; // Limit hours to 12
             
