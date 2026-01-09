@@ -23,16 +23,18 @@ void DisplayStateBooting::Initialize(CRGB* pLEDs, BLEConfig* pConfig, DisplaySta
 //
 bool DisplayStateBooting::HandleLoop(unsigned long epochTime, time_t localTime)
 {
-    CRGB colTop = CRGB(0, m_nCounter, 0);
+    CRGB colTop = CRGB(218, 81, 0);
+    CRGB colWord = CRGB(173, 62, 0);
+
    // CRGB colVersion = CRGB(0, m_nCounter/4, 0);
 
     if (Elapsed(m_timeStamp) > 25)
     {
         m_timeStamp = millis();
-        m_nCounter += m_nDir * 8;
-        if (m_nCounter > 255) 
+        m_nCounter += m_nDir * 6;
+        if (m_nCounter > 200) 
         {
-            m_nCounter = 255;
+            m_nCounter = 200;
             m_nDir *= -1;
         }
         if (m_nCounter < 0)
@@ -52,6 +54,7 @@ bool DisplayStateBooting::HandleLoop(unsigned long epochTime, time_t localTime)
 
         // Show the myriadclock text
         AddWordToLeds(s_layout.extra.myriadclock, colTop, brightness);   
+        AddWordToLeds(s_layout.extra.word, colWord, brightness);   
 
         // Show the codes
    //     AddWordToLeds((ledpos_t*) s_wordCodes[m_pSettings->nSerialNumber % 32].leds, colVersion); TODO

@@ -202,6 +202,7 @@ static const ledclocklayout_t s_layoutNL_V1 =
         NLV1_nok,
         NLV1_wifi,
         NLV1_myriadclock,
+        EMPTY,
         NLV1_myriadbits,
         EMPTY,
         EMPTY,
@@ -209,6 +210,9 @@ static const ledclocklayout_t s_layoutNL_V1 =
         NLV1_flag,
         NLV1_flag,
         NLV1_flag,
+        EMPTY,
+        EMPTY,
+        EMPTY,
         EMPTY,
     },
 

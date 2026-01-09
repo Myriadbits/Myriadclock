@@ -202,6 +202,7 @@ static const ledclocklayout_t s_layoutEN_V1 =
         ENV1_wifi,
         ENV1_myriadclock,
         EMPTY,
+        EMPTY,
         ENV1_bt,
         ENV1_passcode,
         ENV1_goodmorning,
@@ -209,6 +210,9 @@ static const ledclocklayout_t s_layoutEN_V1 =
         ENV1_holiday,
         ENV1_party,
         ENV1_wakeup,
+        EMPTY,
+        EMPTY,
+        EMPTY,
     },
 
     // 10x number

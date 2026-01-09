@@ -34,6 +34,8 @@
 #define CONFIG_OPTIONS_WEEKDAY          21
 #define CONFIG_OPTIONS_DATE             22
 
+#define CONFIG_NAME                     30
+
 #define CONFIG_COMMAND                  42
 
 

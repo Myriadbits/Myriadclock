@@ -32,10 +32,10 @@
 #include "MyriadclockConfig.h"
 #include <ArduinoJson.h>
 
-#define MYRIADCLOCK_MANUFACTURER    "Myriadbits"
-#define MYRIADCLOCK_MODEL           "Myriadclock"
-#define MYRIADCLOCK_VERSION         "2.0.0"
-#define MYRIADCLOCK_DEFAULTNAME     "Myriadclock"
+#define MYRIADCLOCK_MANUFACTURER    "www.cloxel.nl"
+#define MYRIADCLOCK_MODEL           "Wordcloxel"
+#define MYRIADCLOCK_VERSION         "2.1.0"
+#define MYRIADCLOCK_DEFAULTNAME     "Wordcloxel"
 #define MYRIADCLOCK_DEFAULTLOCATION "Default room"
 
 
@@ -84,11 +84,12 @@ void setup()
 
     //g_bleconfig.registerString(CONFIG_LOCATION, "Location", std::string(MYRIADCLOCK_DEFAULTLOCATION), true);
 
-    BLEConfigItemOption *pconfig = g_bleconfig.registerOption(CONFIG_LAYOUT, "Clock layout", 0);
+    BLEConfigItemOption *pconfig = g_bleconfig.registerOption(CONFIG_LAYOUT, "Clock layout", 3);
     pconfig->addOption((uint8_t) 0, "Dutch V2");
     pconfig->addOption((uint8_t) 1, "Dutch V1");
     pconfig->addOption((uint8_t) 2, "English"); 
     pconfig->addOption((uint8_t) 3, "English V2");
+    pconfig->addOption((uint8_t) 4, "Dutch V3");
     
     pconfig = g_bleconfig.registerOption(CONFIG_DAYLIGHTSAVING, "Daylight saving zone", 0);
     pconfig->addOption((uint8_t) 0, "Off"); 
@@ -158,6 +159,8 @@ void setup()
     pconfig->addOption((uint8_t) UC_NORMAL, "Normal");
     pconfig->addOption((uint8_t) UC_MATRIX, "Matrix");
     pconfig->addOption((uint8_t) UC_ALLWORDS, "All words");
+
+    //g_bleconfig.registerString(CONFIG_NAME, "Name", "enteryourname", false);
 
 
     // Start the BLE Config stuff

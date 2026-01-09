@@ -22,9 +22,9 @@ std::string BLEConfigItemString::getValue()
 // returns the index of the last item of this string
 int BLEConfigItemString::onEncodeData(uint8_t *pdata, int dataLen, int idx)
 {
-    int slen = (uint8_t) std::min((int) m_valueString.length(), 0xF0);
+    uint8_t slen = (uint8_t) std::min((int) m_valueString.length(), 0xF0);
     pdata[idx++] = slen;
-    for(int i = 0; i < slen; i++)
+    for(uint8_t i = 0; i < slen; i++)
         pdata[idx++] = m_valueString.c_str()[i];
     return idx;
 }

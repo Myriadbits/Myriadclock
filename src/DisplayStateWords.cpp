@@ -43,9 +43,10 @@ bool DisplayStateWords::HandleLoop(unsigned long epochTime, time_t localTime)
         s_layout.months[0], s_layout.months[1], s_layout.months[2], s_layout.months[3],
         s_layout.months[4], s_layout.months[5], s_layout.months[6], s_layout.months[7],
         s_layout.months[8], s_layout.months[9], s_layout.months[10], s_layout.months[11],
-        s_layout.extra.birthday, s_layout.extra.bluetooth, s_layout.extra.holiday, s_layout.extra.myriadbits, 
+        s_layout.extra.birthday, s_layout.extra.bluetooth, s_layout.extra.holiday, s_layout.extra.word, s_layout.extra.myriadbits, 
         s_layout.extra.myriadclock, s_layout.extra.no, s_layout.extra.yes, s_layout.extra.party, s_layout.extra.passcode, 
-        s_layout.extra.goodmorning, s_layout.extra.wakeup, s_layout.extra.wifi,
+        s_layout.extra.goodmorning, s_layout.extra.wakeup, s_layout.extra.wifi, 
+        s_layout.extra.breakfast, s_layout.extra.lunch, s_layout.extra.dinner,
         NULL };
 
 

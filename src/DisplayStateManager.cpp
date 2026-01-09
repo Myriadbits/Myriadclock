@@ -15,6 +15,7 @@
 
 #include "ClockLayoutNL_V1.h"
 #include "ClockLayoutNL_V2.h"
+#include "ClockLayoutNL_V3.h"
 #include "ClockLayoutEN_V1.h"
 #include "ClockLayoutEN_V2.h"
 
@@ -134,6 +135,7 @@ void DisplayStateManager::setLayout(const int nIndex)
     if (nIndex == 1) playout = const_cast<ledclocklayout_t*>(&s_layoutNL_V1);
     if (nIndex == 2) playout = const_cast<ledclocklayout_t*>(&s_layoutEN_V1);
     if (nIndex == 3) playout = const_cast<ledclocklayout_t*>(&s_layoutEN_V2);
+    if (nIndex == 4) playout = const_cast<ledclocklayout_t*>(&s_layoutNL_V3);
     
     // Inform all display states of the new layout
     DisplayStateBase::setLayout(playout);    

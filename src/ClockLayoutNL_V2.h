@@ -199,6 +199,7 @@ static const ledclocklayout_t s_layoutNL_V2 =
         NLV2_wifi,
         NLV2_myriadclock,
         EMPTY,
+        EMPTY,
         NLV2_bt,
         NLV2_passcode,
         NLV2_goodmorning,
@@ -206,6 +207,9 @@ static const ledclocklayout_t s_layoutNL_V2 =
         NLV2_holiday,
         NLV2_party,
         NLV2_wakeup,
+        EMPTY,
+        EMPTY,
+        EMPTY,
     },
 
     // 10x number

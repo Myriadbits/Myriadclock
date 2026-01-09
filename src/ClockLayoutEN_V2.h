@@ -95,7 +95,7 @@ static const ledpos_t ENV2_wednesday [] = { {4,10}, {5,10}, WEND};
 static const ledpos_t ENV2_thursday  [] = { {6,10}, {7,10}, WEND};
 static const ledpos_t ENV2_friday    [] = { {8,10}, {9,10}, WEND};
 static const ledpos_t ENV2_saturday  [] = { {10,10}, {11,10}, WEND};
-static const ledpos_t ENV2_sunday    [] = { {12,10}, {13,10}, WEND};
+static const ledpos_t ENV2_sunday    [] = { {12,10}, {13,10}, {14,10}, WEND};
 
 static const ledpos_t ENV2_day0      [] = { {1,11}, WEND};
 static const ledpos_t ENV2_day1      [] = { {2,11}, WEND};
@@ -143,7 +143,8 @@ static const ledpos_t ENV2_october  [] = { {6,15}, {7,15}, {8,15}, WEND};
 static const ledpos_t ENV2_november [] = { {9,15}, {10,15}, {11,15}, WEND};
 static const ledpos_t ENV2_december [] = { {12,15}, {13,15}, {14,15}, WEND};
 
-static const ledpos_t ENV2_myriadclock  [] = { {15,5}, {15,6}, {15,7}, {15,8}, {15,9}, {15,10}, {15,11}, {15,12}, {15,13}, {15,14}, WEND};
+static const ledpos_t ENV2_cloxel  [] = { {15,9}, {15,10}, {15,11}, {15,12}, {15,13}, {15,14}, WEND};
+static const ledpos_t ENV2_word  [] = { {15,5}, {15,6}, {15,7}, {15,8}, WEND};
 static const ledpos_t ENV2_bt [] = { {13,3}, {14,3}, WEND};
 static const ledpos_t ENV2_passcode [] = { WEND};
 static const ledpos_t ENV2_no  [] = { {9,5}, {10,5}, WEND};
@@ -155,6 +156,10 @@ static const ledpos_t ENV2_holiday [] = { WEND};
 static const ledpos_t ENV2_party [] = { {6,3}, {7,3}, {8,3}, WEND}; // Actually not available, will display 'day'
 static const ledpos_t ENV2_wakeup [] = { WEND};
 static const ledpos_t ENV2_goodmorning [] = { {9,3}, {10,3}, {11,3}, {12,3}, {9,4}, {10,4}, {11,4}, {12,4}, {13,4}, {14,4}, {15,4}, WEND};
+
+static const ledpos_t ENV2_breakfast [] = { {10,6}, {11,6}, {12,6}, {13,6}, {14,6}, {11,7}, {12,7}, {13,7}, {14,7}, WEND};
+static const ledpos_t ENV2_lunch [] = { {0,9}, {1,9}, {2,9}, {3,9}, {4,9}, {11,9}, {12,9}, {13,9}, {14,9}, WEND};
+static const ledpos_t ENV2_dinner [] = { {5,9}, {6,9}, {7,9}, {8,9}, {9,9}, {10,9}, {11,9}, {12,9}, {13,9}, {14,9}, WEND};
 
 //
 // EN clock layout V1
@@ -200,7 +205,8 @@ static const ledclocklayout_t s_layoutEN_V2 =
         ENV2_no,
         ENV2_yes,
         ENV2_wifi,
-        ENV2_myriadclock,
+        ENV2_cloxel,
+        ENV2_word,
         EMPTY,
         ENV2_bt,
         ENV2_passcode,
@@ -209,6 +215,9 @@ static const ledclocklayout_t s_layoutEN_V2 =
         ENV2_holiday,
         ENV2_party,
         ENV2_wakeup,
+        ENV2_breakfast,
+        ENV2_lunch,
+        ENV2_dinner,
     },
 
     // 10x number
