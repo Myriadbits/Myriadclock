@@ -166,6 +166,12 @@ static const ledpos_t ENV2_dinner [] = { {5,9}, {6,9}, {7,9}, {8,9}, {9,9}, {10,
 //
 static const ledclocklayout_t s_layoutEN_V2 = 
 {
+    16,
+    16,
+    256,
+    O_NORMAL,
+    false,
+
     // Time display method
     TF_EN_5MIN,
 

@@ -161,6 +161,12 @@ static const ledpos_t NLV3_dinner [] = { {5,9}, {6,9}, {7,9}, {8,9}, {9,9}, {10,
 //
 static const ledclocklayout_t s_layoutNL_V3 = 
 {
+    16,
+    16,
+    256,
+    O_NORMAL,
+    false,
+    
     // Time display method
     TF_NL_5MIN,
 
